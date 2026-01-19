@@ -780,9 +780,9 @@
                     
                     <div id="dateRangeError" class="error-message hidden" style="margin: 5px 0; font-size: 9px;"></div>
                     
-                    <div id="scheduleConflict" class="error-message hidden" style="margin: 5px 0; font-size: 9px;">
-                        ⚠️ Some dates conflict with your schedule
-                    </div>
+                    <div id="scheduleConflict" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#fef3c7; color:#92400e; border-color:#fbbf24;">
+    <!-- Message will be set by JavaScript -->
+</div>
                     
                     <label>Reason</label>
                     <textarea id="lvReason" placeholder="Brief reason for leave..."></textarea>
@@ -1778,46 +1778,52 @@
         }
     }
     
-    // Check if leave dates conflict with schedule
-    function checkScheduleConflict() {
-        const startDate = document.getElementById('lvStartDate').value;
-        const endDate = document.getElementById('lvEndDate').value;
+
+// CORRECTED: Check if leave dates conflict with schedule
+function checkScheduleConflict() {
+    const startDate = document.getElementById('lvStartDate').value;
+    const endDate = document.getElementById('lvEndDate').value;
+    
+    if (!startDate) return;
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : start;
+    const currentMonth = new Date().getMonth();
+    const user = appState.users[appState.currentUser.id] || appState.currentUser;
+    
+    const schedule = user['in_' + currentMonth] || '';
+    const off1 = user['off1_' + currentMonth] || '';
+    const off2 = user['off2_' + currentMonth] || '';
+    
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    let hasConflict = false;
+    const currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+        const dayOfWeek = currentDate.getDay();
+        const selectedDay = dayNames[dayOfWeek];
         
-        if (!startDate) return;
+        const isRestDay = off1 === selectedDay || off2 === selectedDay;
         
-        const start = new Date(startDate);
-        const end = endDate ? new Date(endDate) : start;
-        const currentMonth = new Date().getMonth();
-        const user = appState.users[appState.currentUser.id] || appState.currentUser;
-        
-        const schedule = user['in_' + currentMonth] || '';
-        const off1 = user['off1_' + currentMonth] || '';
-        const off2 = user['off2_' + currentMonth] || '';
-        
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        let hasConflict = false;
-        const currentDate = new Date(start);
-        
-        while (currentDate <= end) {
-            const dayOfWeek = currentDate.getDay();
-            const selectedDay = dayNames[dayOfWeek];
-            
-            const isRestDay = off1 === selectedDay || off2 === selectedDay;
-            
-            if (!isRestDay) {
-                hasConflict = true;
-                break;
-            }
-            
-            currentDate.setDate(currentDate.getDate() + 1);
+        // CORRECTION: Conflict only if you're trying to take leave on your REST DAYS
+        // (You shouldn't file leave for days you're already off!)
+        if (isRestDay) {
+            hasConflict = true;
+            break;
         }
         
-        const conflictMsg = document.getElementById('scheduleConflict');
-        if (conflictMsg) {
-            conflictMsg.classList.toggle('hidden', !hasConflict);
-        }
+        currentDate.setDate(currentDate.getDate() + 1);
     }
+    
+    const conflictMsg = document.getElementById('scheduleConflict');
+    if (conflictMsg) {
+        conflictMsg.textContent = hasConflict ? 
+            "⚠️ You're trying to take leave on your scheduled REST DAY. You don't need to file leave for days you're already off." :
+            "✅ Leave dates are on your working days (good!)";
+        conflictMsg.classList.toggle('hidden', !hasConflict);
+    }
+}
     
     // Render Directory (Admin/HR only) with SEARCH and BALANCE DISPLAY
     function renderDirectory() {
@@ -3336,4 +3342,5 @@
     
 </script>
 </body>
+
 </html>
