@@ -9,8 +9,8 @@
     
     <style>
         :root { 
-            --primary: #0f172a; --primary-light: #1e293b; --accent: #6366f1; 
-            --accent-hover: #4f46e5; --header-red: #ef4444; --bg: #f1f5f9; 
+            --primary: #1e40af; --primary-light: #3b82f6; --accent: #2563eb; 
+            --accent-hover: #1d4ed8; --header-red: #ef4444; --bg: #f1f5f9; 
             --text-main: #1e293b; --text-light: #64748b; --card-bg: #ffffff; 
             --green: #10b981; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --warning: #f59e0b; --danger: #ef4444; --success: #10b981;
@@ -41,7 +41,7 @@
         }
         
         .logo-box { 
-            background: linear-gradient(135deg, var(--accent), #818cf8); 
+            background: var(--primary-light); 
             padding: 6px 12px; 
             border-radius: 8px; 
             font-weight: 800; 
@@ -254,7 +254,7 @@
         .bal-box { 
             padding: 20px; 
             border-radius: 12px; 
-            text-align: center;
+text-align: center;
             position: relative;
             min-height: 120px;
             display: flex;
@@ -634,6 +634,16 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        
+        .hierarchy-info {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 10px;
+            color: #0369a1;
+        }
     </style>
 </head>
 <body>
@@ -793,6 +803,12 @@
             
             <div id="leaveFormSection" class="card hidden" style="width:400px; max-width:100%; background:#f8fafc;">
                 <h3>New Leave Request</h3>
+                <div class="hierarchy-info">
+                    <strong>Approval Hierarchy:</strong><br>
+                    • Employee → OPS (same dept) → Admin (same dept) → HR<br>
+                    • Any approver can approve - no sequential requirement<br>
+                    • Only same department approvals for OPS/Admin
+                </div>
                 <div class="flex-column">
                     <label>Leave Type</label>
                     <select id="lvType" onchange="updateLeaveBalance()">
@@ -808,15 +824,19 @@
                     
                     <div id="dateRangeError" class="error-message hidden" style="margin: 5px 0; font-size: 9px;"></div>
                     
-                    <div id="scheduleConflict" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#f0f9ff; color:#0369a1; border-color:#bae6fd;">
-                    </div>
+                    <div id="overlapError" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#fef3f2; color:#dc2626; border-color:#fecaca;"></div>
+                    
+                    <div id="scheduleConflict" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#f0f9ff; color:#0369a1; border-color:#bae6fd;"></div>
+                    
+                    <div id="consecutiveError" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#fffbeb; color:#b45309; border-color:#fde68a;"></div>
                     
                     <label>Reason</label>
                     <textarea id="lvReason" placeholder="Brief reason for leave..."></textarea>
                     
                     <div style="font-size:10px; color:var(--text-light); margin: 5px 0;">
                         Available Balance: <span id="availableBalance">0</span> days | 
-                        Requested: <span id="requestedDays">0</span> days
+                        Requested: <span id="requestedDays">0</span> working days<br>
+                        Max Consecutive Leave: <span id="maxConsecutiveDisplay">0</span> days
                     </div>
                     
                     <button onclick="submitLeave()" class="action-btn" style="width:100%;">SUBMIT REQUEST</button>
@@ -859,6 +879,7 @@
                     <option>OPS</option>
                     <option>HR</option>
                 </select>
+                <input type="number" id="addMaxConsecutive" placeholder="Max Consecutive Leave" min="1" value="30" style="width: 150px;">
                 <button onclick="addEmployee()" class="action-btn" id="addEmployeeBtn">ADD EMPLOYEE</button>
                 <button onclick="cancelEdit()" class="action-btn" id="cancelEditBtn" style="background: var(--danger); display: none;">CANCEL EDIT</button>
             </div>
@@ -1158,24 +1179,141 @@
         return usedDays;
     }
 
-    // Check if user can approve leave
+    // ==================== FIXED HIERARCHY FUNCTION ====================
+    // Check if user can approve leave based on hierarchy: Employee → OPS → Admin → HR
     function canApproveLeave(request) {
         if (!appState.currentUser) return false;
         
         const employee = appState.users[request.empID];
         if (!employee) return false;
         
-        // HR can approve both departments
-        if (appState.currentUser.role === 'HR') {
+        const currentUser = appState.currentUser;
+        
+        // HR can approve both departments (top of hierarchy)
+        if (currentUser.role === 'HR') {
             return true;
         }
         
-        // Admin and OPS can only approve same department
-        if (appState.currentUser.role === 'Admin' || appState.currentUser.role === 'OPS') {
-            return employee.dept === appState.currentUser.dept;
+        // OPS and Admin can only approve same department
+        if (employee.dept !== currentUser.dept) {
+            return false;
+        }
+        
+        // Hierarchy check based on roles
+        const roleHierarchy = {
+            'Employee': 1,
+            'OPS': 2,
+            'Admin': 3,
+            'HR': 4
+        };
+        
+        const requesterLevel = roleHierarchy[employee.role] || 0;
+        const approverLevel = roleHierarchy[currentUser.role] || 0;
+        
+        // Approver must be higher in hierarchy than requester
+        return approverLevel > requesterLevel;
+    }
+
+    // Check if user can cancel leave
+    function canCancelLeave(request) {
+        if (!appState.currentUser) return false;
+        
+        const currentUser = appState.currentUser;
+        const requester = appState.users[request.empID];
+        
+        // HR can cancel any leave
+        if (currentUser.role === 'HR') return true;
+        
+        // Admin can cancel any leave in same department
+        if (currentUser.role === 'Admin') {
+            return requester.dept === currentUser.dept;
+        }
+        
+        // Employees can only cancel their own pending leaves
+        if (currentUser.id === request.empID && request.status === 'Pending') {
+            return true;
         }
         
         return false;
+    }
+
+    // Check for overlapping leaves
+    function hasOverlappingLeave(empId, startDate, endDate, excludeLeaveId = null) {
+        if (!appState.leaveRequests) return false;
+        
+        const start = new Date(startDate);
+        const end = endDate ? new Date(endDate) : start;
+        
+        for (const [leaveId, leave] of Object.entries(appState.leaveRequests)) {
+            if (excludeLeaveId && leaveId === excludeLeaveId) continue;
+            if (leave.empID !== empId) continue;
+            if (leave.status === 'Rejected') continue;
+            
+            const existingStart = new Date(leave.startDate);
+            const existingEnd = leave.endDate ? new Date(leave.endDate) : existingStart;
+            
+            // Check for overlap (including same day)
+            if ((start <= existingEnd && end >= existingStart)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    // Calculate working days excluding rest days
+    function calculateWorkingDays(startDate, endDate, empId) {
+        if (!startDate) return 0;
+        
+        const start = new Date(startDate);
+        const end = endDate ? new Date(endDate) : start;
+        const user = appState.users[empId];
+        
+        if (!user) return 0;
+        
+        let workingDays = 0;
+        const currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+            const month = currentDate.getMonth();
+            const dayOfWeek = currentDate.getDay();
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = dayNames[dayOfWeek];
+            
+            // Get schedule for this month
+            const off1 = user['off1_' + month] || '';
+            const off2 = user['off2_' + month] || '';
+            
+            // Check if it's a rest day
+            const isRestDay = off1 === dayName || off2 === dayName;
+            
+            if (!isRestDay) {
+                workingDays++;
+            }
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return workingDays;
+    }
+
+    // Check consecutive leave days against max limit
+    function checkConsecutiveLimit(empId, startDate, endDate) {
+        const user = appState.users[empId];
+        if (!user) return { valid: true, days: 0, max: 30 };
+        
+        const start = new Date(startDate);
+        const end = endDate ? new Date(endDate) : start;
+        const diffTime = Math.abs(end - start);
+        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        
+        const maxConsecutive = user.maxConsecutiveLeave || 30;
+        
+        return {
+            valid: totalDays <= maxConsecutive,
+            days: totalDays,
+            max: maxConsecutive
+        };
     }
 
     // Initialize the application
@@ -1382,6 +1520,9 @@
                 await update(ref(db, `attendance/${data.userId}`), data.updates);
                 await push(ref(db, 'audit_logs'), data.auditLog);
                 await push(ref(db, 'notifications'), data.notification);
+                break;
+            case 'cancel_leave':
+                await update(ref(db, `leave_requests/${data.leaveId}`), data.updates);
                 break;
         }
     }
@@ -1966,19 +2107,27 @@
         document.getElementById('monthLates').textContent = totalLates;
     }
     
-    // Check date range for leave request
+    // ==================== FIXED: Check date range with schedule conflict ====================
     function checkDateRange() {
         const startDate = document.getElementById('lvStartDate').value;
         const endDate = document.getElementById('lvEndDate').value;
         const errorDiv = document.getElementById('dateRangeError');
+        const overlapError = document.getElementById('overlapError');
+        const scheduleConflict = document.getElementById('scheduleConflict');
+        const consecutiveError = document.getElementById('consecutiveError');
         
-        if (!startDate || !endDate) {
-            errorDiv.classList.add('hidden');
+        // Clear all errors
+        errorDiv.classList.add('hidden');
+        overlapError.classList.add('hidden');
+        scheduleConflict.classList.add('hidden');
+        consecutiveError.classList.add('hidden');
+        
+        if (!startDate) {
             return;
         }
         
         const start = new Date(startDate);
-        const end = new Date(endDate);
+        const end = endDate ? new Date(endDate) : start;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -1997,63 +2146,79 @@
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         
-        if (diffDays > 30) {
-            errorDiv.textContent = 'Leave cannot exceed 30 days';
-            errorDiv.classList.remove('hidden');
-            return;
+        // Check overlapping leaves
+        if (hasOverlappingLeave(appState.currentUser.id, startDate, endDate)) {
+            overlapError.textContent = 'You already have a pending or approved leave request during this period';
+            overlapError.classList.remove('hidden');
         }
         
-        errorDiv.classList.add('hidden');
+        // Check consecutive leave limit
+        const consecutiveCheck = checkConsecutiveLimit(appState.currentUser.id, startDate, endDate);
+        document.getElementById('maxConsecutiveDisplay').textContent = consecutiveCheck.max;
         
-        document.getElementById('requestedDays').textContent = diffDays;
+        if (!consecutiveCheck.valid) {
+            consecutiveError.textContent = `Maximum consecutive leave is ${consecutiveCheck.max} days. You requested ${consecutiveCheck.days} days.`;
+            consecutiveError.classList.remove('hidden');
+        }
+        
+        // Calculate working days (excluding rest days)
+        const workingDays = calculateWorkingDays(startDate, endDate, appState.currentUser.id);
+        document.getElementById('requestedDays').textContent = workingDays;
+        
+        // Check schedule conflict (for information only)
+        checkScheduleConflictInfo(startDate, endDate);
         
         updateLeaveBalance();
-        
-        checkScheduleConflictInfo();
     }
     
-    // Check schedule conflict for INFORMATION ONLY
-    function checkScheduleConflictInfo() {
-        const startDate = document.getElementById('lvStartDate').value;
-        const endDate = document.getElementById('lvEndDate').value;
-        
+    // ==================== FIXED: Schedule conflict check ====================
+    function checkScheduleConflictInfo(startDate, endDate) {
         if (!startDate) return;
         
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : start;
-        const currentMonth = new Date().getMonth();
+        const conflictMsg = document.getElementById('scheduleConflict');
+        
+        if (!conflictMsg) return;
+        
         const user = appState.users[appState.currentUser.id] || appState.currentUser;
         
-        const off1 = user['off1_' + currentMonth] || '';
-        const off2 = user['off2_' + currentMonth] || '';
-        
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
         let restDaysInLeave = [];
+        let workingDaysCount = 0;
         const currentDate = new Date(start);
         
         while (currentDate <= end) {
+            const month = currentDate.getMonth();
             const dayOfWeek = currentDate.getDay();
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const selectedDay = dayNames[dayOfWeek];
+            
+            // Get schedule for the correct month
+            const off1 = user['off1_' + month] || '';
+            const off2 = user['off2_' + month] || '';
             
             const isRestDay = off1 === selectedDay || off2 === selectedDay;
             
             if (isRestDay) {
-                restDaysInLeave.push(selectedDay);
+                restDaysInLeave.push({
+                    date: currentDate.toISOString().split('T')[0],
+                    day: selectedDay
+                });
+            } else {
+                workingDaysCount++;
             }
             
             currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        const conflictMsg = document.getElementById('scheduleConflict');
-        if (conflictMsg) {
-            if (restDaysInLeave.length > 0) {
-                conflictMsg.innerHTML = `ℹ️ Note: Your leave includes ${restDaysInLeave.length} rest day(s) (${restDaysInLeave.join(', ')}).<br>
-                                        <small>These won't count against your leave balance.</small>`;
-                conflictMsg.classList.remove('hidden');
-            } else {
-                conflictMsg.classList.add('hidden');
-            }
+        if (restDaysInLeave.length > 0) {
+            const uniqueRestDays = [...new Set(restDaysInLeave.map(day => day.day))];
+            conflictMsg.innerHTML = `ℹ️ Note: Your leave includes ${restDaysInLeave.length} rest day(s) (${uniqueRestDays.join(', ')}).<br>
+                                    <small>These ${restDaysInLeave.length} day(s) won't count against your leave balance.</small><br>
+                                    <small>Only ${workingDaysCount} working day(s) will be deducted.</small>`;
+            conflictMsg.classList.remove('hidden');
+        } else {
+            conflictMsg.classList.add('hidden');
         }
     }
     
@@ -2066,13 +2231,9 @@
         const endDate = document.getElementById('lvEndDate').value;
         const user = appState.users[appState.currentUser.id] || appState.currentUser;
         
-        let requestedDays = 1;
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const diffTime = Math.abs(end - start);
-            requestedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        }
+        // Calculate working days (excluding rest days)
+        const workingDays = startDate ? calculateWorkingDays(startDate, endDate, appState.currentUser.id) : 0;
+        document.getElementById('requestedDays').textContent = workingDays;
         
         const used = calculateUsedLeaves(appState.currentUser.id, leaveType);
         
@@ -2085,7 +2246,7 @@
         
         const submitBtn = document.querySelector('#leaveFormSection .action-btn');
         if (submitBtn) {
-            const canSubmit = available >= requestedDays && requestedDays > 0;
+            const canSubmit = available >= workingDays && workingDays > 0;
             submitBtn.disabled = !canSubmit;
             submitBtn.style.opacity = canSubmit ? '1' : '0.5';
             submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
@@ -2247,7 +2408,7 @@
         }
     }
     
-    // Submit Leave Request with offline support
+    // ==================== FIXED: Submit Leave Request ====================
     async function submitLeave() {
         if (appState.isProcessing) return;
         
@@ -2256,6 +2417,7 @@
         const endDate = document.getElementById('lvEndDate').value;
         const leaveReason = document.getElementById('lvReason').value.trim();
         
+        // Validation
         if (!startDate) {
             showError('Please select a start date');
             return;
@@ -2275,11 +2437,25 @@
             return;
         }
         
-        const availableBalance = parseInt(document.getElementById('availableBalance').textContent);
-        const requestedDays = parseInt(document.getElementById('requestedDays').textContent);
+        // Check overlapping leaves
+        if (hasOverlappingLeave(appState.currentUser.id, startDate, endDate)) {
+            showError('You already have a pending or approved leave request during this period.');
+            return;
+        }
         
-        if (availableBalance < requestedDays) {
-            showError('Not enough available leave balance');
+        // Check consecutive limit
+        const consecutiveCheck = checkConsecutiveLimit(appState.currentUser.id, startDate, endDate);
+        if (!consecutiveCheck.valid) {
+            showError(`Maximum consecutive leave is ${consecutiveCheck.max} days. You requested ${consecutiveCheck.days} days.`);
+            return;
+        }
+        
+        // Calculate working days
+        const workingDays = calculateWorkingDays(startDate, endDate, appState.currentUser.id);
+        const availableBalance = parseInt(document.getElementById('availableBalance').textContent);
+        
+        if (availableBalance < workingDays) {
+            showError(`Not enough available leave balance. You have ${availableBalance} days, but need ${workingDays} working days.`);
             return;
         }
         
@@ -2296,7 +2472,8 @@
                 status: 'Pending',
                 department: appState.currentUser.dept,
                 submittedAt: new Date().toISOString(),
-                leaveTypeName: LEAVE_TYPES[leaveType] || leaveType
+                leaveTypeName: LEAVE_TYPES[leaveType] || leaveType,
+                workingDays: workingDays
             };
             
             const result = await safeFirebaseOperation(async () => {
@@ -2310,7 +2487,8 @@
                     department: appState.currentUser.dept,
                     leaveType: leaveType,
                     startDate: startDate,
-                    endDate: endDate || startDate
+                    endDate: endDate || startDate,
+                    workingDays: workingDays
                 });
             }, {
                 leaveRequest: leaveRequest,
@@ -2322,15 +2500,23 @@
                     department: appState.currentUser.dept,
                     leaveType: leaveType,
                     startDate: startDate,
-                    endDate: endDate || startDate
+                    endDate: endDate || startDate,
+                    workingDays: workingDays
                 }
             }, 'submit_leave');
             
             if (result.success) {
+                // Reset form
                 document.getElementById('lvStartDate').value = '';
                 document.getElementById('lvEndDate').value = '';
                 document.getElementById('lvReason').value = '';
                 document.getElementById('leaveFormSection').classList.add('hidden');
+                
+                // Clear errors
+                document.getElementById('dateRangeError').classList.add('hidden');
+                document.getElementById('overlapError').classList.add('hidden');
+                document.getElementById('scheduleConflict').classList.add('hidden');
+                document.getElementById('consecutiveError').classList.add('hidden');
                 
                 showSuccess('Leave request submitted successfully! It will be reviewed by your department head.', null, 3000);
                 
@@ -2347,6 +2533,58 @@
             showError('Failed to submit leave request');
         } finally {
             appState.isProcessing = false;
+        }
+    }
+    
+    // Cancel leave request
+    async function cancelLeave(leaveId) {
+        if (!confirm('Are you sure you want to cancel this leave request?')) {
+            return;
+        }
+        
+        try {
+            const request = appState.leaveRequests[leaveId];
+            
+            // Check if user can cancel this leave
+            if (!canCancelLeave(request)) {
+                showError('You are not authorized to cancel this leave request.');
+                return;
+            }
+            
+            const result = await safeFirebaseOperation(async () => {
+                await update(ref(db, `leave_requests/${leaveId}`), {
+                    status: 'Cancelled',
+                    cancelledAt: new Date().toISOString(),
+                    cancelledBy: appState.currentUser.fullName
+                });
+                
+                await push(ref(db, 'audit_logs'), {
+                    name: appState.currentUser.fullName,
+                    action: 'Cancelled leave request',
+                    timestamp: new Date().toISOString(),
+                    empID: request.empID,
+                    department: request.department,
+                    leaveId: leaveId
+                });
+            }, {
+                leaveId: leaveId,
+                updates: {
+                    status: 'Cancelled',
+                    cancelledAt: new Date().toISOString(),
+                    cancelledBy: appState.currentUser.fullName
+                }
+            }, 'cancel_leave');
+            
+            if (result.success) {
+                showSuccess('Leave request cancelled successfully!', null, 3000);
+                updateInbox();
+                updateMyLeaves();
+            } else if (result.queued) {
+                showError('Offline. Cancellation will be processed when connection is restored.', null, false);
+            }
+        } catch (error) {
+            console.error('Cancel leave error:', error);
+            showError('Failed to cancel leave request');
         }
     }
     
@@ -2371,6 +2609,7 @@
         document.getElementById('addSL').value = user.slMax || 10;
         document.getElementById('addVL').value = user.vlMax || 10;
         document.getElementById('addRole').value = user.role || 'Employee';
+        document.getElementById('addMaxConsecutive').value = user.maxConsecutiveLeave || 30;
         
         document.getElementById('addEmployeeBtn').textContent = 'UPDATE EMPLOYEE';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
@@ -2398,6 +2637,7 @@
         document.getElementById('addSL').value = '10';
         document.getElementById('addVL').value = '10';
         document.getElementById('addRole').value = 'Employee';
+        document.getElementById('addMaxConsecutive').value = '30';
         
         document.getElementById('addEmployeeBtn').textContent = 'ADD EMPLOYEE';
         document.getElementById('cancelEditBtn').style.display = 'none';
@@ -2458,7 +2698,8 @@
                 assets: document.getElementById('addAssets').value.trim(),
                 slMax: Math.max(0, parseInt(document.getElementById('addSL').value) || 10),
                 vlMax: Math.max(0, parseInt(document.getElementById('addVL').value) || 10),
-                role: document.getElementById('addRole').value
+                role: document.getElementById('addRole').value,
+                maxConsecutiveLeave: Math.max(1, parseInt(document.getElementById('addMaxConsecutive').value) || 30)
             };
             
             const actionType = appState.editingEmployeeId ? 'update_employee' : 'add_employee';
@@ -2528,6 +2769,7 @@
                     <th>Backend ID</th>
                     <th>Assets</th>
                     <th>SL/VL Balance</th>
+                    <th>Max Consecutive</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -2540,6 +2782,7 @@
             const vlMax = user.vlMax || 0;
             const slRemaining = Math.max(0, slMax - slUsed);
             const vlRemaining = Math.max(0, vlMax - vlUsed);
+            const maxConsecutive = user.maxConsecutiveLeave || 30;
             
             html += `
             <tr>
@@ -2563,6 +2806,7 @@
                         <span class="balance-used">Used: ${vlUsed}</span>
                     </div>
                 </td>
+                <td>${maxConsecutive} days</td>
                 <td>
                     <button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button>
                     <button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button>
@@ -2919,7 +3163,7 @@
         });
     }
     
-    // ==================== INBOX FUNCTIONS ====================
+    // ==================== INBOX FUNCTIONS with Hierarchy ====================
     function updateInbox() {
         if (!appState.currentUser || (appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR' && appState.currentUser.role !== 'OPS')) {
             return;
@@ -2936,22 +3180,34 @@
         
         Object.entries(appState.leaveRequests).forEach(([key, request]) => {
             if (request.status === 'Pending') {
-                pendingCount++;
-                
                 const canApprove = canApproveLeave(request);
+                const canCancel = canCancelLeave(request);
+                
+                pendingCount++;
                 
                 html += `
                 <div class="leave-item">
                     <strong>${request.name}</strong> (${request.empID})<br>
                     <small>${LEAVE_TYPES[request.type] || request.type}: ${request.startDate} ${request.endDate !== request.startDate ? `to ${request.endDate}` : ''}</small><br>
-                    <small>Reason: ${request.reason}</small>
-                    ${canApprove ? `
+                    <small>Department: ${request.department} | Working Days: ${request.workingDays || '1'}</small><br>
+                    <small>Reason: ${request.reason}</small>`;
+                
+                if (canApprove) {
+                    html += `
                     <div class="leave-actions">
                         <button class="action-btn btn-small" onclick="approveLeave('${key}')" style="background:var(--success);">Approve</button>
-                        <button class="action-btn btn-small" onclick="rejectLeave('${key}')" style="background:var(--danger);">Reject</button>
-                    </div>
-                    ` : '<small style="color:var(--text-light);">Not authorized to approve</small>'}
-                </div>`;
+                        <button class="action-btn btn-small" onclick="rejectLeave('${key}')" style="background:var(--danger);">Reject</button>`;
+                    
+                    if (canCancel) {
+                        html += `<button class="action-btn btn-small" onclick="cancelLeave('${key}')" style="background:var(--warning); color:black;">Cancel</button>`;
+                    }
+                    
+                    html += `</div>`;
+                } else {
+                    html += `<small style="color:var(--text-light);">Not authorized to approve</small>`;
+                }
+                
+                html += `</div>`;
             }
         });
         
@@ -2980,52 +3236,55 @@
         inbox.classList.toggle('hidden');
     }
     
-    // FIXED: Approve leave request - Now properly marks attendance as leave type
+    // ==================== FIXED: Approve leave request with schedule update ====================
     async function approveLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
+            
+            // Check if user can approve this leave
+            if (!canApproveLeave(request)) {
+                showError('You are not authorized to approve this leave request.');
+                return;
+            }
+            
             const now = new Date();
             
-            // Mark attendance as leave type for each day in the leave period
+            // Calculate all dates in the leave period
             const startDate = new Date(request.startDate);
             const endDate = request.endDate ? new Date(request.endDate) : startDate;
+            const dateUpdates = {};
             
-            // Generate attendance records for each day of leave
+            // Iterate through each day in the leave period
             const currentDate = new Date(startDate);
-            const attendanceUpdates = {};
-            
             while (currentDate <= endDate) {
                 const month = currentDate.getMonth();
                 const day = currentDate.getDate();
                 const dateKey = `${month}_${day}`;
                 
-                // Mark as leave type (SL or VL) in attendance
-                attendanceUpdates[`attendance/${request.empID}/${dateKey}`] = request.type;
+                // Mark attendance as leave type (SL or VL)
+                dateUpdates[dateKey] = request.type;
                 
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             
             // Update leave request status
-            const leaveUpdate = {
-                [`leave_requests/${leaveId}/status`]: 'Approved',
-                [`leave_requests/${leaveId}/approvedBy`]: appState.currentUser.fullName,
-                [`leave_requests/${leaveId}/approvedAt`]: now.toISOString()
-            };
+            await update(ref(db, `leave_requests/${leaveId}`), {
+                status: 'Approved',
+                approvedBy: appState.currentUser.fullName,
+                approvedAt: now.toISOString(),
+                approvedByRole: appState.currentUser.role
+            });
             
-            // Combine all updates
-            const allUpdates = {
-                ...attendanceUpdates,
-                ...leaveUpdate
-            };
-            
-            // Execute all updates in a single transaction
-            await update(ref(db), allUpdates);
+            // Update attendance records for the leave period
+            if (Object.keys(dateUpdates).length > 0) {
+                await update(ref(db, `attendance/${request.empID}`), dateUpdates);
+            }
             
             // Send notification
             await push(ref(db, 'notifications'), {
                 userId: request.empID,
                 title: 'Leave Approved',
-                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''} has been approved.`,
+                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''} has been approved by ${appState.currentUser.fullName} (${appState.currentUser.role}).`,
                 type: 'success',
                 timestamp: now.toISOString(),
                 read: false
@@ -3037,32 +3296,42 @@
                 action: `Approved leave request for ${request.name} (${request.type}: ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''})`,
                 timestamp: now.toISOString(),
                 empID: request.empID,
-                department: request.department
+                department: request.department,
+                approverRole: appState.currentUser.role,
+                attendanceUpdated: true
             });
             
-            showSuccess('Leave request approved! Attendance marked accordingly.', null, 3000);
+            showSuccess('Leave request approved and schedule updated!', null, 3000);
         } catch (error) {
             console.error('Error approving leave:', error);
             showError('Failed to approve leave');
         }
     }
     
-    // Reject leave request
+    // ==================== FIXED: Reject leave request ====================
     async function rejectLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
+            
+            // Check if user can approve this leave (same rules as approve)
+            if (!canApproveLeave(request)) {
+                showError('You are not authorized to reject this leave request.');
+                return;
+            }
+            
             const now = new Date();
             
             await update(ref(db, `leave_requests/${leaveId}`), {
                 status: 'Rejected',
                 rejectedBy: appState.currentUser.fullName,
-                rejectedAt: now.toISOString()
+                rejectedAt: now.toISOString(),
+                rejectedByRole: appState.currentUser.role
             });
             
             await push(ref(db, 'notifications'), {
                 userId: request.empID,
                 title: 'Leave Rejected',
-                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate} has been rejected.`,
+                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate} has been rejected by ${appState.currentUser.fullName} (${appState.currentUser.role}).`,
                 type: 'error',
                 timestamp: now.toISOString(),
                 read: false
@@ -3074,7 +3343,8 @@
                 action: `Rejected leave request for ${request.name} (${request.type}: ${request.startDate} to ${request.endDate})`,
                 timestamp: now.toISOString(),
                 empID: request.empID,
-                department: request.department
+                department: request.department,
+                rejecterRole: appState.currentUser.role
             });
             
             showSuccess('Leave request rejected!', null, 3000);
@@ -3194,7 +3464,7 @@
                 <strong>${LEAVE_TYPES[leave.type] || leave.type}</strong>
                 <div style="display:flex; justify-content:space-between; margin-top:5px;">
                     <span>${leave.startDate} ${endDate !== startDate ? `to ${leave.endDate}` : ''}</span>
-                    <span>(${diffDays} day${diffDays > 1 ? 's' : ''})</span>
+                    <span>(${leave.workingDays || diffDays} working day${leave.workingDays !== 1 ? 's' : ''})</span>
                 </div>
                 <div style="margin-top:8px;">
                     <span class="status-indicator status-${leave.status.toLowerCase()}"></span>
@@ -3205,8 +3475,14 @@
                 </div>
                 <div style="margin-top:8px; font-size:9px; color:var(--text-light);">
                     Submitted: ${submittedStr}
-                    ${leave.approvedBy ? `<br>Approved by: ${leave.approvedBy}` : ''}
-                    ${leave.rejectedBy ? `<br>Rejected by: ${leave.rejectedBy}` : ''}
+                    ${leave.approvedBy ? `<br>Approved by: ${leave.approvedBy} (${leave.approvedByRole || 'Unknown'})` : ''}
+                    ${leave.rejectedBy ? `<br>Rejected by: ${leave.rejectedBy} (${leave.rejectedByRole || 'Unknown'})` : ''}
+                    ${leave.cancelledBy ? `<br>Cancelled by: ${leave.cancelledBy}` : ''}
+                </div>
+                <div class="leave-actions" style="margin-top:10px;">
+                    ${leave.status === 'Pending' ? `
+                    <button class="action-btn btn-small" onclick="cancelLeave('${Object.keys(appState.leaveRequests).find(key => appState.leaveRequests[key] === leave)}')" style="background:var(--warning); color:black;">Cancel</button>
+                    ` : ''}
                 </div>
             </div>`;
         });
@@ -3314,7 +3590,7 @@
             }
             
             events.push({
-                title: `${employee.fullName} - ${LEAVE_TYPES[leave.type] || leave.type}`,
+                title: `${employee.fullName} - ${LEAVE_TYPES[leave.type] || leave.type} (${leave.status})`,
                 start: start,
                 end: new Date(new Date(end).setDate(new Date(end).getDate() + 1)),
                 backgroundColor: backgroundColor,
@@ -3522,6 +3798,7 @@
     window.handleLogout = handleLogout;
     window.userClockAction = userClockAction;
     window.submitLeave = submitLeave;
+    window.cancelLeave = cancelLeave;
     window.addEmployee = addEmployee;
     window.editEmployee = editEmployee;
     window.cancelEdit = cancelEdit;
