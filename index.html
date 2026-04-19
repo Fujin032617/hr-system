@@ -100,11 +100,11 @@
         <div class="flex-center">
             <span id="userRoleBadge" class="role-badge"></span>
             <span><i class="fas fa-user"></i> <span id="userNameDisplay"></span> (<span id="userDeptDisplay"></span>)</span>
-            <div id="notificationBell" style="position:relative; cursor:pointer;" onclick="toggleNotifications()">
+            <div id="notificationBell" style="position:relative; cursor:pointer;" onclick="window.toggleNotifications()">
                 <i class="fas fa-bell" style="font-size:1.2rem;"></i>
                 <span id="notificationBadge" class="badge hidden">0</span>
             </div>
-            <div id="mailIcon" style="position:relative; cursor:pointer;" onclick="toggleInbox()">
+            <div id="mailIcon" style="position:relative; cursor:pointer;" onclick="window.toggleInbox()">
                 <i class="fas fa-envelope" style="font-size:1.2rem;"></i>
                 <span id="mailBadge" class="badge hidden">0</span>
             </div>
@@ -134,10 +134,11 @@
 </div>
 
 <script>
-    // ========== SUPABASE CONFIGURATION ==========
+(function() {
+    // ========== SUPABASE CONFIGURATION (unique name to avoid conflicts) ==========
     const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null, currentProfile = null, activeTab = "dashboard";
     let allEmployees = [], allLeaveRequests = [], allAttendances = [], allSchedules = [], allAuditLogs = [], allNotifications = [];
@@ -155,26 +156,26 @@
 
     async function addAuditLog(action, details) {
         if (!currentUser) return;
-        await supabase.from('audit_logs').insert([{ user_id: currentUser.id, action, details, created_at: new Date() }]);
+        await _supabase.from('audit_logs').insert([{ user_id: currentUser.id, action, details, created_at: new Date() }]);
     }
 
     async function addNotification(userId, title, message) {
-        await supabase.from('notifications').insert([{ user_id: userId, title, message, read: false, created_at: new Date() }]);
+        await _supabase.from('notifications').insert([{ user_id: userId, title, message, read: false, created_at: new Date() }]);
     }
 
     async function fetchAllData() {
         if (!currentUser) return;
-        const { data: profiles } = await supabase.from('profiles').select('*');
+        const { data: profiles } = await _supabase.from('profiles').select('*');
         allEmployees = profiles || [];
-        const { data: leaves } = await supabase.from('leave_requests').select('*');
+        const { data: leaves } = await _supabase.from('leave_requests').select('*');
         allLeaveRequests = leaves || [];
-        const { data: attend } = await supabase.from('attendances').select('*');
+        const { data: attend } = await _supabase.from('attendances').select('*');
         allAttendances = attend || [];
-        const { data: sched } = await supabase.from('employee_schedules').select('*');
+        const { data: sched } = await _supabase.from('employee_schedules').select('*');
         allSchedules = sched || [];
-        const { data: logs } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
+        const { data: logs } = await _supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
         allAuditLogs = logs || [];
-        const { data: notifs } = await supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        const { data: notifs } = await _supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
         allNotifications = notifs || [];
         unreadNotif = allNotifications.filter(n => !n.read).length;
         updateBadges();
@@ -277,12 +278,12 @@
             <button id="newLeaveBtn" class="btn btn-primary" style="margin-top:10px;">+ Request Leave</button>
         `;
         document.getElementById('clockInBtn')?.addEventListener('click', async () => {
-            const { error } = await supabase.from('attendances').upsert({ user_id: currentUser.id, date: today, clock_in: new Date().toISOString(), status_code: 'Present' }, { onConflict: 'user_id,date' });
+            const { error } = await _supabase.from('attendances').upsert({ user_id: currentUser.id, date: today, clock_in: new Date().toISOString(), status_code: 'Present' }, { onConflict: 'user_id,date' });
             if (error) showToast(error.message, "error"); else showToast("Clocked in", "success");
             loadMainContent();
         });
         document.getElementById('clockOutBtn')?.addEventListener('click', async () => {
-            const { error } = await supabase.from('attendances').update({ clock_out: new Date().toISOString() }).eq('user_id', currentUser.id).eq('date', today);
+            const { error } = await _supabase.from('attendances').update({ clock_out: new Date().toISOString() }).eq('user_id', currentUser.id).eq('date', today);
             if (error) showToast(error.message, "error"); else showToast("Clocked out", "success");
             loadMainContent();
         });
@@ -296,7 +297,7 @@
             document.getElementById('myScheduleInfo').innerHTML = '<p>No schedule set for this month. Contact HR.</p>';
         }
         const myAttendances = allAttendances.filter(a => a.user_id === currentUser.id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,7);
-        const recentHtml = `<tr><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${myAttendances.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table>`;
+        const recentHtml = `<table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${myAttendances.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table>`;
         document.getElementById('recentTable').innerHTML = recentHtml;
     }
 
@@ -338,7 +339,7 @@
                     else if (status === 'Sick Leave') statusClass = 'status-SL';
                     else if (status === 'Vacation Leave') statusClass = 'status-VL';
                     else if (status === 'Rest Day') statusClass = 'status-RD';
-                    html += `<td class="attendance-cell ${statusClass}" onclick="editAttendance('${emp.id}','${dateStr}')">${status === 'Present' ? 'P' : (status === 'Absent' ? 'A' : (status === 'Sick Leave' ? 'SL' : (status === 'Vacation Leave' ? 'VL' : 'RD')))}${lateMins>0?`<span class="late-badge">${lateMins}m</span>`:''}</td>`;
+                    html += `<td class="attendance-cell ${statusClass}" onclick="window.editAttendance('${emp.id}','${dateStr}')">${status === 'Present' ? 'P' : (status === 'Absent' ? 'A' : (status === 'Sick Leave' ? 'SL' : (status === 'Vacation Leave' ? 'VL' : 'RD')))}${lateMins>0?`<span class="late-badge">${lateMins}m</span>`:''}</td>`;
                 }
                 html += `<td class="total-lates-col">${totalLates}</td></tr>`;
             }
@@ -356,7 +357,7 @@
                 else if (newStatus === 'RD') statusText = 'Rest Day';
                 else return;
                 const late = prompt("Late minutes (0 if none)","0");
-                const { error } = await supabase.from('attendances').upsert({ user_id: userId, date, status_code: statusText, late_minutes: parseInt(late)||0 }, { onConflict: 'user_id,date' });
+                const { error } = await _supabase.from('attendances').upsert({ user_id: userId, date, status_code: statusText, late_minutes: parseInt(late)||0 }, { onConflict: 'user_id,date' });
                 if (error) showToast(error.message, "error"); else showToast("Attendance updated");
                 loadMatrix();
                 addAuditLog(`Edit attendance for ${userId} on ${date} to ${statusText}`);
@@ -394,10 +395,10 @@
         const myLeaves = allLeaveRequests.filter(l => l.user_id === currentUser.id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
         container.innerHTML = `<div class="card"><h3>My Leave Requests</h3><button id="newReqBtn" class="btn btn-primary">+ New Request</button><div id="leaveList"></div></div>`;
         document.getElementById('newReqBtn')?.addEventListener('click', () => showLeaveForm());
-        const listHtml = `<table><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Working Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>${myLeaves.map(l => `<tr><td>${l.leave_type}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.working_days||1}</td><td>${l.reason}</td><td>${l.status}</td><td>${l.status === 'pending' ? `<button class="btn btn-danger btn-small" onclick="cancelLeaveReq('${l.id}')">Cancel</button>` : '-'}</td></tr>`).join('')}</tbody></table>`;
+        const listHtml = `<tr><thead><tr><th>Type</th><th>Start</th><th>End</th><th>Working Days</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>${myLeaves.map(l => `<tr><td>${l.leave_type}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.working_days||1}</td><td>${l.reason}</td><td>${l.status}</td><td>${l.status === 'pending' ? `<button class="btn btn-danger btn-small" onclick="window.cancelLeaveReq('${l.id}')">Cancel</button>` : '-'}</td></tr>`).join('')}</tbody></table>`;
         document.getElementById('leaveList').innerHTML = listHtml;
         window.cancelLeaveReq = async (id) => {
-            const { error } = await supabase.from('leave_requests').update({ status: 'cancelled' }).eq('id', id);
+            const { error } = await _supabase.from('leave_requests').update({ status: 'cancelled' }).eq('id', id);
             if (error) showToast(error.message, "error"); else showToast("Leave cancelled");
             loadMainContent();
         };
@@ -421,7 +422,7 @@
             const reason = document.getElementById('reason').value;
             if (!start_date) return showToast("Select dates");
             const workingDays = calcWorkingDays(start_date, end_date, currentUser.id);
-            const { error } = await supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type, start_date, end_date, reason, status: 'pending', working_days: workingDays }]);
+            const { error } = await _supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type, start_date, end_date, reason, status: 'pending', working_days: workingDays }]);
             if (error) showToast(error.message, "error");
             else {
                 showToast("Request submitted");
@@ -462,7 +463,7 @@
         </div>`;
         const loadSched = async () => {
             const month = parseInt(document.getElementById('schedMonth').value);
-            let html = `<table><thead><tr><th>Employee</th><th>Working Days</th><th>Time Slot</th><th>Rest Day 1</th><th>Rest Day 2</th><th>Shift</th>${currentProfile.role !== 'Employee' ? '<th>Action</th>' : ''}</tr></thead><tbody>`;
+            let html = `<tr><thead><tr><th>Employee</th><th>Working Days</th><th>Time Slot</th><th>Rest Day 1</th><th>Rest Day 2</th><th>Shift</th>${currentProfile.role !== 'Employee' ? '<th>Action</th>' : ''}</tr></thead><tbody>`;
             for (const emp of allEmployees) {
                 let sched = allSchedules.find(s => s.user_id === emp.id && s.month === month);
                 if (!sched) sched = { working_days: 'Mon-Fri', time_slot: '9AM-6PM', rest_day1: 'Sunday', rest_day2: 'Saturday' };
@@ -488,7 +489,7 @@
                     const time_slot = row.querySelector('.ts').value;
                     const rest_day1 = row.querySelector('.r1').value;
                     const rest_day2 = row.querySelector('.r2').value;
-                    const { error } = await supabase.from('employee_schedules').upsert({ user_id: userId, month, working_days, time_slot, rest_day1, rest_day2 }, { onConflict: 'user_id,month' });
+                    const { error } = await _supabase.from('employee_schedules').upsert({ user_id: userId, month, working_days, time_slot, rest_day1, rest_day2 }, { onConflict: 'user_id,month' });
                     if (error) showToast(error.message, "error"); else showToast("Schedule saved");
                     addAuditLog(`Updated schedule for ${userId} month ${month}`);
                     loadSched();
@@ -517,24 +518,24 @@
                     <td><select id="role_${emp.id}"><option ${emp.role==='Employee'?'selected':''}>Employee</option><option ${emp.role==='OPS'?'selected':''}>OPS</option><option ${emp.role==='Admin'?'selected':''}>Admin</option><option ${emp.role==='HR'?'selected':''}>HR</option></select></td>
                     <td><input type="number" id="sl_${emp.id}" value="${emp.sl_balance||15}" style="width:60px;"></td>
                     <td><input type="number" id="vl_${emp.id}" value="${emp.vl_balance||15}" style="width:60px;"></td>
-                    <td><button class="btn btn-small" onclick="updateEmp('${emp.id}')">Update</button> <button class="btn btn-danger btn-small" onclick="deleteEmp('${emp.id}')">Delete</button></td>
+                    <td><button class="btn btn-small" onclick="window.updateEmp('${emp.id}')">Update</button> <button class="btn btn-danger btn-small" onclick="window.deleteEmp('${emp.id}')">Delete</button></td>
                 </tr>`;
             }
-            html += `</tbody></table>`;
+            html += `</tbody><table>`;
             document.getElementById('empList').innerHTML = html;
             window.updateEmp = async (id) => {
                 const department = document.getElementById(`dept_${id}`).value;
                 const role = document.getElementById(`role_${id}`).value;
                 const sl = parseInt(document.getElementById(`sl_${id}`).value);
                 const vl = parseInt(document.getElementById(`vl_${id}`).value);
-                const { error } = await supabase.from('profiles').update({ department, role, sl_balance: sl, vl_balance: vl }).eq('id', id);
+                const { error } = await _supabase.from('profiles').update({ department, role, sl_balance: sl, vl_balance: vl }).eq('id', id);
                 if (error) showToast(error.message, "error"); else showToast("Updated");
                 addAuditLog(`Updated employee ${id}`);
                 loadMainContent();
             };
             window.deleteEmp = async (id) => {
                 if (!confirm("Delete employee? This will also delete their attendance and leave records.")) return;
-                const { error } = await supabase.from('profiles').delete().eq('id', id);
+                const { error } = await _supabase.from('profiles').delete().eq('id', id);
                 if (error) showToast(error.message, "error"); else showToast("Deleted");
                 loadMainContent();
             };
@@ -572,44 +573,44 @@
         if (inboxDiv) {
             inboxDiv.innerHTML = pending.map(l => {
                 const emp = allEmployees.find(e=>e.id===l.user_id);
-                return `<div class="leave-item"><strong>${emp?.full_name}</strong> (${l.leave_type})<br>${l.start_date} to ${l.end_date}<br>Reason: ${l.reason}<div><button onclick="approveLeaveReq('${l.id}')" class="btn btn-success btn-small">Approve</button> <button onclick="rejectLeaveReq('${l.id}')" class="btn btn-danger btn-small">Reject</button></div></div>`;
+                return `<div class="leave-item"><strong>${emp?.full_name}</strong> (${l.leave_type})<br>${l.start_date} to ${l.end_date}<br>Reason: ${l.reason}<div><button onclick="window.approveLeaveReq('${l.id}')" class="btn btn-success btn-small">Approve</button> <button onclick="window.rejectLeaveReq('${l.id}')" class="btn btn-danger btn-small">Reject</button></div></div>`;
             }).join('');
         }
         window.approveLeaveReq = async (id) => {
-            const { error } = await supabase.from('leave_requests').update({ status: 'approved' }).eq('id', id);
+            const { error } = await _supabase.from('leave_requests').update({ status: 'approved' }).eq('id', id);
             if (error) showToast(error.message, "error"); else showToast("Approved");
             loadMainContent();
         };
         window.rejectLeaveReq = async (id) => {
-            const { error } = await supabase.from('leave_requests').update({ status: 'rejected' }).eq('id', id);
+            const { error } = await _supabase.from('leave_requests').update({ status: 'rejected' }).eq('id', id);
             if (error) showToast(error.message, "error"); else showToast("Rejected");
             loadMainContent();
         };
     }
 
-    function toggleInbox() {
+    window.toggleInbox = function() {
         const modal = document.getElementById('inboxModal');
         modal.classList.toggle('hidden');
         updateInbox();
-    }
-    async function toggleNotifications() {
+    };
+    window.toggleNotifications = async function() {
         const modal = document.getElementById('notifModal');
         modal.classList.toggle('hidden');
         const notifDiv = document.getElementById('notifContent');
         notifDiv.innerHTML = allNotifications.map(n => `<div><b>${n.title}</b><br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></div>`).join('');
-        const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id).eq('read', false);
+        const { error } = await _supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id).eq('read', false);
         if (!error) {
             unreadNotif = 0;
             updateBadges();
         }
-    }
+    };
 
     async function initApp() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await _supabase.auth.getSession();
         if (!session) { document.getElementById('loginSection').style.display = 'flex'; document.getElementById('appContainer').style.display = 'none'; return; }
         currentUser = session.user;
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-        if (!profile) { await supabase.auth.signOut(); location.reload(); return; }
+        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+        if (!profile) { await _supabase.auth.signOut(); location.reload(); return; }
         currentProfile = profile;
         document.getElementById('userRoleBadge').innerHTML = currentProfile.role;
         document.getElementById('userNameDisplay').innerHTML = currentProfile.full_name;
@@ -624,7 +625,7 @@
 
     document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value, password = document.getElementById('loginPassword').value;
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) showToast(error.message, "error");
         else { showToast("Login success"); initApp(); addAuditLog("Login"); }
     };
@@ -632,13 +633,14 @@
     document.getElementById('doSignup').onclick = async () => {
         const email = document.getElementById('signupEmail').value, password = document.getElementById('signupPassword').value, full_name = document.getElementById('signupName').value, department = document.getElementById('signupDept').value;
         if (password.length < 6) return showToast("Password must be at least 6 characters");
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name, department, role: 'Employee', sl_balance: 15, vl_balance: 15 } } });
+        const { error } = await _supabase.auth.signUp({ email, password, options: { data: { full_name, department, role: 'Employee', sl_balance: 15, vl_balance: 15 } } });
         if (error) showToast(error.message, "error");
         else { showToast("Account created! Please login."); document.getElementById('signupForm').style.display = 'none'; }
     };
-    document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
-    supabase.auth.onAuthStateChange(() => initApp());
+    document.getElementById('logoutBtn').onclick = async () => { await _supabase.auth.signOut(); location.reload(); };
+    _supabase.auth.onAuthStateChange(() => initApp());
     initApp();
+})();
 </script>
 </body>
 </html>
