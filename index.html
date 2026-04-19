@@ -2,441 +2,285 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>HR Nexus | Enterprise HR Suite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Nexus</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #f4f7fc; color: #1e293b; }
-        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f2b3d 0%, #1b4a6e 100%); padding: 1rem; }
-        .login-card { background: white; border-radius: 32px; padding: 2rem; width: 100%; max-width: 440px; box-shadow: 0 25px 45px -12px rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f0f4f8; }
+        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f, #0f2b3d); }
+        .login-card { background: white; border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; box-shadow: 0 20px 35px rgba(0,0,0,0.2); }
         .app-wrapper { display: none; }
-        .app-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        .logo { font-weight: 800; font-size: 1.5rem; background: linear-gradient(135deg, #1e4a76, #0f2b3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .role-badge { background: #eef2ff; padding: 0.3rem 0.8rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
-        .main-layout { display: flex; min-height: calc(100vh - 72px); }
-        .sidebar { width: 270px; background: white; border-right: 1px solid #e2e8f0; padding: 1.5rem 0; }
-        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 0.75rem 1.8rem; color: #334155; text-decoration: none; font-weight: 500; transition: 0.2s; margin: 0.2rem 0; }
-        .sidebar nav a i { width: 24px; }
-        .sidebar nav a.active, .sidebar nav a:hover { background: #eef2ff; color: #1e4a76; border-left: 4px solid #1e4a76; }
-        .content-area { flex: 1; padding: 2rem; overflow-x: auto; }
-        .card { background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e9eef3; margin-bottom: 1.5rem; }
-        .btn { padding: 0.5rem 1.2rem; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; background: #f1f5f9; transition: 0.2s; }
-        .btn-primary { background: #1e4a76; color: white; }
-        .btn-primary:hover { background: #0f3b5c; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-success { background: #10b981; color: white; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #ccc; }
+        button { background: #1e4a76; color: white; font-weight: bold; cursor: pointer; border: none; }
+        button:hover { background: #0f3b5c; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px; z-index: 999; }
+        .card { background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; }
-        .status-present { background: #d1fae5; color: #065f46; }
-        .status-absent { background: #fee2e2; color: #991b1b; }
-        .toast-msg { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px; z-index: 999; font-size: 0.85rem; }
-        .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; align-items: center; }
-        select, input, textarea { padding: 8px 12px; border-radius: 12px; border: 1px solid #cbd5e1; }
-        @media (max-width: 768px) { .main-layout { flex-direction: column; } .sidebar { width: 100%; } .sidebar nav { display: flex; flex-wrap: wrap; } .sidebar nav a { padding: 0.5rem 1rem; } .content-area { padding: 1rem; } }
-        .active-user-card { background: #f0fdf4; border-left: 4px solid #22c55e; margin-bottom: 0.5rem; padding: 0.8rem; border-radius: 16px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        .sidebar { width: 260px; background: white; border-right: 1px solid #e2e8f0; padding: 1rem; }
+        .sidebar a { display: block; padding: 10px 16px; margin: 4px 0; color: #1e293b; text-decoration: none; border-radius: 12px; }
+        .sidebar a:hover { background: #eef2ff; }
+        .main-layout { display: flex; }
+        .content-area { flex: 1; padding: 1.5rem; }
+        .header { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        @media (max-width: 768px) { .main-layout { flex-direction: column; } .sidebar { width: 100%; } }
     </style>
 </head>
 <body>
+
+<!-- LOGIN SECTION -->
 <div id="loginSection" class="login-container">
     <div class="login-card">
-        <h2>HR Nexus</h2>
-        <p>Sign in to your account</p>
-        <input type="email" id="loginEmail" placeholder="Email" style="width:100%; margin-bottom: 1rem; padding:12px;">
-        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; margin-bottom: 1.5rem; padding:12px;">
-        <button id="loginBtn" class="btn btn-primary" style="width:100%;">Login</button>
-        <p style="margin-top: 1rem; text-align:center;">
-            <a href="#" id="showSignupLink">Create new account</a>
+        <h2 style="margin-bottom: 1rem;">HR Nexus</h2>
+        <input type="email" id="email" placeholder="Email" value="debug@example.com">
+        <input type="password" id="password" placeholder="Password" value="123456">
+        <button id="loginBtn">Login</button>
+        <p style="margin-top: 1rem; text-align:center; font-size:0.8rem;">
+            <a href="#" id="showSignup">Create account</a>
         </p>
-        <div id="signupForm" style="display:none; margin-top: 1rem;">
-            <input type="text" id="signupName" placeholder="Full Name" style="width:100%; margin-bottom:0.8rem;">
-            <input type="email" id="signupEmail" placeholder="Email" style="width:100%; margin-bottom:0.8rem;">
-            <input type="text" id="signupDept" placeholder="Department" style="width:100%; margin-bottom:0.8rem;">
-            <input type="password" id="signupPassword" placeholder="Password" style="width:100%; margin-bottom:0.8rem;">
-            <button id="doSignup" class="btn btn-primary" style="width:100%;">Register</button>
+        <div id="signupForm" style="display: none; margin-top: 1rem;">
+            <input type="text" id="fullname" placeholder="Full Name">
+            <input type="email" id="newEmail" placeholder="Email">
+            <input type="text" id="dept" placeholder="Department">
+            <input type="password" id="newPassword" placeholder="Password">
+            <button id="signupBtn">Register</button>
         </div>
-        <p style="margin-top: 1rem; text-align:center; font-size:0.7rem; color:#64748b;">
-            Demo: debug@example.com / 123456
-        </p>
+        <div id="loginError" style="color: red; margin-top: 0.5rem; font-size: 0.8rem;"></div>
     </div>
 </div>
 
+<!-- MAIN APP (hidden until login) -->
 <div id="appContainer" class="app-wrapper">
-    <div class="app-header">
-        <div class="logo"><i class="fas fa-building"></i> HR Nexus</div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <span id="userRoleBadge" class="role-badge"></span>
-            <span><i class="fas fa-user"></i> <span id="userNameDisplay"></span> (<span id="userDeptDisplay"></span>)</span>
-            <button id="logoutBtn" class="btn">Logout</button>
-        </div>
+    <div class="header">
+        <div style="font-size: 1.5rem; font-weight: bold;">HR Nexus</div>
+        <div><span id="userName"></span> (<span id="userRole"></span>) <button id="logoutBtn">Logout</button></div>
     </div>
     <div class="main-layout">
-        <div class="sidebar">
-            <nav id="dynamicNav"></nav>
-        </div>
-        <div class="content-area" id="mainContent"></div>
+        <div class="sidebar" id="sidebar"></div>
+        <div class="content-area" id="content"></div>
     </div>
 </div>
 
 <script>
-    // ========== SUPABASE CONFIGURATION ==========
     const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentUser = null, currentProfile = null, activeTab = "dashboard";
+    let currentUser = null;
+    let currentProfile = null;
+    let currentTab = "dashboard";
 
-    function showToast(msg, type = "info") {
+    function showToast(msg) {
         const toast = document.createElement('div');
-        toast.className = "toast-msg";
-        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${msg}`;
+        toast.className = "toast";
+        toast.innerText = msg;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
 
-    async function addAuditLog(action, details) {
-        if (!currentUser) return;
-        try {
-            await sb.from('audit_logs').insert([{ user_id: currentUser.id, action, details, created_at: new Date() }]);
-        } catch(e) { console.warn(e); }
-    }
-
-    async function addNotification(userId, title, message) {
-        try {
-            await sb.from('notifications').insert([{ user_id: userId, title, message, type: 'info', read: false, created_at: new Date() }]);
-        } catch(e) { console.warn(e); }
-    }
-
-    async function fetchProfile(userId) {
-        const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+    async function loadProfile(userId) {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if (error) {
-            console.error("Profile fetch error:", error);
+            console.error("Profile error", error);
             return null;
         }
         return data;
     }
 
-    function renderNav() {
-        const role = currentProfile?.role;
-        let items = [{ id: 'dashboard', icon: 'tachometer-alt', label: 'Dashboard' }];
-        items.push({ id: 'attendance', icon: 'calendar-check', label: 'Attendance Tracker' });
-        items.push({ id: 'leaverequests', icon: 'envelope-open-text', label: 'Leave Requests' });
-        items.push({ id: 'directory', icon: 'users', label: 'Employee Directory' });
-        items.push({ id: 'calendarview', icon: 'calendar-alt', label: 'Company Calendar' });
-        if (role === 'OPS' || role === 'Admin' || role === 'HR') items.push({ id: 'activenow', icon: 'user-clock', label: 'Active Now' });
-        if (role === 'OPS' || role === 'Admin' || role === 'HR') items.push({ id: 'masterschedule', icon: 'clock', label: 'Master Schedules' });
-        if (role === 'Admin' || role === 'HR') items.push({ id: 'manageemployees', icon: 'user-edit', label: 'Manage Employees' });
-        if (role === 'Admin' || role === 'HR' || role === 'OPS') items.push({ id: 'auditlogs', icon: 'history', label: 'Audit Logs' });
-        items.push({ id: 'notifications', icon: 'bell', label: 'Notifications' });
-        const navDiv = document.getElementById('dynamicNav');
-        navDiv.innerHTML = items.map(item => `<a href="#" data-tab="${item.id}"><i class="fas fa-${item.icon}"></i> ${item.label}</a>`).join('');
-        document.querySelectorAll('[data-tab]').forEach(link => {
-            link.addEventListener('click', (e) => { e.preventDefault(); activeTab = link.dataset.tab; loadMainContent(); });
-        });
-    }
-
-    async function loadMainContent() {
-        const contentDiv = document.getElementById('mainContent');
-        if (activeTab === 'dashboard') await renderDashboard(contentDiv);
-        else if (activeTab === 'attendance') await renderAttendanceTracker(contentDiv);
-        else if (activeTab === 'leaverequests') await renderLeaveRequests(contentDiv);
-        else if (activeTab === 'directory') await renderEmployeeDirectory(contentDiv);
-        else if (activeTab === 'masterschedule') await renderMasterSchedule(contentDiv);
-        else if (activeTab === 'calendarview') await renderCompanyCalendar(contentDiv);
-        else if (activeTab === 'auditlogs') await renderAuditLogs(contentDiv);
-        else if (activeTab === 'notifications') await renderNotifications(contentDiv);
-        else if (activeTab === 'activenow') await renderActiveNow(contentDiv);
-        else if (activeTab === 'manageemployees') await renderManageEmployees(contentDiv);
-    }
-
-    async function renderDashboard(container) {
-        const today = new Date().toISOString().slice(0,10);
-        const { data: attend } = await sb.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
-        const isClockedIn = attend && attend.clock_in && !attend.clock_out;
-        const clockInTime = attend?.clock_in ? new Date(attend.clock_in).toLocaleTimeString() : null;
-        container.innerHTML = `
-            <div class="card"><h2><i class="fas fa-clock"></i> Time Tracking</h2>
-            <div><strong>${isClockedIn ? '✅ Clocked In at ' + clockInTime : '⏰ Not clocked in today'}</strong>
-            <button id="clockInBtn" class="btn btn-primary" ${isClockedIn ? 'disabled' : ''}>Clock In</button>
-            <button id="clockOutBtn" class="btn" ${!isClockedIn ? 'disabled' : ''}>Clock Out</button>
-            </div></div>
-            <div class="card"><h3>My Recent Attendance</h3><div id="recentAttendanceTable"></div></div>
-        `;
-        document.getElementById('clockInBtn')?.addEventListener('click', async () => {
-            const now = new Date();
-            await sb.from('attendances').insert([{ user_id: currentUser.id, date: today, clock_in: now.toISOString(), status_code: 'Present' }]);
-            showToast('Clocked in', 'success'); addAuditLog('Clock In', ''); loadMainContent();
-        });
-        document.getElementById('clockOutBtn')?.addEventListener('click', async () => {
-            const now = new Date();
-            await sb.from('attendances').update({ clock_out: now.toISOString() }).eq('user_id', currentUser.id).eq('date', today);
-            showToast('Clocked out', 'success'); addAuditLog('Clock Out', ''); loadMainContent();
-        });
-        const { data: lastDays } = await sb.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(7);
-        const tableHtml = `<table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${lastDays?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code || 'Present'}</td></tr>`).join('') || '<tr><td colspan="4">No records</td></tr>'}</table>`;
-        document.getElementById('recentAttendanceTable').innerHTML = tableHtml;
-    }
-
-    async function renderActiveNow(container) {
-        const today = new Date().toISOString().slice(0,10);
-        const { data: active } = await sb
-            .from('attendances')
-            .select('user_id, clock_in, profiles!inner(full_name, department, role)')
-            .eq('date', today)
-            .not('clock_in', 'is', null)
-            .is('clock_out', null);
-        container.innerHTML = `<div class="card"><h3><i class="fas fa-user-check"></i> Active Now (Clocked In)</h3>${active?.length ? active.map(a => `<div class="active-user-card"><strong>${a.profiles.full_name}</strong> (${a.profiles.role}) - ${a.profiles.department || 'General'}<br><small>Since ${new Date(a.clock_in).toLocaleTimeString()}</small></div>`).join('') : '<p>No one is currently clocked in.</p>'}</div>`;
-    }
-
-    async function renderAttendanceTracker(container) {
-        const role = currentProfile?.role;
-        let users = [{ id: currentUser.id, full_name: currentProfile.full_name }];
-        if (role === 'HR') {
-            const { data } = await sb.from('profiles').select('id, full_name');
-            if (data) users = data;
-        } else if (role === 'Admin' || role === 'OPS') {
-            const { data } = await sb.from('profiles').select('id, full_name').eq('department', currentProfile.department);
-            if (data) users = data;
-        }
-        const selectedUserId = users.length>1 ? `<select id="attUserSelect">${users.map(u => `<option value="${u.id}">${u.full_name}</option>`).join('')}</select>` : '';
-        container.innerHTML = `<div class="card"><h3>Attendance Tracker</h3><div class="filter-bar">${selectedUserId}<input type="month" id="attMonth" value="${new Date().toISOString().slice(0,7)}"><button id="exportExcelBtn" class="btn btn-primary"><i class="fas fa-file-excel"></i> Export Excel</button></div><div id="attTableContainer"></div></div>`;
-        const loadAttendance = async () => {
-            const userId = document.getElementById('attUserSelect')?.value || currentUser.id;
-            const month = document.getElementById('attMonth').value;
-            const [year, monthNum] = month.split('-');
-            const startDate = `${year}-${monthNum}-01`;
-            const endDate = new Date(year, monthNum, 0).toISOString().slice(0,10);
-            const { data: attendances } = await sb.from('attendances').select('*').eq('user_id', userId).gte('date', startDate).lte('date', endDate);
-            const { data: leaves } = await sb.from('leave_requests').select('*').eq('user_id', userId).eq('status', 'approved').gte('start_date', startDate).lte('end_date', endDate);
-            const dates = [];
-            let d = new Date(startDate);
-            while (d <= new Date(endDate)) { dates.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
-            const rows = dates.map(date => {
-                const attendance = attendances?.find(a => a.date === date);
-                const leave = leaves?.find(l => date >= l.start_date && date <= l.end_date);
-                let status = attendance?.clock_in ? 'Present' : (leave ? (leave.leave_type === 'Sick' ? 'Sick Leave' : 'Vacation Leave') : 'Absent');
-                return `<tr><td>${date}</td><td><span class="status-badge ${status === 'Present' ? 'status-present' : 'status-absent'}">${status}</span></td><td>${attendance?.clock_in ? new Date(attendance.clock_in).toLocaleTimeString() : '-'}</td><td>${attendance?.clock_out ? new Date(attendance.clock_out).toLocaleTimeString() : '-'}</td></tr>`;
-            });
-            document.getElementById('attTableContainer').innerHTML = `<table><thead><tr><th>Date</th><th>Status</th><th>Clock In</th><th>Clock Out</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-            document.getElementById('exportExcelBtn').onclick = () => {
-                const wsData = [["Date","Status","Clock In","Clock Out"]];
-                dates.forEach((date,i) => { wsData.push([date, rows[i].match(/<span[^>]*>([^<]+)<\/span>/)?.[1] || '', rows[i].split('</td>')[2]?.replace(/<[^>]*>/g, '') || '', rows[i].split('</td>')[3]?.replace(/<[^>]*>/g, '') || '']); });
-                const ws = XLSX.utils.aoa_to_sheet(wsData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Attendance"); XLSX.writeFile(wb, `attendance_${month}.xlsx`);
-            };
-        };
-        document.getElementById('attUserSelect')?.addEventListener('change', loadAttendance);
-        document.getElementById('attMonth')?.addEventListener('change', loadAttendance);
-        await loadAttendance();
-    }
-
-    async function renderLeaveRequests(container) {
-        const role = currentProfile?.role;
-        const isApprover = role === 'HR' || role === 'Admin' || role === 'OPS';
-        let html = `<div class="card"><h3>Leave Requests</h3>${!isApprover ? '<button id="newLeaveBtn" class="btn btn-primary">+ New Request</button>' : ''}<div id="leaveList"></div></div>`;
-        container.innerHTML = html;
-        const fetchLeaves = async () => {
-            let query = sb.from('leave_requests').select(`*, profiles!leave_requests_user_id_fkey(full_name, department, role)`);
-            if (!isApprover) query = query.eq('user_id', currentUser.id);
-            const { data } = await query.order('created_at', { ascending: false });
-            const canApprove = (leave) => {
-                if (role === 'HR') return true;
-                if (role === 'Admin') return leave.profiles.department === currentProfile.department && (leave.profiles.role === 'Employee' || leave.profiles.role === 'OPS');
-                if (role === 'OPS') return leave.profiles.department === currentProfile.department && leave.profiles.role === 'Employee';
-                return false;
-            };
-            const listHtml = `<table><tr><th>Employee</th><th>Dept</th><th>Type</th><th>Dates</th><th>Reason</th><th>Status</th>${isApprover ? '<th>Action</th>' : ''}</tr>${data?.map(l => `<tr><td>${l.profiles.full_name}</td><td>${l.profiles.department || '-'}</td><td>${l.leave_type}</td><td>${l.start_date} → ${l.end_date}</td><td>${l.reason}</td><td><span class="status-badge">${l.status}</span></td>${isApprover ? `<td>${canApprove(l) && l.status === 'pending' ? `<button data-id="${l.id}" class="approveLeave btn btn-success btn-sm">Approve</button> <button data-id="${l.id}" class="rejectLeave btn btn-danger btn-sm">Deny</button>` : (l.status === 'pending' ? 'Unauthorized' : '—')}</td>` : ''}</tr>`).join('')}</table>`;
-            document.getElementById('leaveList').innerHTML = listHtml;
-            document.querySelectorAll('.approveLeave').forEach(btn => btn.addEventListener('click', async (e) => {
-                const id = btn.dataset.id;
-                await sb.from('leave_requests').update({ status: 'approved' }).eq('id', id);
-                const { data: req } = await sb.from('leave_requests').select('user_id').eq('id', id).single();
-                if(req) await addNotification(req.user_id, "Leave Approved", "Your leave request has been approved");
-                showToast('Approved'); fetchLeaves(); addAuditLog('Approve Leave', `Request ${id}`);
-            }));
-            document.querySelectorAll('.rejectLeave').forEach(btn => btn.addEventListener('click', async () => {
-                const id = btn.dataset.id;
-                await sb.from('leave_requests').update({ status: 'denied' }).eq('id', id);
-                showToast('Denied'); fetchLeaves();
-            }));
-        };
-        if (!isApprover) document.getElementById('newLeaveBtn')?.addEventListener('click', () => {
-            const modalHtml = `<div id="leaveModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;"><div class="card" style="width:400px;"><h3>Request Leave</h3><select id="leaveType"><option value="Sick">Sick Leave</option><option value="Vacation">Vacation Leave</option></select><input type="date" id="startDate"><input type="date" id="endDate"><textarea id="reason" placeholder="Reason"></textarea><div style="display:flex;gap:1rem;margin-top:1rem;"><button id="submitLeaveBtn" class="btn btn-primary">Submit</button><button id="closeModalBtn" class="btn">Cancel</button></div></div></div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            document.getElementById('submitLeaveBtn').onclick = async () => {
-                const leave_type = document.getElementById('leaveType').value;
-                const start_date = document.getElementById('startDate').value;
-                const end_date = document.getElementById('endDate').value;
-                const reason = document.getElementById('reason').value;
-                await sb.from('leave_requests').insert([{ user_id: currentUser.id, leave_type, start_date, end_date, reason, status: 'pending' }]);
-                showToast('Request submitted'); document.getElementById('leaveModal')?.remove(); fetchLeaves(); addAuditLog('Submit Leave', '');
-                const { data: managers } = await sb.from('profiles').select('id').in('role', ['HR','Admin','OPS']).eq('department', currentProfile.department);
-                managers?.forEach(m => addNotification(m.id, 'New Leave Request', `${currentProfile.full_name} requested ${leave_type}`));
-            };
-            document.getElementById('closeModalBtn').onclick = () => document.getElementById('leaveModal')?.remove();
-        });
-        await fetchLeaves();
-    }
-
-    async function renderEmployeeDirectory(container) {
-        const role = currentProfile?.role;
-        let query = sb.from('profiles').select('*');
-        if (role === 'Admin') query = query.eq('department', currentProfile.department);
-        const { data: employees } = await query;
-        container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td>${emp.department || 'General'}</td><td>${emp.role}</td></tr>`).join('')}</table></div>`;
-    }
-
-    async function renderManageEmployees(container) {
-        const role = currentProfile?.role;
-        let query = sb.from('profiles').select('*');
-        if (role === 'Admin') query = query.eq('department', currentProfile.department);
-        const { data: employees } = await query;
-        container.innerHTML = `<div class="card"><h3>Manage Employees (Add/Edit/Delete)</h3><button id="addEmpBtn" class="btn btn-primary">+ Add Employee</button><div id="empList"></div></div>`;
-        const renderList = () => {
-            const listHtml = `<table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th><tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')}</table>`;
-            document.getElementById('empList').innerHTML = listHtml;
-            document.querySelectorAll('.updateEmpBtn').forEach(btn => btn.addEventListener('click', async (e) => {
-                const id = btn.dataset.id;
-                const newDept = document.querySelector(`.deptInput[data-id="${id}"]`).value;
-                const newRole = document.querySelector(`.roleSelect[data-id="${id}"]`).value;
-                await sb.from('profiles').update({ department: newDept, role: newRole }).eq('id', id);
-                showToast('Updated'); addAuditLog('Update Employee', `${id} -> ${newRole}`);
-                renderManageEmployees(container);
-            }));
-            document.querySelectorAll('.deleteEmpBtn').forEach(btn => btn.addEventListener('click', async () => {
-                if(confirm('Delete employee?')) { await sb.from('profiles').delete().eq('id', btn.dataset.id); renderManageEmployees(container); }
-            }));
-        };
-        document.getElementById('addEmpBtn')?.addEventListener('click', () => {
-            const email = prompt("Email"); const name = prompt("Full Name"); const dept = prompt("Department");
-            if(email && name) sb.auth.admin.createUser({ email, password: 'temp123', email_confirm: true, user_metadata: { full_name: name, department: dept, role: 'Employee' } }).then(() => { showToast('User created'); renderManageEmployees(container); });
-        });
-        renderList();
-    }
-
-    async function renderMasterSchedule(container) {
-        const { data: schedules } = await sb.from('master_schedule').select('*').order('day_of_week');
-        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        container.innerHTML = `<div class="card"><h3>Master Schedule</h3><div id="scheduleForm"></div><button id="saveScheduleBtn" class="btn btn-primary">Save Changes</button></div>`;
-        let html = `<tr><tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th></tr>`;
-        schedules?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td><input type="checkbox" class="restChk" data-day="${s.day_of_week}" ${s.is_rest_day ? 'checked' : ''}></td><td><input type="time" class="startTime" data-day="${s.day_of_week}" value="${s.start_time || '09:00'}"></td><td><input type="time" class="endTime" data-day="${s.day_of_week}" value="${s.end_time || '17:00'}"></td></tr>`; });
-        document.getElementById('scheduleForm').innerHTML = html;
-        document.getElementById('saveScheduleBtn').onclick = async () => {
-            for (let s of schedules) {
-                const isRest = document.querySelector(`.restChk[data-day="${s.day_of_week}"]`).checked;
-                const start = document.querySelector(`.startTime[data-day="${s.day_of_week}"]`).value;
-                const end = document.querySelector(`.endTime[data-day="${s.day_of_week}"]`).value;
-                await sb.from('master_schedule').update({ is_rest_day: isRest, start_time: start, end_time: end }).eq('id', s.id);
-            }
-            showToast('Schedule updated'); addAuditLog('Update Schedule','');
-        };
-    }
-
-    async function renderCompanyCalendar(container) {
-        const yearMonth = new Date().toISOString().slice(0,7);
-        container.innerHTML = `<div class="card"><h3>Company Calendar</h3><input type="month" id="calMonth" value="${yearMonth}"><div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:1rem;"></div></div>`;
-        const loadCalendar = async () => {
-            const month = document.getElementById('calMonth').value; const [year, monthIdx] = month.split('-');
-            const firstDay = new Date(year, monthIdx-1, 1); const lastDay = new Date(year, monthIdx, 0);
-            const daysInMonth = lastDay.getDate(); const startWeekday = firstDay.getDay();
-            const { data: leaves } = await sb.from('leave_requests').select('*').eq('status','approved').gte('start_date', `${year}-${monthIdx}-01`).lte('end_date', `${year}-${monthIdx}-${daysInMonth}`);
-            let gridHtml = `<div style="font-weight:bold;">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>`;
-            for(let i=0;i<startWeekday;i++) gridHtml += `<div></div>`;
-            for(let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${monthIdx}-${String(d).padStart(2,'0')}`;
-                const leavesToday = leaves?.filter(l => dateStr >= l.start_date && dateStr <= l.end_date).map(l => l.leave_type).join(',');
-                gridHtml += `<div style="border:1px solid #ddd; padding:8px; border-radius:12px;"><strong>${d}</strong><br><span style="font-size:11px;">${leavesToday || 'Working'}</span></div>`;
-            }
-            document.getElementById('calendarGrid').innerHTML = gridHtml;
-        };
-        document.getElementById('calMonth')?.addEventListener('change', loadCalendar);
-        await loadCalendar();
-    }
-
-    async function renderAuditLogs(container) {
-        let query = sb.from('audit_logs').select('*, profiles!audit_logs_user_id_fkey(full_name)').order('created_at', { ascending: false }).limit(200);
-        if (currentProfile?.role === 'Admin') {
-            const { data: deptUsers } = await sb.from('profiles').select('id').eq('department', currentProfile.department);
-            const userIds = deptUsers.map(u => u.id);
-            query = query.in('user_id', userIds);
-        }
-        const { data } = await query;
-        container.innerHTML = `<div class="card"><h3>Audit Logs</h3> table <tr><th>User</th><th>Action</th><th>Details</th><th>Timestamp</th> </tr>${data?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${l.details || ''}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')} </table></div>`;
-    }
-
-    async function renderNotifications(container) {
-        const { data } = await sb.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        container.innerHTML = `<div class="card"><h3>Notifications</h3><ul>${data?.map(n => `<li style="padding:8px; border-bottom:1px solid #e2e8f0;"><b>${n.title}</b><br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></li>`).join('') || '<li>No notifications</li>'}</ul></div>`;
-        await sb.from('notifications').update({ read: true }).eq('user_id', currentUser.id);
-    }
-
-    // ========== AUTH INIT ==========
     async function initApp() {
-        const { data: { session } } = await sb.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
             document.getElementById('loginSection').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
             return;
         }
         currentUser = session.user;
-        currentProfile = await fetchProfile(currentUser.id);
+        currentProfile = await loadProfile(currentUser.id);
         if (!currentProfile) {
-            showToast("Profile missing. Please contact admin.", "error");
-            await sb.auth.signOut();
+            showToast("Profile missing – contact admin");
+            await supabase.auth.signOut();
             location.reload();
             return;
         }
-        document.getElementById('userRoleBadge').innerHTML = currentProfile.role;
-        document.getElementById('userNameDisplay').innerHTML = currentProfile.full_name;
-        document.getElementById('userDeptDisplay').innerHTML = currentProfile.department || 'General';
+        document.getElementById('userName').innerText = currentProfile.full_name;
+        document.getElementById('userRole').innerText = currentProfile.role;
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
-        renderNav();
-        activeTab = "dashboard";
-        await loadMainContent();
+        renderSidebar();
+        loadContent();
     }
 
+    function renderSidebar() {
+        const role = currentProfile?.role;
+        const links = [
+            { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+            { id: 'attendance', label: 'Attendance', icon: '📅' },
+            { id: 'leaverequests', label: 'Leave Requests', icon: '✉️' },
+            { id: 'directory', label: 'Directory', icon: '👥' },
+            { id: 'calendar', label: 'Calendar', icon: '📆' }
+        ];
+        if (role === 'OPS' || role === 'Admin' || role === 'HR') links.push({ id: 'activenow', label: 'Active Now', icon: '🟢' });
+        if (role === 'OPS' || role === 'Admin' || role === 'HR') links.push({ id: 'schedule', label: 'Schedule', icon: '⏰' });
+        if (role === 'Admin' || role === 'HR') links.push({ id: 'manage', label: 'Manage Employees', icon: '⚙️' });
+        if (role === 'Admin' || role === 'HR' || role === 'OPS') links.push({ id: 'audit', label: 'Audit Logs', icon: '📜' });
+        links.push({ id: 'notifications', label: 'Notifications', icon: '🔔' });
+        
+        const sidebar = document.getElementById('sidebar');
+        sidebar.innerHTML = links.map(link => `<a href="#" data-tab="${link.id}">${link.icon} ${link.label}</a>`).join('');
+        document.querySelectorAll('[data-tab]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentTab = a.dataset.tab;
+                loadContent();
+            });
+        });
+    }
+
+    async function loadContent() {
+        const contentDiv = document.getElementById('content');
+        if (currentTab === 'dashboard') await dashboardView(contentDiv);
+        else if (currentTab === 'attendance') await attendanceView(contentDiv);
+        else if (currentTab === 'leaverequests') await leaveView(contentDiv);
+        else if (currentTab === 'directory') await directoryView(contentDiv);
+        else if (currentTab === 'calendar') await calendarView(contentDiv);
+        else if (currentTab === 'activenow') await activeNowView(contentDiv);
+        else if (currentTab === 'schedule') await scheduleView(contentDiv);
+        else if (currentTab === 'manage') await manageView(contentDiv);
+        else if (currentTab === 'audit') await auditView(contentDiv);
+        else if (currentTab === 'notifications') await notificationsView(contentDiv);
+    }
+
+    async function dashboardView(container) {
+        const today = new Date().toISOString().slice(0,10);
+        const { data: attend } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
+        const isIn = attend && attend.clock_in && !attend.clock_out;
+        container.innerHTML = `
+            <div class="card">
+                <h2>⏱️ Time Tracking</h2>
+                <p>${isIn ? '✅ Clocked in at ' + new Date(attend.clock_in).toLocaleTimeString() : '❌ Not clocked in'}</p>
+                <button id="clockIn" class="btn" ${isIn ? 'disabled' : ''}>Clock In</button>
+                <button id="clockOut" class="btn" ${!isIn ? 'disabled' : ''}>Clock Out</button>
+            </div>
+            <div class="card"><h3>Recent Attendance</h3><div id="recentTable"></div></div>
+        `;
+        document.getElementById('clockIn')?.addEventListener('click', async () => {
+            await supabase.from('attendances').insert([{ user_id: currentUser.id, date: today, clock_in: new Date().toISOString(), status_code: 'Present' }]);
+            showToast("Clocked in");
+            dashboardView(container);
+        });
+        document.getElementById('clockOut')?.addEventListener('click', async () => {
+            await supabase.from('attendances').update({ clock_out: new Date().toISOString() }).eq('user_id', currentUser.id).eq('date', today);
+            showToast("Clocked out");
+            dashboardView(container);
+        });
+        const { data: last } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(5);
+        const tableHtml = `<table><th>Date</th><th>In</th><th>Out</th><th>Status</th></td>${last?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')} </table>`;
+        document.getElementById('recentTable').innerHTML = tableHtml;
+    }
+
+    async function attendanceView(container) {
+        const { data: list } = await supabase.from('attendances').select('*, profiles(full_name)').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(20);
+        container.innerHTML = `<div class="card"><h3>My Attendance</h3><table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${list?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table></div>`;
+    }
+
+    async function leaveView(container) {
+        const { data: leaves } = await supabase.from('leave_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        container.innerHTML = `<div class="card"><h3>My Leave Requests</h3><button id="newLeaveBtn">+ New Request</button><table><tr><th>Type</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th></tr>${leaves?.map(l => `<tr><td>${l.leave_type}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.reason}</td><td>${l.status}</td></tr>`).join('')}</table></div>`;
+        document.getElementById('newLeaveBtn')?.addEventListener('click', () => {
+            const type = prompt("Leave type (Sick/Vacation)");
+            const start = prompt("Start date (YYYY-MM-DD)");
+            const end = prompt("End date (YYYY-MM-DD)");
+            const reason = prompt("Reason");
+            if (type && start && end) supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type: type, start_date: start, end_date: end, reason, status: 'pending' }]).then(() => { showToast("Request submitted"); leaveView(container); });
+        });
+    }
+
+    async function directoryView(container) {
+        const { data: emps } = await supabase.from('profiles').select('*');
+        container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.email}</td><td>${e.department}</td><td>${e.role}</td></tr>`).join('')}</table></div>`;
+    }
+
+    async function calendarView(container) {
+        container.innerHTML = `<div class="card"><h3>Company Calendar</h3><p>Working days & leave overview (simplified)</p><div id="calGrid"></div></div>`;
+        const { data: leaves } = await supabase.from('leave_requests').select('*').eq('status', 'approved');
+        let html = "<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px;'>";
+        for (let i=1;i<=30;i++) {
+            let dateStr = `2026-04-${String(i).padStart(2,'0')}`;
+            let leaveNames = leaves?.filter(l => dateStr >= l.start_date && dateStr <= l.end_date).map(l => l.leave_type).join(',');
+            html += `<div style='border:1px solid #ccc;padding:4px;'><strong>${i}</strong><br><small>${leaveNames || 'Work'}</small></div>`;
+        }
+        html += "</div>";
+        document.getElementById('calGrid').innerHTML = html;
+    }
+
+    async function activeNowView(container) {
+        const today = new Date().toISOString().slice(0,10);
+        const { data: active } = await supabase.from('attendances').select('user_id, clock_in, profiles(full_name, department)').eq('date', today).not('clock_in', 'is', null).is('clock_out', null);
+        container.innerHTML = `<div class="card"><h3>🟢 Active Now</h3>${active?.map(a => `<p>${a.profiles.full_name} (${a.profiles.department}) since ${new Date(a.clock_in).toLocaleTimeString()}</p>`).join('') || '<p>No one clocked in</p>'}</div>`;
+    }
+
+    async function scheduleView(container) {
+        const { data: sched } = await supabase.from('master_schedule').select('*').order('day_of_week');
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        let html = `<div class="card"><h3>Master Schedule</h3><table><tr><th>Day</th><th>Rest?</th><th>Start</th><th>End</th></tr>`;
+        sched?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td>${s.is_rest_day ? 'Yes' : 'No'}</td><td>${s.start_time}</td><td>${s.end_time}</td></tr>`; });
+        html += `</table></div>`;
+        container.innerHTML = html;
+    }
+
+    async function manageView(container) {
+        const { data: emps } = await supabase.from('profiles').select('*');
+        container.innerHTML = `<div class="card"><h3>Manage Employees</h3><table><tr><th>Name</th><th>Role</th><th>Action</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.role}</td><td><button data-id="${e.id}" class="promoteBtn">Promote to HR</button></td></tr>`).join('')}</table></div>`;
+        document.querySelectorAll('.promoteBtn').forEach(btn => btn.addEventListener('click', async () => {
+            await supabase.from('profiles').update({ role: 'HR' }).eq('id', btn.dataset.id);
+            showToast("Promoted to HR");
+            manageView(container);
+        }));
+    }
+
+    async function auditView(container) {
+        const { data: logs } = await supabase.from('audit_logs').select('*, profiles(full_name)').order('created_at', { ascending: false }).limit(50);
+        container.innerHTML = `<div class="card"><h3>Audit Logs</h3><table><tr><th>User</th><th>Action</th><th>Time</th></tr>${logs?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
+    }
+
+    async function notificationsView(container) {
+        const { data: notifs } = await supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        container.innerHTML = `<div class="card"><h3>Notifications</h3><ul>${notifs?.map(n => `<li><b>${n.title}</b><br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></li>`).join('') || '<li>No notifications</li>'}</ul></div>`;
+        await supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id);
+    }
+
+    // LOGIN / SIGNUP
     document.getElementById('loginBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        if (!email || !password) { showToast("Enter email and password", "error"); return; }
-        const { error } = await sb.auth.signInWithPassword({ email, password });
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.innerText = '';
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-            showToast(error.message, "error");
+            errorDiv.innerText = error.message;
         } else {
-            showToast('Login success', 'success');
+            showToast("Welcome!");
             initApp();
-            addAuditLog('Login', 'User logged in');
         }
     };
-    document.getElementById('showSignupLink').addEventListener('click', (e) => {
+    document.getElementById('showSignup').onclick = (e) => {
         e.preventDefault();
-        const signupDiv = document.getElementById('signupForm');
-        signupDiv.style.display = signupDiv.style.display === 'none' ? 'block' : 'none';
-    });
-    document.getElementById('doSignup').addEventListener('click', async () => {
-        const email = document.getElementById('signupEmail').value.trim();
-        const password = document.getElementById('signupPassword').value;
-        const full_name = document.getElementById('signupName').value.trim();
-        const department = document.getElementById('signupDept').value.trim() || 'General';
-        if (!email || !password || !full_name) { showToast("Fill all fields", "error"); return; }
-        const { error } = await sb.auth.signUp({ email, password, options: { data: { full_name, department, role: 'Employee' } } });
-        if (error) {
-            showToast(error.message, "error");
-        } else {
-            showToast("Account created! You can now log in.", "success");
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('signupEmail').value = '';
-            document.getElementById('signupPassword').value = '';
-            document.getElementById('signupName').value = '';
-            document.getElementById('signupDept').value = '';
-        }
-    });
-    document.getElementById('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
-    sb.auth.onAuthStateChange(() => initApp());
+        const form = document.getElementById('signupForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    };
+    document.getElementById('signupBtn').onclick = async () => {
+        const email = document.getElementById('newEmail').value.trim();
+        const password = document.getElementById('newPassword').value;
+        const fullname = document.getElementById('fullname').value.trim();
+        const department = document.getElementById('dept').value.trim() || 'General';
+        if (!email || !password || !fullname) { alert("Fill all fields"); return; }
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullname, department, role: 'Employee' } } });
+        if (error) alert(error.message);
+        else { alert("Account created! You can now log in."); document.getElementById('signupForm').style.display = 'none'; }
+    };
+    document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
+    supabase.auth.onAuthStateChange(() => initApp());
     initApp();
 </script>
 </body>
