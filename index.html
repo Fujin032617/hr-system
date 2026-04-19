@@ -6,10 +6,10 @@
     <title>HR Nexus</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui; }
         body { background: #f0f4f8; }
         .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f, #0f2b3d); }
-        .login-card { background: white; border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; box-shadow: 0 20px 35px rgba(0,0,0,0.2); }
+        .login-card { background: white; border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; }
         .app-wrapper { display: none; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #ccc; }
         button { background: #1e4a76; color: white; font-weight: bold; cursor: pointer; border: none; }
@@ -32,11 +32,11 @@
 <!-- LOGIN SECTION -->
 <div id="loginSection" class="login-container">
     <div class="login-card">
-        <h2 style="margin-bottom: 1rem;">HR Nexus</h2>
+        <h2>HR Nexus</h2>
         <input type="email" id="email" placeholder="Email" value="debug@example.com">
         <input type="password" id="password" placeholder="Password" value="123456">
         <button id="loginBtn">Login</button>
-        <p style="margin-top: 1rem; text-align:center; font-size:0.8rem;">
+        <p style="margin-top: 1rem; text-align:center;">
             <a href="#" id="showSignup">Create account</a>
         </p>
         <div id="signupForm" style="display: none; margin-top: 1rem;">
@@ -46,11 +46,11 @@
             <input type="password" id="newPassword" placeholder="Password">
             <button id="signupBtn">Register</button>
         </div>
-        <div id="loginError" style="color: red; margin-top: 0.5rem; font-size: 0.8rem;"></div>
+        <div id="loginError" style="color: red; margin-top: 0.5rem;"></div>
     </div>
 </div>
 
-<!-- MAIN APP (hidden until login) -->
+<!-- MAIN APP -->
 <div id="appContainer" class="app-wrapper">
     <div class="header">
         <div style="font-size: 1.5rem; font-weight: bold;">HR Nexus</div>
@@ -63,9 +63,10 @@
 </div>
 
 <script>
+    // Use a unique variable name to avoid conflicts
     const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
     let currentProfile = null;
@@ -80,16 +81,13 @@
     }
 
     async function loadProfile(userId) {
-        const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if (error) {
-            console.error("Profile error", error);
-            return null;
-        }
+        const { data, error } = await _supabase.from('profiles').select('*').eq('id', userId).single();
+        if (error) return null;
         return data;
     }
 
     async function initApp() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await _supabase.auth.getSession();
         if (!session) {
             document.getElementById('loginSection').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
@@ -98,8 +96,8 @@
         currentUser = session.user;
         currentProfile = await loadProfile(currentUser.id);
         if (!currentProfile) {
-            showToast("Profile missing – contact admin");
-            await supabase.auth.signOut();
+            showToast("Profile missing");
+            await _supabase.auth.signOut();
             location.reload();
             return;
         }
@@ -153,57 +151,57 @@
 
     async function dashboardView(container) {
         const today = new Date().toISOString().slice(0,10);
-        const { data: attend } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
+        const { data: attend } = await _supabase.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
         const isIn = attend && attend.clock_in && !attend.clock_out;
         container.innerHTML = `
             <div class="card">
                 <h2>⏱️ Time Tracking</h2>
                 <p>${isIn ? '✅ Clocked in at ' + new Date(attend.clock_in).toLocaleTimeString() : '❌ Not clocked in'}</p>
-                <button id="clockIn" class="btn" ${isIn ? 'disabled' : ''}>Clock In</button>
-                <button id="clockOut" class="btn" ${!isIn ? 'disabled' : ''}>Clock Out</button>
+                <button id="clockIn" ${isIn ? 'disabled' : ''}>Clock In</button>
+                <button id="clockOut" ${!isIn ? 'disabled' : ''}>Clock Out</button>
             </div>
             <div class="card"><h3>Recent Attendance</h3><div id="recentTable"></div></div>
         `;
         document.getElementById('clockIn')?.addEventListener('click', async () => {
-            await supabase.from('attendances').insert([{ user_id: currentUser.id, date: today, clock_in: new Date().toISOString(), status_code: 'Present' }]);
+            await _supabase.from('attendances').insert([{ user_id: currentUser.id, date: today, clock_in: new Date().toISOString(), status_code: 'Present' }]);
             showToast("Clocked in");
             dashboardView(container);
         });
         document.getElementById('clockOut')?.addEventListener('click', async () => {
-            await supabase.from('attendances').update({ clock_out: new Date().toISOString() }).eq('user_id', currentUser.id).eq('date', today);
+            await _supabase.from('attendances').update({ clock_out: new Date().toISOString() }).eq('user_id', currentUser.id).eq('date', today);
             showToast("Clocked out");
             dashboardView(container);
         });
-        const { data: last } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(5);
-        const tableHtml = `<table><th>Date</th><th>In</th><th>Out</th><th>Status</th></td>${last?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')} </table>`;
+        const { data: last } = await _supabase.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(5);
+        const tableHtml = `<table><th>Date</th><th>In</th><th>Out</th><th>Status</th></td>${last?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table>`;
         document.getElementById('recentTable').innerHTML = tableHtml;
     }
 
     async function attendanceView(container) {
-        const { data: list } = await supabase.from('attendances').select('*, profiles(full_name)').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(20);
-        container.innerHTML = `<div class="card"><h3>My Attendance</h3><table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${list?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table></div>`;
+        const { data: list } = await _supabase.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(20);
+        container.innerHTML = `<div class="card"><h3>My Attendance</h3><table><td><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${list?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code}</td></tr>`).join('')}</table></div>`;
     }
 
     async function leaveView(container) {
-        const { data: leaves } = await supabase.from('leave_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-        container.innerHTML = `<div class="card"><h3>My Leave Requests</h3><button id="newLeaveBtn">+ New Request</button><table><tr><th>Type</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th></tr>${leaves?.map(l => `<tr><td>${l.leave_type}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.reason}</td><td>${l.status}</td></tr>`).join('')}</table></div>`;
+        const { data: leaves } = await _supabase.from('leave_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        container.innerHTML = `<div class="card"><h3>My Leave Requests</h3><button id="newLeaveBtn">+ New Request</button><table><th>Type</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th></tr>${leaves?.map(l => `<tr><td>${l.leave_type}</td><td>${l.start_date}</td><td>${l.end_date}</td><td>${l.reason}</td><td>${l.status}</td></tr>`).join('')}</table></div>`;
         document.getElementById('newLeaveBtn')?.addEventListener('click', () => {
             const type = prompt("Leave type (Sick/Vacation)");
             const start = prompt("Start date (YYYY-MM-DD)");
             const end = prompt("End date (YYYY-MM-DD)");
             const reason = prompt("Reason");
-            if (type && start && end) supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type: type, start_date: start, end_date: end, reason, status: 'pending' }]).then(() => { showToast("Request submitted"); leaveView(container); });
+            if (type && start && end) _supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type: type, start_date: start, end_date: end, reason, status: 'pending' }]).then(() => { showToast("Request submitted"); leaveView(container); });
         });
     }
 
     async function directoryView(container) {
-        const { data: emps } = await supabase.from('profiles').select('*');
-        container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.email}</td><td>${e.department}</td><td>${e.role}</td></tr>`).join('')}</table></div>`;
+        const { data: emps } = await _supabase.from('profiles').select('*');
+        container.innerHTML = `<div class="card"><h3>Employee Directory</h3></table><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.email}</td><td>${e.department}</td><td>${e.role}</td></tr>`).join('')}</table></div>`;
     }
 
     async function calendarView(container) {
-        container.innerHTML = `<div class="card"><h3>Company Calendar</h3><p>Working days & leave overview (simplified)</p><div id="calGrid"></div></div>`;
-        const { data: leaves } = await supabase.from('leave_requests').select('*').eq('status', 'approved');
+        container.innerHTML = `<div class="card"><h3>Company Calendar</h3><div id="calGrid"></div></div>`;
+        const { data: leaves } = await _supabase.from('leave_requests').select('*').eq('status', 'approved');
         let html = "<div style='display:grid;grid-template-columns:repeat(7,1fr);gap:4px;'>";
         for (let i=1;i<=30;i++) {
             let dateStr = `2026-04-${String(i).padStart(2,'0')}`;
@@ -216,53 +214,49 @@
 
     async function activeNowView(container) {
         const today = new Date().toISOString().slice(0,10);
-        const { data: active } = await supabase.from('attendances').select('user_id, clock_in, profiles(full_name, department)').eq('date', today).not('clock_in', 'is', null).is('clock_out', null);
+        const { data: active } = await _supabase.from('attendances').select('user_id, clock_in, profiles(full_name, department)').eq('date', today).not('clock_in', 'is', null).is('clock_out', null);
         container.innerHTML = `<div class="card"><h3>🟢 Active Now</h3>${active?.map(a => `<p>${a.profiles.full_name} (${a.profiles.department}) since ${new Date(a.clock_in).toLocaleTimeString()}</p>`).join('') || '<p>No one clocked in</p>'}</div>`;
     }
 
     async function scheduleView(container) {
-        const { data: sched } = await supabase.from('master_schedule').select('*').order('day_of_week');
+        const { data: sched } = await _supabase.from('master_schedule').select('*').order('day_of_week');
         const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        let html = `<div class="card"><h3>Master Schedule</h3><table><tr><th>Day</th><th>Rest?</th><th>Start</th><th>End</th></tr>`;
+        let html = `<div class="card"><h3>Master Schedule</h3></table><th>Day</th><th>Rest?</th><th>Start</th><th>End</th></tr>`;
         sched?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td>${s.is_rest_day ? 'Yes' : 'No'}</td><td>${s.start_time}</td><td>${s.end_time}</td></tr>`; });
         html += `</table></div>`;
         container.innerHTML = html;
     }
 
     async function manageView(container) {
-        const { data: emps } = await supabase.from('profiles').select('*');
-        container.innerHTML = `<div class="card"><h3>Manage Employees</h3><table><tr><th>Name</th><th>Role</th><th>Action</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.role}</td><td><button data-id="${e.id}" class="promoteBtn">Promote to HR</button></td></tr>`).join('')}</table></div>`;
+        const { data: emps } = await _supabase.from('profiles').select('*');
+        container.innerHTML = `<div class="card"><h3>Manage Employees</h3><table><th>Name</th><th>Role</th><th>Action</th></tr>${emps?.map(e => `<tr><td>${e.full_name}</td><td>${e.role}</td><td><button data-id="${e.id}" class="promoteBtn">Promote to HR</button></td></tr>`).join('')}</table></div>`;
         document.querySelectorAll('.promoteBtn').forEach(btn => btn.addEventListener('click', async () => {
-            await supabase.from('profiles').update({ role: 'HR' }).eq('id', btn.dataset.id);
+            await _supabase.from('profiles').update({ role: 'HR' }).eq('id', btn.dataset.id);
             showToast("Promoted to HR");
             manageView(container);
         }));
     }
 
     async function auditView(container) {
-        const { data: logs } = await supabase.from('audit_logs').select('*, profiles(full_name)').order('created_at', { ascending: false }).limit(50);
-        container.innerHTML = `<div class="card"><h3>Audit Logs</h3><table><tr><th>User</th><th>Action</th><th>Time</th></tr>${logs?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
+        const { data: logs } = await _supabase.from('audit_logs').select('*, profiles(full_name)').order('created_at', { ascending: false }).limit(50);
+        container.innerHTML = `<div class="card"><h3>Audit Logs</h3><table><th>User</th><th>Action</th><th>Time</th></tr>${logs?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
     }
 
     async function notificationsView(container) {
-        const { data: notifs } = await supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        const { data: notifs } = await _supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
         container.innerHTML = `<div class="card"><h3>Notifications</h3><ul>${notifs?.map(n => `<li><b>${n.title}</b><br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></li>`).join('') || '<li>No notifications</li>'}</ul></div>`;
-        await supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id);
+        await _supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id);
     }
 
-    // LOGIN / SIGNUP
+    // Event listeners
     document.getElementById('loginBtn').onclick = async () => {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('loginError');
         errorDiv.innerText = '';
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            errorDiv.innerText = error.message;
-        } else {
-            showToast("Welcome!");
-            initApp();
-        }
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) errorDiv.innerText = error.message;
+        else { showToast("Welcome!"); initApp(); }
     };
     document.getElementById('showSignup').onclick = (e) => {
         e.preventDefault();
@@ -275,12 +269,12 @@
         const fullname = document.getElementById('fullname').value.trim();
         const department = document.getElementById('dept').value.trim() || 'General';
         if (!email || !password || !fullname) { alert("Fill all fields"); return; }
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullname, department, role: 'Employee' } } });
+        const { error } = await _supabase.auth.signUp({ email, password, options: { data: { full_name: fullname, department, role: 'Employee' } } });
         if (error) alert(error.message);
         else { alert("Account created! You can now log in."); document.getElementById('signupForm').style.display = 'none'; }
     };
-    document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
-    supabase.auth.onAuthStateChange(() => initApp());
+    document.getElementById('logoutBtn').onclick = async () => { await _supabase.auth.signOut(); location.reload(); };
+    _supabase.auth.onAuthStateChange(() => initApp());
     initApp();
 </script>
 </body>
