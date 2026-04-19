@@ -2,683 +2,408 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Master Pro | Enterprise Edition</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>HR Nexus | Enterprise HR Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #1e40af; --primary-light: #3b82f6; --accent: #2563eb; --accent-hover: #1d4ed8; --header-red: #ef4444; --bg: #f1f5f9; --text-main: #1e293b; --text-light: #64748b; --card-bg: #ffffff; --green: #10b981; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); --warning: #f59e0b; --danger: #ef4444; --success: #10b981; --orange: #f97316; --purple: #8b5cf6; --cyan: #06b6d4; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; font-size: 11px; color: var(--text-main); line-height: 1.6; }
-        header { background: var(--primary); padding: 0 40px; height: 60px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo-box { background: var(--primary-light); padding: 6px 12px; border-radius: 8px; font-weight: 800; letter-spacing: 1px; }
-        .nav-bar { display: flex; background: white; padding: 0 40px; border-bottom: 1px solid var(--border); position: sticky; top: 60px; z-index: 1000; gap: 15px; overflow-x: auto; white-space: nowrap; }
-        .nav-btn { padding: 18px 10px; cursor: pointer; border: none; background: none; font-weight: 600; color: var(--text-light); border-bottom: 3px solid transparent; transition: all 0.2s ease; min-width: max-content; }
-        .nav-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
-        .nav-btn:hover { color: var(--accent); }
-        .card { background: var(--card-bg); border-radius: 12px; margin: 20px; padding: 24px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.7); }
-        h3 { margin-top: 0; font-size: 14px; font-weight: 700; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 12px; margin-bottom: 20px; }
-        .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); background: white; }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-        th { background: #f8fafc; color: var(--text-light); padding: 12px 10px; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 10px; font-weight: 700; position: sticky; top: 0; z-index: 5; }
-        td { padding: 8px; border-bottom: 1px solid var(--border); text-align: center; }
-        .status-RD { background: #f97316 !important; color: white !important; font-weight: 700; }
-        .status-SL { background: #facc15 !important; color: black !important; font-weight: 700; }
-        .status-A  { background: #ef4444 !important; color: white !important; font-weight: 700; }
-        .status-NPL { background: #0891b2 !important; color: white !important; font-weight: 700; }
-        .status-P  { background: #65a30d !important; color: white !important; font-weight: 700; }
-        .status-NPSL { background: #fdba74 !important; color: black !important; font-weight: 700; }
-        .status-S  { background: #b91c1c !important; color: white !important; font-weight: 700; }
-        .status-VL { background: #ffffff !important; color: #1e293b !important; font-weight: 700; border: 1px solid #ddd; }
-        .status-UT { background: #1e3a8a !important; color: white !important; font-weight: 700; }
-        .status-HD { background: #93c5fd !important; color: #1e3a8a !important; font-weight: 700; }
-        .status-BL { background: #22d3ee !important; color: black !important; font-weight: 700; }
-        .status-PL { background: #4ade80 !important; color: black !important; font-weight: 700; }
-        .status-ML { background: #f472b6 !important; color: white !important; font-weight: 700; }
-        .status-OUT { background: #64748b !important; color: white !important; font-weight: 700; }
-        .status-EMPTY { background: transparent; color: transparent; border: 1px dashed #eee; }
-        .attendance-cell { cursor: pointer; transition: transform 0.2s; }
-        .attendance-cell:hover { transform: scale(1.05); opacity: 0.9; }
-        .total-lates-col { background: #fef2f2; font-weight: 800; color: #b91c1c; border-left: 3px solid #fee2e2; width: 100px; font-size: 12px; }
-        .late-badge { display: block; font-size: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-top: 2px; padding: 1px; }
-        input, select, textarea { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; background: #fcfdfe; transition: border-color 0.2s; box-sizing: border-box; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1); }
-        .action-btn { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 11px; }
-        .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .action-btn:active { transform: translateY(0); }
-        .btn-small { padding: 5px 10px; font-size: 10px; }
-        .row-save-btn { background: var(--success); color: white; padding: 5px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 9px; margin-right: 5px; }
-        .row-del-btn { background: var(--danger); color: white; padding: 5px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 9px; }
-        .bal-box { padding: 20px; border-radius: 12px; text-align: center; position: relative; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
-        .bal-num { font-size: 32px; font-weight: 800; display: block; margin: 10px 0; }
-        .bal-label { font-size: 12px; color: var(--text-light); margin-bottom: 5px; display: block; font-weight: 600; }
-        .bal-progress { height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 12px; overflow: hidden; }
-        .bal-progress-fill { height: 100%; transition: width 0.3s ease; }
-        .sl-progress { background: linear-gradient(90deg, #fbbf24, #b45309); }
-        .vl-progress { background: linear-gradient(90deg, #60a5fa, #1d4ed8); }
-        .balance-details { font-size: 10px; color: var(--text-light); margin-top: 8px; display: flex; justify-content: space-between; }
-        .badge { position: absolute; top: -5px; right: -10px; background: var(--header-red); color: white; font-size: 9px; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary); }
-        .inbox-modal { position: fixed; top: 70px; right: 20px; width: 320px; max-width: calc(100vw - 40px); background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); z-index: 2000; border: 1px solid var(--border); overflow: hidden; }
-        .hidden { display: none !important; }
-        .wide-btn { width: 400px; max-width: 100%; }
-        .logout-btn { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
-        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .flex-center { display: flex; align-items: center; gap: 20px; }
-        .flex-column { display: flex; flex-direction: column; gap: 10px; }
-        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #connectionStatus { position: fixed; top: 10px; right: 10px; padding: 8px 12px; border-radius: 20px; font-size: 9px; font-weight: 700; z-index: 3000; display: none; background: rgba(16, 185, 129, 0.2); color: #065f46; border: 1px solid rgba(16, 185, 129, 0.3); }
-        #connectionStatus.offline { background: rgba(239, 68, 68, 0.2); color: #7f1d1d; border: 1px solid rgba(239, 68, 68, 0.3); }
-        @media (max-width: 768px) { header, .nav-bar { padding: 0 20px; } .card { margin: 10px; padding: 15px; } .wide-btn { width: 100%; } .grid-inputs { grid-template-columns: 1fr; } .inbox-modal { right: 10px; left: 10px; width: auto; } .bal-num { font-size: 28px; } }
-        .error-message { color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 10px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .leave-item { padding: 12px; border-bottom: 1px solid var(--border); transition: background-color 0.2s; }
-        .leave-item:hover { background-color: #f8fafc; }
-        .leave-actions { display: flex; gap: 5px; margin-top: 8px; }
-        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
-        .status-pending { background-color: var(--warning); }
-        .status-approved { background-color: var(--success); }
-        .status-rejected { background-color: var(--danger); }
-        .my-leaves-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
-        .leave-card { background: white; border-radius: 8px; padding: 15px; border: 1px solid var(--border); }
-        .leave-card.pending { border-left: 4px solid var(--warning); }
-        .leave-card.approved { border-left: 4px solid var(--success); }
-        .leave-card.rejected { border-left: 4px solid var(--danger); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .stat-card { background: white; border-radius: 8px; padding: 15px; text-align: center; border: 1px solid var(--border); }
-        .stat-number { font-size: 24px; font-weight: 800; margin: 5px 0; }
-        .stat-label { font-size: 10px; color: var(--text-light); text-transform: uppercase; }
-        .date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .slvl-inputs { display: flex; align-items: center; gap: 5px; }
-        .slvl-inputs input { width: 60px !important; font-size: 12px; font-weight: bold; text-align: center; padding: 10px 5px; }
-        .shift-day { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .shift-night { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
-        .search-container { position: relative; margin-bottom: 15px; }
-        .search-input { width: 100%; padding: 10px 40px 10px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; }
-        .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-        .notification-bell { position: relative; cursor: pointer; font-size: 20px; }
-        #calendar { background: white; border-radius: 12px; padding: 20px; margin: 20px; }
-        .fc-toolbar-title { font-size: 1.2em !important; }
-        .fc-button { padding: 4px 10px !important; font-size: 0.9em !important; }
-        .balance-display { font-size: 9px; padding: 5px; background: #f8fafc; border-radius: 4px; margin: 2px 0; }
-        .balance-remaining { font-weight: bold; color: var(--success); }
-        .balance-used { color: var(--text-light); }
-        .fc-event.sl-approved { background-color: #10b981 !important; border-color: #059669 !important; }
-        .fc-event.sl-pending { background-color: #fbbf24 !important; border-color: #d97706 !important; color: #000 !important; }
-        .fc-event.sl-rejected { background-color: #ef4444 !important; border-color: #b91c1c !important; }
-        .fc-event.vl-approved { background-color: #6366f1 !important; border-color: #4f46e5 !important; }
-        .fc-event.vl-pending { background-color: #f59e0b !important; border-color: #d97706 !important; color: #000 !important; }
-        .fc-event.vl-rejected { background-color: #dc2626 !important; border-color: #991b1b !important; }
-        .calendar-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; font-size: 10px; }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .legend-color { width: 12px; height: 12px; border-radius: 3px; }
-        .clockout-warning { background: linear-gradient(135deg, #fef3c7, #fbbf24); border: 2px solid #d97706; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: center; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
-        .offline-queue { background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 9px; }
-        .forgot-logout-alert { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 15px 20px; border-radius: 10px; z-index: 10000; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3); animation: slideIn 0.5s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .hierarchy-info { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 10px; color: #0369a1; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f4f7fc; color: #1e293b; }
+        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0f2b3d 0%, #1b4a6e 100%); padding: 1rem; }
+        .login-card { background: white; border-radius: 32px; padding: 2rem; width: 100%; max-width: 440px; box-shadow: 0 25px 45px -12px rgba(0,0,0,0.3); }
+        .app-wrapper { display: none; }
+        .app-header { background: white; border-bottom: 1px solid #e2e8f0; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .logo { font-weight: 800; font-size: 1.5rem; background: linear-gradient(135deg, #1e4a76, #0f2b3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .role-badge { background: #eef2ff; padding: 0.3rem 0.8rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .main-layout { display: flex; min-height: calc(100vh - 72px); }
+        .sidebar { width: 270px; background: white; border-right: 1px solid #e2e8f0; padding: 1.5rem 0; }
+        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 0.75rem 1.8rem; color: #334155; text-decoration: none; font-weight: 500; transition: 0.2s; margin: 0.2rem 0; }
+        .sidebar nav a i { width: 24px; }
+        .sidebar nav a.active, .sidebar nav a:hover { background: #eef2ff; color: #1e4a76; border-left: 4px solid #1e4a76; }
+        .content-area { flex: 1; padding: 2rem; overflow-x: auto; }
+        .card { background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e9eef3; margin-bottom: 1.5rem; }
+        .btn { padding: 0.5rem 1.2rem; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; background: #f1f5f9; transition: 0.2s; }
+        .btn-primary { background: #1e4a76; color: white; }
+        .btn-primary:hover { background: #0f3b5c; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #e2e8f0; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; }
+        .status-present { background: #d1fae5; color: #065f46; }
+        .status-absent { background: #fee2e2; color: #991b1b; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap: 1.5rem; }
+        .toast-msg { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px; z-index: 999; font-size: 0.85rem; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 1rem; align-items: center; }
+        select, input, textarea { padding: 8px 12px; border-radius: 12px; border: 1px solid #cbd5e1; }
+        @media (max-width: 768px) { .main-layout { flex-direction: column; } .sidebar { width: 100%; } .sidebar nav { display: flex; flex-wrap: wrap; } .sidebar nav a { padding: 0.5rem 1rem; } .content-area { padding: 1rem; } }
+        .active-user-card { background: #f0fdf4; border-left: 4px solid #22c55e; margin-bottom: 0.5rem; padding: 0.8rem; border-radius: 16px; }
     </style>
 </head>
 <body>
-<header>
-    <div class="flex-center"><div class="logo-box">HR</div><h2 style="margin:0;font-size:18px;">MASTER<span style="font-weight:300;">LIST</span></h2><span id="roleBadge" style="padding:4px 10px;border-radius:20px;font-size:9px;font-weight:700;background:rgba(255,255,255,0.15);"></span></div>
-    <div class="flex-center">
-        <div id="notificationBell" class="notification-bell hidden" onclick="toggleNotifications()"><span>🔔</span><span id="notificationBadge" class="badge hidden">0</span></div>
-        <div id="mailIcon" class="hidden" style="position:relative;cursor:pointer;" onclick="toggleInbox()"><span>✉</span><span id="mailBadge" class="badge hidden">0</span></div>
-        <button class="action-btn logout-btn" style="padding:8px 15px;" onclick="handleLogout()">LOGOUT</button>
-    </div>
-</header>
-<div id="connectionStatus" class="hidden"></div>
-<div id="forgotLogoutAlert" class="forgot-logout-alert hidden"><div><strong>⚠️ AUTO CLOCK-OUT</strong></div><div>You forgot to clock out! Auto clock-out in <span id="autoClockoutTimer">5:00</span></div><button onclick="manualClockOutNow()" style="background:white;color:#dc2626;border:none;padding:5px 10px;border-radius:5px;font-size:9px;font-weight:bold;margin-top:8px;cursor:pointer;width:100%;">CLOCK OUT NOW</button></div>
-<div id="leaveInbox" class="inbox-modal hidden"><div style="padding:15px;border-bottom:1px solid var(--border);font-weight:700;background:#f8fafc;">Department Leave Requests <span id="inboxCount">0</span></div><div id="inboxContent" style="max-height:350px;overflow-y:auto;padding:15px;"></div></div>
-<div id="notificationsModal" class="inbox-modal hidden" style="right:350px;"><div style="padding:15px;border-bottom:1px solid var(--border);font-weight:700;background:#f8fafc;">Notifications <span id="notificationCount">0</span></div><div id="notificationsContent" style="max-height:350px;overflow-y:auto;padding:15px;"></div></div>
-
-<div id="loginSection"><div style="max-width:320px;margin:100px auto;background:white;padding:40px;border-radius:20px;text-align:center;box-shadow:var(--shadow);"><h2>Sign In</h2><div id="loginError" class="error-message hidden"></div><input id="lUser" placeholder="Username" style="width:100%;margin-bottom:15px;padding:12px;"><input type="password" id="lPass" placeholder="Password" style="width:100%;margin-bottom:25px;padding:12px;"><button onclick="handleLogin()" class="action-btn" style="width:100%;">ACCESS PORTAL</button></div></div>
-
-<div id="adminPanel" class="hidden">
-    <nav class="nav-bar">
-        <button class="nav-btn active" onclick="switchTab('profile', this)">Dashboard</button>
-        <button class="nav-btn adm-only hidden" onclick="switchTab('dir', this)">Directory</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('active', this)">Active Now</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('sched', this)">Schedules</button>
-        <button class="nav-btn" onclick="switchTab('pay', this)">Payroll & Attendance</button>
-        <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('audit', this)">Audit Logs</button>
-        <button class="nav-btn" onclick="switchTab('leaves', this)">My Leaves</button>
-    </nav>
-    <!-- Dashboard -->
-    <section id="sec-profile" class="tab-content">
-        <div style="display:flex;justify-content:center;gap:20px;padding:30px;flex-direction:column;align-items:center;">
-            <div class="card" style="width:400px;text-align:center;"><h1 id="profName">User</h1><div id="liveClock" style="font-size:36px;font-weight:800;color:var(--accent);">00:00:00</div><div id="offlineQueueDisplay" class="offline-queue hidden"><span id="offlineQueueCount">0</span> actions queued</div><div id="clockControls"><button id="btnClockIn" onclick="userClockAction('P')" class="action-btn" style="width:100%;height:55px;background:var(--green);">CLOCK IN</button><button id="btnClockOut" onclick="userClockAction('OUT')" class="action-btn hidden" style="width:100%;height:55px;background:var(--header-red);">CLOCK OUT</button></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;"><div class="bal-box" style="border-bottom:4px solid #fbbf24;"><span class="bal-label">SICK LEAVE</span><span id="slView" class="bal-num">0</span><div class="bal-progress"><div id="slProgress" class="bal-progress-fill sl-progress"></div></div><div class="balance-details"><span>Used: <span id="slUsed">0</span></span><span>Total: <span id="slTotal">0</span></span></div></div><div class="bal-box" style="border-bottom:4px solid #60a5fa;"><span class="bal-label">VACATION LEAVE</span><span id="vlView" class="bal-num">0</span><div class="bal-progress"><div id="vlProgress" class="bal-progress-fill vl-progress"></div></div><div class="balance-details"><span>Used: <span id="vlUsed">0</span></span><span>Total: <span id="vlTotal">0</span></span></div></div></div>
-            </div>
-            <div class="card" style="width:400px;"><h3>My Schedule</h3><div id="schedDisplay"><div><span>Shift:</span><b id="myShift">---</b></div><div><span>Days:</span><b id="myDays">---</b></div><div><span>Time:</span><b id="myTime">---</b></div><div><span>Off:</span><b id="myOff">---</b></div></div><div class="stats-grid"><div class="stat-card"><div class="stat-label">Present</div><div class="stat-number" id="monthAttendance">0</div></div><div class="stat-card"><div class="stat-label">Lates (min)</div><div class="stat-number" id="monthLates">0</div></div></div></div>
-            <button class="action-btn wide-btn" onclick="toggleLeaveForm()">FILE LEAVE REQUEST</button>
-            <div id="leaveFormSection" class="card hidden" style="width:400px;"><h3>New Leave</h3><div class="hierarchy-info">Approval: Employee → OPS → Admin → HR</div><select id="lvType"><option value="SL">Sick Leave</option><option value="VL">Vacation Leave</option></select><div class="date-range"><input type="date" id="lvStartDate"><input type="date" id="lvEndDate"></div><div id="dateRangeError" class="error-message hidden"></div><textarea id="lvReason" placeholder="Reason"></textarea><div>Available: <span id="availableBalance">0</span> | Requested: <span id="requestedDays">0</span></div><button onclick="submitLeave()" class="action-btn">SUBMIT</button></div>
+<div id="loginSection" class="login-container">
+    <div class="login-card">
+        <h2>HR Nexus</h2>
+        <p>Sign in to your account</p>
+        <input type="email" id="loginEmail" placeholder="Email" style="width:100%; margin-bottom: 1rem; padding:12px;">
+        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; margin-bottom: 1.5rem; padding:12px;">
+        <button id="loginBtn" class="btn btn-primary" style="width:100%;">Login</button>
+        <p style="margin-top: 1rem; text-align:center; font-size:0.85rem;">Demo: hr@example.com (HR) / admin@example.com (Admin) / ops@example.com (OPS) / emp@example.com (Employee)<br>Password: 123456</p>
+        <div id="signupForm" style="display:none; margin-top: 1rem;">
+            <input type="text" id="signupName" placeholder="Full Name" style="width:100%; margin-bottom:0.8rem;">
+            <input type="email" id="signupEmail" placeholder="Email" style="width:100%; margin-bottom:0.8rem;">
+            <input type="text" id="signupDept" placeholder="Department" style="width:100%; margin-bottom:0.8rem;">
+            <input type="password" id="signupPassword" placeholder="Password" style="width:100%; margin-bottom:0.8rem;">
+            <button id="doSignup" class="btn btn-primary" style="width:100%;">Register</button>
         </div>
-    </section>
-    <!-- Directory -->
-    <section id="sec-dir" class="tab-content hidden"><div class="card"><h3>Staff Directory</h3><div id="directoryMessage" class="error-message hidden"></div><div class="search-container"><input id="directorySearch" class="search-input" placeholder="Search..." onkeyup="searchEmployees()"><span class="search-icon">🔍</span></div><div class="grid-inputs" style="margin-bottom:20px;background:#f8fafc;padding:20px;"><input id="addEmpNum" placeholder="Emp ID*"><input id="addFullName" placeholder="Full Name*"><input id="addUser" placeholder="Username*"><input type="password" id="addPass" placeholder="Password*"><select id="addDept"><option>RC</option><option>CSR</option></select><input id="addBday" type="date"><input id="addContact" placeholder="Contact"><input id="addEmergency" placeholder="Emergency"><input id="addBackend" placeholder="Backend ID"><input id="addAssets" placeholder="Assets"><div class="slvl-inputs"><input id="addSL" value="10" type="number"><span>/</span><input id="addVL" value="10" type="number"></div><select id="addRole"><option>Employee</option><option>Admin</option><option>OPS</option><option>HR</option></select><input id="addMaxConsecutive" value="30" type="number"><button onclick="addEmployee()" class="action-btn">ADD</button><button onclick="cancelEdit()" class="action-btn" style="background:var(--danger);display:none;" id="cancelEditBtn">CANCEL</button></div><div class="table-wrap" id="dirTable"></div></div></section>
-    <!-- Active Now -->
-    <section id="sec-active" class="tab-content hidden"><div class="card"><h3>Currently In Service</h3><div class="search-container"><input id="activeSearch" class="search-input" placeholder="Search..." onkeyup="searchActive()"><span class="search-icon">🔍</span></div><div class="table-wrap" id="activeTable"></div></div></section>
-    <!-- Schedules -->
-    <section id="sec-sched" class="tab-content hidden"><div class="card"><div class="flex-between"><h3>Master Schedules</h3><select id="sMonth" onchange="renderSchedules()"></select></div><div class="search-container"><input id="scheduleSearch" class="search-input" placeholder="Search..." onkeyup="searchSchedules()"><span class="search-icon">🔍</span></div><div class="table-wrap" id="schedTable"></div><button id="saveSchedulesBtn" class="action-btn hidden" onclick="saveAllSchedules()">PUBLISH CHANGES</button></div></section>
-    <!-- Payroll & Attendance -->
-    <section id="sec-pay" class="tab-content hidden"><div class="card"><div class="flex-between"><h3>Attendance Tracker</h3><div class="flex-center"><select id="pShift" onchange="renderAttendance()"><option value="all">All</option><option>Day</option><option>Night</option></select><select id="pMonth" onchange="renderAttendance()"></select><select id="pPeriod" onchange="renderAttendance()"><option value="1-15">1-15</option><option value="16-31">16-31</option></select><button class="action-btn" style="background:#15803d;" onclick="exportToExcel()">EXPORT EXCEL</button></div></div><div class="search-container"><input id="attendanceSearch" class="search-input" placeholder="Search..." onkeyup="searchAttendance()"><span class="search-icon">🔍</span></div><div class="table-wrap" id="payTable"></div></div></section>
-    <!-- Calendar -->
-    <section id="sec-calendar" class="tab-content hidden"><div class="card"><div class="flex-between"><h3>Company Calendar</h3><div class="flex-center"><select id="calendarView" onchange="changeCalendarView()"><option value="dayGridMonth">Month</option><option value="timeGridWeek">Week</option><option value="timeGridDay">Day</option><option value="listMonth">List</option></select><select id="calendarFilter" onchange="refreshCalendarEvents()"><option value="all">All</option><option value="my">My</option><option value="dept">Dept</option><option value="SL">SL</option><option value="VL">VL</option><option value="approved">Approved</option><option value="pending">Pending</option></select><button class="action-btn btn-small" onclick="refreshCalendarEvents()">🔄 Refresh</button></div></div><div id="calendar"></div><div class="calendar-legend"><div class="legend-item"><div class="legend-color" style="background:#10b981;"></div><span>Approved SL</span></div><div class="legend-item"><div class="legend-color" style="background:#fbbf24;"></div><span>Pending SL</span></div><div class="legend-item"><div class="legend-color" style="background:#ef4444;"></div><span>Rejected SL</span></div><div class="legend-item"><div class="legend-color" style="background:#6366f1;"></div><span>Approved VL</span></div><div class="legend-item"><div class="legend-color" style="background:#f59e0b;"></div><span>Pending VL</span></div><div class="legend-item"><div class="legend-color" style="background:#dc2626;"></div><span>Rejected VL</span></div></div></div></section>
-    <!-- Audit Logs -->
-    <section id="sec-audit" class="tab-content hidden"><div class="card"><h3>Audit Logs</h3><div class="search-container"><input id="auditSearch" class="search-input" placeholder="Search..." onkeyup="searchAudit()"><span class="search-icon">🔍</span></div><div class="table-wrap" id="auditTable"></div></div></section>
-    <!-- My Leaves -->
-    <section id="sec-leaves" class="tab-content hidden"><div class="card"><h3>My Leave History</h3><div class="stats-grid"><div class="stat-card"><div class="stat-label">Total</div><div class="stat-number" id="totalLeaves">0</div></div><div class="stat-card"><div class="stat-label">Approved</div><div class="stat-number" id="approvedLeaves">0</div></div><div class="stat-card"><div class="stat-label">Pending</div><div class="stat-number" id="pendingLeaves">0</div></div><div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-number" id="rejectedLeaves">0</div></div></div><div class="search-container"><input id="leaveSearch" class="search-input" placeholder="Search..." onkeyup="searchMyLeaves()"><span class="search-icon">🔍</span></div><div class="my-leaves-container" id="myLeavesContainer"></div></div></section>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.js"></script>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onValue, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<div id="appContainer" class="app-wrapper">
+    <div class="app-header">
+        <div class="logo"><i class="fas fa-building"></i> HR Nexus</div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span id="userRoleBadge" class="role-badge"></span>
+            <span><i class="fas fa-user"></i> <span id="userNameDisplay"></span> (<span id="userDeptDisplay"></span>)</span>
+            <button id="logoutBtn" class="btn">Logout</button>
+        </div>
+    </div>
+    <div class="main-layout">
+        <div class="sidebar">
+            <nav id="dynamicNav"></nav>
+        </div>
+        <div class="content-area" id="mainContent"></div>
+    </div>
+</div>
 
-    // Your Firebase config (complete with databaseURL)
-    const firebaseConfig = {
-        apiKey: "AIzaSyByHriu33qnYyuvcsQlSA_PSmZITteAae4",
-        authDomain: "hr-system-hue.firebaseapp.com",
-        databaseURL: "https://hr-system-hue-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "hr-system-hue",
-        storageBucket: "hr-system-hue.firebasestorage.app",
-        messagingSenderId: "560600446893",
-        appId: "1:560600446893:web:2877592d0a89268fec5324"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+<script>
+    // ========== SUPABASE CONFIGURATION ==========
+    const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";     // REPLACE WITH YOUR URL
+    const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";                 // REPLACE WITH YOUR KEY
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Password hashing
-    const hashPassword = (p, s) => { if(!s) s = CryptoJS.lib.WordArray.random(128/8).toString(); return { hash: CryptoJS.SHA256(p + s).toString(), salt: s }; };
-    const verify = (p, s, h) => CryptoJS.SHA256(p + s).toString() === h;
+    let currentUser = null, currentProfile = null, activeTab = "dashboard";
 
-    // Offline queue handlers
-    const ACTION_HANDLERS = {
-        clock_in: async (d) => { await update(ref(db, `attendance/${d.userId}`), d.updates); await push(ref(db, 'audit_logs'), d.auditLog); },
-        clock_out: async (d) => { await update(ref(db, `attendance/${d.userId}`), d.updates); await push(ref(db, 'audit_logs'), d.auditLog); if(d.notification) await push(ref(db, 'notifications'), d.notification); },
-        submit_leave: async (d) => { await push(ref(db, 'leave_requests'), d.leaveRequest); await push(ref(db, 'audit_logs'), d.auditLog); },
-        add_employee: async (d) => { await set(ref(db, `users/users/${d.empId}`), d.employeeData); },
-        update_employee: async (d) => {
-            const path = `users/users/${d.empId}`;
-            if(d.oldEmpId && d.oldEmpId !== d.empId){
-                const snap = await get(ref(db, `users/users/${d.oldEmpId}`));
-                if(snap.exists()){
-                    await set(ref(db, path), d.employeeData);
-                    await remove(ref(db, `users/users/${d.oldEmpId}`));
-                    const attSnap = await get(ref(db, `attendance/${d.oldEmpId}`));
-                    if(attSnap.exists()){ await set(ref(db, `attendance/${d.empId}`), attSnap.val()); await remove(ref(db, `attendance/${d.oldEmpId}`)); }
-                }
-            } else await update(ref(db, path), d.employeeData);
-        },
-        auto_clock_out: async (d) => { await update(ref(db, `attendance/${d.userId}`), d.updates); await push(ref(db, 'audit_logs'), d.auditLog); if(d.notification) await push(ref(db, 'notifications'), d.notification); },
-        cancel_leave: async (d) => { await update(ref(db, `leave_requests/${d.leaveId}`), d.updates); },
-        delete_employee: async (d) => { await remove(ref(db, `users/users/${d.empId}`)); await remove(ref(db, `attendance/${d.empId}`)); }
-    };
-
-    const appState = {
-        users:{}, attendance:{}, leaveRequests:{}, notifications:{}, currentUser:null, listeners:{}, isProcessing:false, isOnline:navigator.onLine,
-        offlineQueue: JSON.parse(localStorage.getItem('hr_offline_v2')||'[]'), calendarInstance:null, editingEmployeeId:null, scheduleChanges:{},
-        lastRenderTime:0, calendarInitialized:false
-    };
-    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const STATUS_CYCLE = ['', 'P', 'RD', 'SL', 'VL', 'A', 'NPL', 'NPSL', 'S', 'UT', 'HD', 'BL', 'PL', 'ML'];
-    const LEAVE_TYPES = { 'SL':'Sick Leave','VL':'Vacation Leave' };
-
-    const escapeHtml = t => t ? String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) : '';
-    const showToast = (msg, type='info') => { alert(msg); };
-    const updateConnectionStatus = () => {
-        const qd = document.getElementById('offlineQueueDisplay');
-        if(qd) qd.classList.toggle('hidden', appState.isOnline && !appState.offlineQueue.length);
-        if(!appState.isOnline && qd) { qd.classList.remove('hidden'); document.getElementById('offlineQueueCount').textContent = appState.offlineQueue.length; }
-    };
-    async function processOfflineQueue(){
-        if(!appState.isOnline || !appState.offlineQueue.length) return;
-        const failed = [];
-        for(const item of appState.offlineQueue){
-            const handler = ACTION_HANDLERS[item.type];
-            if(handler){ try{ await handler(item.data); }catch(e){ failed.push(item); } }
-            else failed.push(item);
-        }
-        appState.offlineQueue = failed;
-        localStorage.setItem('hr_offline_v2', JSON.stringify(failed));
-        updateConnectionStatus();
-    }
-    const addToOfflineQueue = (type, data) => {
-        appState.offlineQueue.push({type, data, timestamp: new Date().toISOString()});
-        localStorage.setItem('hr_offline_v2', JSON.stringify(appState.offlineQueue));
-        updateConnectionStatus();
-    };
-    async function safeFirebaseOp(type, data){
-        if(!appState.isOnline){ addToOfflineQueue(type, data); return {queued:true}; }
-        try{ await ACTION_HANDLERS[type](data); return {success:true}; }
-        catch(e){ if(!navigator.onLine){ addToOfflineQueue(type, data); return {queued:true}; } throw e; }
-    }
-    window.addEventListener('online', ()=>{ appState.isOnline=true; updateConnectionStatus(); processOfflineQueue(); });
-    window.addEventListener('offline', ()=>{ appState.isOnline=false; updateConnectionStatus(); });
-
-    function parseTime(t){ if(!t) return [17,0]; t=t.trim().toUpperCase(); if(t.includes(':')){ let [h,m]=t.split(':'); h=parseInt(h); m=parseInt(m); if(t.includes('PM')&&h<12) h+=12; if(t.includes('AM')&&h===12) h=0; return [h,m]; } let m=t.match(/(\d+)\s*(AM|PM)?/i); if(m){ let h=parseInt(m[1]); if(m[2]==='PM'&&h<12) h+=12; if(m[2]==='AM'&&h===12) h=0; return [h,0]; } return [17,0]; }
-    function detectShiftType(ts){ if(!ts) return 'Day'; ts=ts.toLowerCase(); if(/night|20:|21:|22:|23:|00:|01:|02:|03:|04:|05:|06:|18:|19:|7 pm|8 pm|9 pm|10 pm|11 pm|12 am/.test(ts)) return 'Night'; return 'Day'; }
-    function getShiftClass(st){ return st.toLowerCase()==='night'?'shift-night':'shift-day'; }
-    function calculateUsedLeaves(empId, lt){ let used=0; Object.values(appState.leaveRequests||{}).forEach(l=>{ if(l.empID===empId && l.type===lt && l.status==='Approved'){ let s=new Date(l.startDate), e=l.endDate?new Date(l.endDate):s; used+=Math.ceil((e-s)/(1000*60*60*24))+1; } }); return used; }
-    function canApproveLeave(req){ if(!appState.currentUser) return false; const emp=appState.users[req.empID], cur=appState.currentUser; if(!emp) return false; if(cur.role==='HR') return true; if(emp.dept!==cur.dept) return false; const hier={Employee:1,OPS:2,Admin:3,HR:4}; return (hier[cur.role]||0) > (hier[emp.role]||0); }
-    function canCancelLeave(req){ if(!appState.currentUser) return false; const cur=appState.currentUser, reqEmp=appState.users[req.empID]; if(cur.role==='HR') return true; if(cur.role==='Admin') return reqEmp?.dept === cur.dept; return cur.id === req.empID && req.status === 'Pending'; }
-    function hasOverlappingLeave(empId, start, end, exclude=null){ if(!appState.leaveRequests) return false; const s=new Date(start), e=end?new Date(end):s; for(const [id,l] of Object.entries(appState.leaveRequests)){ if(exclude&&id===exclude) continue; if(l.empID!==empId||l.status==='Rejected') continue; const es=new Date(l.startDate), ee=l.endDate?new Date(l.endDate):es; if(s<=ee && e>=es) return true; } return false; }
-    function calculateWorkingDays(start, end, empId){ if(!start) return 0; const s=new Date(start), e=end?new Date(end):s; const user=appState.users[empId]; if(!user) return 0; let wd=0, d=new Date(s); const dn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']; while(d<=e){ const m=d.getMonth(), dow=d.getDay(), off1=user['off1_'+m]||'', off2=user['off2_'+m]||''; if(!(off1===dn[dow]||off2===dn[dow])) wd++; d.setDate(d.getDate()+1); } return wd; }
-    function checkConsecutiveLimit(empId, start, end){ const user=appState.users[empId]; if(!user) return {valid:true,days:0,max:30}; const s=new Date(start), e=end?new Date(end):s; const days=Math.ceil((e-s)/(1000*60*60*24))+1; const max=user.maxConsecutiveLeave||30; return {valid:days<=max, days, max}; }
-
-    function renderCurrentTabOnly(){
-        if(!appState.currentUser) return;
-        const now=Date.now();
-        if(now - appState.lastRenderTime < 300) { requestAnimationFrame(renderCurrentTabOnly); return; }
-        appState.lastRenderTime = now;
-        const active = document.querySelector('.nav-btn.active');
-        if(!active) return;
-        const txt = active.textContent.toLowerCase();
-        if(txt.includes('dashboard')) updateDashboard();
-        else if(txt.includes('directory')) renderDirectory();
-        else if(txt.includes('active')) renderActiveNow();
-        else if(txt.includes('schedules')) renderSchedules();
-        else if(txt.includes('payroll')||txt.includes('attendance')) renderAttendance();
-        else if(txt.includes('calendar')) initializeCalendar();
-        else if(txt.includes('leaves')) updateMyLeaves();
+    function showToast(msg, type = "info") {
+        const toast = document.createElement('div');
+        toast.className = "toast-msg";
+        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
 
-    function updateDashboard(){
-        if(!appState.currentUser) return;
-        const m=new Date().getMonth(), d=new Date().getDate(), key=`${m}_${d}`;
-        const user=appState.users[appState.currentUser.id]||appState.currentUser;
-        const slUsed=calculateUsedLeaves(appState.currentUser.id,'SL'), vlUsed=calculateUsedLeaves(appState.currentUser.id,'VL');
-        const slMax=user.slMax||0, vlMax=user.vlMax||0;
-        document.getElementById('slView').textContent=Math.max(0,slMax-slUsed);
-        document.getElementById('vlView').textContent=Math.max(0,vlMax-vlUsed);
-        document.getElementById('slTotal').textContent=slMax; document.getElementById('vlTotal').textContent=vlMax;
-        document.getElementById('slUsed').textContent=slUsed; document.getElementById('vlUsed').textContent=vlUsed;
-        document.getElementById('slProgress').style.width=slMax?`${(slUsed/slMax)*100}%`:'0%';
-        document.getElementById('vlProgress').style.width=vlMax?`${(vlUsed/vlMax)*100}%`:'0%';
-        const wd=user['in_'+m]||'TBA', ts=user['out_'+m]||'TBA', off1=user['off1_'+m]||'', off2=user['off2_'+m]||'';
-        const shift=detectShiftType(ts);
-        document.getElementById('myShift').textContent=shift; document.getElementById('myShift').className=getShiftClass(shift);
-        document.getElementById('myDays').textContent=wd; document.getElementById('myTime').textContent=ts;
-        document.getElementById('myOff').textContent=`${off1} ${off2}`.trim()||'TBA';
-        let present=0, lates=0;
-        for(let day=1; day<=d; day++){ const dk=`${m}_${day}`; if(appState.attendance[appState.currentUser.id]?.[dk]==='P'){ present++; lates+=parseInt(appState.attendance[appState.currentUser.id]?.[dk+'_late']||0); } }
-        document.getElementById('monthAttendance').textContent=present; document.getElementById('monthLates').textContent=lates;
-        const status=appState.attendance[appState.currentUser.id]?.[key]||'', out=appState.attendance[appState.currentUser.id]?.[`${key}_out`]||'';
-        const clockedIn=(status==='P' && !out);
-        document.getElementById('btnClockIn').classList.toggle('hidden', clockedIn);
-        document.getElementById('btnClockOut').classList.toggle('hidden', !clockedIn);
+    async function addAuditLog(action, details) {
+        if (!currentUser) return;
+        await supabase.from('audit_logs').insert([{ user_id: currentUser.id, action, details, created_at: new Date() }]);
     }
 
-    async function handleLogin(){
-        if(appState.isProcessing) return;
-        const username=document.getElementById('lUser').value.trim(), password=document.getElementById('lPass').value;
-        if(!username||!password) return showToast('Enter credentials','error');
-        appState.isProcessing=true;
-        try{
-            const snap = await get(ref(db,'users/users'));
-            const users=snap.val()||{};
-            const entry = Object.entries(users).find(([id,u])=>u.username===username);
-            if(!entry) throw new Error('Invalid credentials');
-            const [uid, u] = entry;
-            if(!u.passwordHash || !u.salt){
-                if(u.password !== password) throw new Error('Invalid credentials');
-                const {hash,salt} = hashPassword(password);
-                await update(ref(db,`users/users/${uid}`),{passwordHash:hash,salt,password:null});
-            } else { if(!verify(password, u.salt, u.passwordHash)) throw new Error('Invalid credentials'); }
-            appState.currentUser = {id:uid, ...u};
-            localStorage.setItem('hr_currentUser', JSON.stringify(appState.currentUser));
-            showAdminPanel(); setupRealtimeListeners();
-        } catch(e){ showToast(e.message,'error'); }
-        finally{ appState.isProcessing=false; }
+    async function addNotification(userId, title, message) {
+        await supabase.from('notifications').insert([{ user_id: userId, title, message, type: 'info', read: false, created_at: new Date() }]);
     }
 
-    function showAdminPanel(){
-        document.getElementById('adminPanel').classList.remove('hidden');
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('profName').textContent = appState.currentUser.fullName;
-        const rb = document.getElementById('roleBadge'); rb.textContent = appState.currentUser.role;
-        rb.style.background = appState.currentUser.role==='HR'?'rgba(168,85,247,0.3)':(appState.currentUser.role==='Admin'?'rgba(99,102,241,0.3)':(appState.currentUser.role==='OPS'?'rgba(16,185,129,0.3)':'rgba(255,255,255,0.15)'));
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.add('hidden'));
-        document.querySelectorAll('[onclick*="profile"]')[0]?.classList.remove('hidden');
-        document.querySelectorAll('[onclick*="pay"]')[0]?.classList.remove('hidden');
-        document.querySelectorAll('[onclick*="calendar"]')[0]?.classList.remove('hidden');
-        document.querySelectorAll('[onclick*="leaves"]')[0]?.classList.remove('hidden');
-        if(appState.currentUser.role==='Admin'||appState.currentUser.role==='HR'){
-            document.querySelectorAll('[onclick*="dir"]')[0]?.classList.remove('hidden');
-            document.querySelectorAll('[onclick*="active"]')[0]?.classList.remove('hidden');
-            document.querySelectorAll('[onclick*="sched"]')[0]?.classList.remove('hidden');
-            document.querySelectorAll('[onclick*="audit"]')[0]?.classList.remove('hidden');
-            document.getElementById('mailIcon')?.classList.remove('hidden');
-            document.getElementById('notificationBell')?.classList.remove('hidden');
-        } else if(appState.currentUser.role==='OPS'){
-            document.querySelectorAll('[onclick*="active"]')[0]?.classList.remove('hidden');
-            document.querySelectorAll('[onclick*="sched"]')[0]?.classList.remove('hidden');
-            document.querySelectorAll('[onclick*="audit"]')[0]?.classList.remove('hidden');
-            document.getElementById('mailIcon')?.classList.remove('hidden');
-            document.getElementById('notificationBell')?.classList.remove('hidden');
-        }
-        switchTab('profile', document.querySelector('.nav-btn:not(.hidden)'));
-        renderCurrentTabOnly();
+    async function fetchProfile(userId) {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        if (data) return data;
+        return null;
     }
 
-    function handleLogout(){ if(confirm('Logout?')){ if(appState.calendarInstance) appState.calendarInstance.destroy(); localStorage.removeItem('hr_currentUser'); location.reload(); } }
-
-    async function userClockAction(type){
-        if(appState.isProcessing) return;
-        appState.isProcessing=true;
-        const now=new Date(), m=now.getMonth(), d=now.getDate(), key=`${m}_${d}`;
-        try{
-            if(type==='P'){
-                const data={userId:appState.currentUser.id, updates:{[key]:'P',[key+'_time']:now.toISOString()}, auditLog:{name:appState.currentUser.fullName, action:'CLOCK IN', timestamp:now.toISOString(), empID:appState.currentUser.id, department:appState.currentUser.dept}};
-                const res=await safeFirebaseOp('clock_in', data);
-                if(res.success){ showToast('Clocked in!','success'); updateDashboard(); }
-                else if(res.queued) showToast('Queued offline','info');
-            } else {
-                const data={userId:appState.currentUser.id, updates:{[key+'_out']:now.toISOString()}, auditLog:{name:appState.currentUser.fullName, action:'CLOCK OUT', timestamp:now.toISOString(), empID:appState.currentUser.id, department:appState.currentUser.dept}, notification:{userId:appState.currentUser.id, title:'Clock Out', message:`Clocked out at ${now.toLocaleTimeString()}`, type:'info', timestamp:now.toISOString(), read:false}};
-                const res=await safeFirebaseOp('clock_out', data);
-                if(res.success){ showToast('Clocked out!','success'); updateDashboard(); }
-                else if(res.queued) showToast('Queued offline','info');
-            }
-        }catch(e){ showToast('Action failed','error'); }
-        finally{ appState.isProcessing=false; }
-    }
-
-    // ==================== RENDERING FUNCTIONS ====================
-    function renderDirectory(){
-        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>SL/VL</th><th>Actions</th></tr></thead><tbody>`;
-        for(const [empId, user] of Object.entries(appState.users)){
-            const slUsed=calculateUsedLeaves(empId,'SL'), vlUsed=calculateUsedLeaves(empId,'VL');
-            const slMax=user.slMax||0, vlMax=user.vlMax||0;
-            html += `<tr><td>${escapeHtml(empId)}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td><td>${user.dept}</td><td>${user.role}</td><td>SL:${slMax-slUsed}/${slMax} VL:${vlMax-vlUsed}/${vlMax}</td><td><button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button><button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button></td></tr>`;
-        }
-        html += `</tbody></table>`;
-        document.getElementById('dirTable').innerHTML = html;
-    }
-
-    function renderActiveNow(){
-        const now=new Date(), m=now.getMonth(), d=now.getDate(), key=`${m}_${d}`;
-        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Time In</th><th>Shift</th></tr></thead><tbody>`;
-        for(const [empId, user] of Object.entries(appState.users)){
-            const status=appState.attendance[empId]?.[key], out=appState.attendance[empId]?.[`${key}_out`];
-            if(status==='P' && !out){
-                const timeIn=appState.attendance[empId]?.[key+'_time'];
-                const ts=user['out_'+m]||'';
-                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn?new Date(timeIn).toLocaleTimeString():'?'}</td><td>${detectShiftType(ts)}</td></tr>`;
-            }
-        }
-        html += `</tbody></table>`;
-        document.getElementById('activeTable').innerHTML = html;
-    }
-
-    function renderSchedules(){
-        const month = parseInt(document.getElementById('sMonth').value);
-        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Working Days</th><th>Time Slot</th><th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th></tr></thead><tbody>`;
-        for(const [empId, user] of Object.entries(appState.users)){
-            const wd=user['in_'+month]||'', ts=user['out_'+month]||'', off1=user['off1_'+month]||'', off2=user['off2_'+month]||'';
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td><input type="text" value="${wd}" onchange="updateScheduleField('${empId}','in_${month}',this.value)"></td><td><input type="text" value="${ts}" onchange="updateScheduleField('${empId}','out_${month}',this.value)"></td><td><input type="text" value="${off1}" onchange="updateScheduleField('${empId}','off1_${month}',this.value)"></td><td><input type="text" value="${off2}" onchange="updateScheduleField('${empId}','off2_${month}',this.value)"></td><td><button class="row-save-btn" onclick="saveSchedule('${empId}',${month})">Save</button></td></tr>`;
-        }
-        html += `</tbody></table>`;
-        document.getElementById('schedTable').innerHTML = html;
-    }
-
-    function renderAttendance(){
-        const month = parseInt(document.getElementById('pMonth').value);
-        const period = document.getElementById('pPeriod').value;
-        const [startDay, endDay] = period.split('-').map(Number);
-        const shiftFilter = document.getElementById('pShift').value;
-        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
-        for(let d=startDay; d<=endDay; d++) html += `<th>${d}</th>`;
-        html += `<th class="total-lates-col">Total Lates</th></tr></thead><tbody>`;
-        for(const [empId, user] of Object.entries(appState.users)){
-            const ts = user['out_'+month]||'';
-            const shift = detectShiftType(ts);
-            if(shiftFilter!=='all' && shiftFilter!==shift) continue;
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td class="${getShiftClass(shift)}">${shift}</td>`;
-            let totalLates = 0;
-            for(let d=startDay; d<=endDay; d++){
-                const key = `${month}_${d}`;
-                const status = appState.attendance[empId]?.[key]||'';
-                const late = appState.attendance[empId]?.[key+'_late']||0;
-                totalLates += parseInt(late);
-                html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${empId}','${key}')">${status}${late?`<span class="late-badge">${late}m</span>`:''}</td>`;
-            }
-            html += `<td class="total-lates-col">${totalLates}</td></tr>`;
-        }
-        html += `</tbody></table>`;
-        document.getElementById('payTable').innerHTML = html;
-    }
-
-    function initializeCalendar(){
-        const calendarEl = document.getElementById('calendar');
-        if(appState.calendarInstance) appState.calendarInstance.destroy();
-        appState.calendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: getCalendarEvents(),
-            height: 'auto'
+    // Role-based menu generation (with department awareness)
+    function renderNav() {
+        const role = currentProfile?.role;
+        let items = [{ id: 'dashboard', icon: 'tachometer-alt', label: 'Dashboard' }];
+        items.push({ id: 'attendance', icon: 'calendar-check', label: 'Attendance Tracker' });
+        items.push({ id: 'leaverequests', icon: 'envelope-open-text', label: 'Leave Requests' });
+        items.push({ id: 'directory', icon: 'users', label: 'Employee Directory' });
+        items.push({ id: 'calendarview', icon: 'calendar-alt', label: 'Company Calendar' });
+        if (role === 'OPS' || role === 'Admin' || role === 'HR') items.push({ id: 'activenow', icon: 'user-clock', label: 'Active Now' });
+        if (role === 'OPS' || role === 'Admin' || role === 'HR') items.push({ id: 'masterschedule', icon: 'clock', label: 'Master Schedules' });
+        if (role === 'Admin' || role === 'HR') items.push({ id: 'manageemployees', icon: 'user-edit', label: 'Manage Employees' });
+        if (role === 'Admin' || role === 'HR' || role === 'OPS') items.push({ id: 'auditlogs', icon: 'history', label: 'Audit Logs' });
+        items.push({ id: 'notifications', icon: 'bell', label: 'Notifications' });
+        const navDiv = document.getElementById('dynamicNav');
+        navDiv.innerHTML = items.map(item => `<a href="#" data-tab="${item.id}"><i class="fas fa-${item.icon}"></i> ${item.label}</a>`).join('');
+        document.querySelectorAll('[data-tab]').forEach(link => {
+            link.addEventListener('click', (e) => { e.preventDefault(); activeTab = link.dataset.tab; loadMainContent(); });
         });
-        appState.calendarInstance.render();
-        appState.calendarInitialized = true;
     }
 
-    function getCalendarEvents(){
-        const events = [];
-        const filter = document.getElementById('calendarFilter')?.value || 'all';
-        Object.values(appState.leaveRequests||{}).forEach(l=>{
-            const emp = appState.users[l.empID];
-            if(!emp) return;
-            let show = true;
-            if(filter==='my') show = l.empID === appState.currentUser.id;
-            else if(filter==='dept') show = emp.dept === appState.currentUser.dept;
-            else if(filter==='SL') show = l.type === 'SL';
-            else if(filter==='VL') show = l.type === 'VL';
-            else if(filter==='approved') show = l.status === 'Approved';
-            else if(filter==='pending') show = l.status === 'Pending';
-            if(!show) return;
-            let color = l.type==='SL'? (l.status==='Approved'?'#10b981':l.status==='Pending'?'#fbbf24':'#ef4444') : (l.status==='Approved'?'#6366f1':l.status==='Pending'?'#f59e0b':'#dc2626');
-            events.push({
-                title: `${emp.fullName} - ${LEAVE_TYPES[l.type]||l.type} (${l.status})`,
-                start: l.startDate,
-                end: l.endDate ? new Date(new Date(l.endDate).setDate(new Date(l.endDate).getDate()+1)) : undefined,
-                backgroundColor: color
+    async function loadMainContent() {
+        const contentDiv = document.getElementById('mainContent');
+        if (activeTab === 'dashboard') await renderDashboard(contentDiv);
+        else if (activeTab === 'attendance') await renderAttendanceTracker(contentDiv);
+        else if (activeTab === 'leaverequests') await renderLeaveRequests(contentDiv);
+        else if (activeTab === 'directory') await renderEmployeeDirectory(contentDiv);
+        else if (activeTab === 'masterschedule') await renderMasterSchedule(contentDiv);
+        else if (activeTab === 'calendarview') await renderCompanyCalendar(contentDiv);
+        else if (activeTab === 'auditlogs') await renderAuditLogs(contentDiv);
+        else if (activeTab === 'notifications') await renderNotifications(contentDiv);
+        else if (activeTab === 'activenow') await renderActiveNow(contentDiv);
+        else if (activeTab === 'manageemployees') await renderManageEmployees(contentDiv);
+    }
+
+    // ========== DASHBOARD ==========
+    async function renderDashboard(container) {
+        const today = new Date().toISOString().slice(0,10);
+        const { data: attend } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
+        const isClockedIn = attend && attend.clock_in && !attend.clock_out;
+        const clockInTime = attend?.clock_in ? new Date(attend.clock_in).toLocaleTimeString() : null;
+        container.innerHTML = `
+            <div class="card"><h2><i class="fas fa-clock"></i> Time Tracking</h2>
+            <div><strong>${isClockedIn ? '✅ Clocked In at ' + clockInTime : '⏰ Not clocked in today'}</strong>
+            <button id="clockInBtn" class="btn btn-primary" ${isClockedIn ? 'disabled' : ''}>Clock In</button>
+            <button id="clockOutBtn" class="btn" ${!isClockedIn ? 'disabled' : ''}>Clock Out</button>
+            </div></div>
+            <div class="card"><h3>My Recent Attendance</h3><div id="recentAttendanceTable"></div></div>
+        `;
+        document.getElementById('clockInBtn')?.addEventListener('click', async () => {
+            const now = new Date();
+            await supabase.from('attendances').insert([{ user_id: currentUser.id, date: today, clock_in: now.toISOString(), status_code: 'Present' }]);
+            showToast('Clocked in', 'success'); addAuditLog('Clock In', ''); loadMainContent();
+        });
+        document.getElementById('clockOutBtn')?.addEventListener('click', async () => {
+            const now = new Date();
+            await supabase.from('attendances').update({ clock_out: now.toISOString() }).eq('user_id', currentUser.id).eq('date', today);
+            showToast('Clocked out', 'success'); addAuditLog('Clock Out', ''); loadMainContent();
+        });
+        const { data: lastDays } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(7);
+        const tableHtml = `<table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${lastDays?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code || 'Present'}</td></tr>`).join('') || '<tr><td colspan="4">No records</td></tr>'}</table>`;
+        document.getElementById('recentAttendanceTable').innerHTML = tableHtml;
+    }
+
+    // ========== ACTIVE NOW (for OPS/Admin/HR) ==========
+    async function renderActiveNow(container) {
+        const today = new Date().toISOString().slice(0,10);
+        const { data: active } = await supabase.from('attendances').select('user_id, clock_in, profiles!inner(full_name, department, role)').eq('date', today).not('clock_out', 'is', null).is('clock_out', null);
+        container.innerHTML = `<div class="card"><h3><i class="fas fa-user-check"></i> Active Now (Clocked In)</h3>${active?.length ? active.map(a => `<div class="active-user-card"><strong>${a.profiles.full_name}</strong> (${a.profiles.role}) - ${a.profiles.department || 'General'}<br><small>Since ${new Date(a.clock_in).toLocaleTimeString()}</small></div>`).join('') : '<p>No one is currently clocked in.</p>'}</div>`;
+    }
+
+    // ========== ATTENDANCE TRACKER (with export) ==========
+    async function renderAttendanceTracker(container) {
+        const role = currentProfile?.role;
+        let users = [{ id: currentUser.id, full_name: currentProfile.full_name }];
+        if (role === 'HR') {
+            const { data } = await supabase.from('profiles').select('id, full_name');
+            if (data) users = data;
+        } else if (role === 'Admin') {
+            const { data } = await supabase.from('profiles').select('id, full_name').eq('department', currentProfile.department);
+            if (data) users = data;
+        } else if (role === 'OPS') {
+            const { data } = await supabase.from('profiles').select('id, full_name').eq('department', currentProfile.department);
+            if (data) users = data;
+        }
+        const selectedUserId = users.length>1 ? `<select id="attUserSelect">${users.map(u => `<option value="${u.id}">${u.full_name}</option>`).join('')}</select>` : '';
+        container.innerHTML = `<div class="card"><h3>Attendance Tracker</h3><div class="filter-bar">${selectedUserId}<input type="month" id="attMonth" value="2026-04"><button id="exportExcelBtn" class="btn btn-primary"><i class="fas fa-file-excel"></i> Export Excel</button></div><div id="attTableContainer"></div></div>`;
+        const loadAttendance = async () => {
+            const userId = document.getElementById('attUserSelect')?.value || currentUser.id;
+            const month = document.getElementById('attMonth').value;
+            const [year, monthNum] = month.split('-');
+            const startDate = `${year}-${monthNum}-01`;
+            const endDate = new Date(year, monthNum, 0).toISOString().slice(0,10);
+            const { data: attendances } = await supabase.from('attendances').select('*').eq('user_id', userId).gte('date', startDate).lte('date', endDate);
+            const { data: leaves } = await supabase.from('leave_requests').select('*').eq('user_id', userId).eq('status', 'approved').gte('start_date', startDate).lte('end_date', endDate);
+            const dates = [];
+            let d = new Date(startDate);
+            while (d <= new Date(endDate)) { dates.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+            const rows = dates.map(date => {
+                const attendance = attendances?.find(a => a.date === date);
+                const leave = leaves?.find(l => date >= l.start_date && date <= l.end_date);
+                let status = attendance?.clock_in ? 'Present' : (leave ? (leave.leave_type === 'Sick' ? 'Sick Leave' : 'Vacation Leave') : 'Absent');
+                return `<tr><td>${date}</td><td><span class="status-badge ${status === 'Present' ? 'status-present' : 'status-absent'}">${status}</span></td><td>${attendance?.clock_in ? new Date(attendance.clock_in).toLocaleTimeString() : '-'}</td><td>${attendance?.clock_out ? new Date(attendance.clock_out).toLocaleTimeString() : '-'}</td></tr>`;
             });
-        });
-        return events;
+            document.getElementById('attTableContainer').innerHTML = `<table><thead><tr><th>Date</th><th>Status</th><th>Clock In</th><th>Clock Out</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+            document.getElementById('exportExcelBtn').onclick = () => {
+                const wsData = [["Date","Status","Clock In","Clock Out"]];
+                dates.forEach((date,i) => { wsData.push([date, rows[i].match(/<span[^>]*>([^<]+)<\/span>/)?.[1] || '', rows[i].split('</td>')[2]?.replace(/<[^>]*>/g, '') || '', rows[i].split('</td>')[3]?.replace(/<[^>]*>/g, '') || '']); });
+                const ws = XLSX.utils.aoa_to_sheet(wsData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Attendance"); XLSX.writeFile(wb, `attendance_${month}.xlsx`);
+            };
+        };
+        document.getElementById('attUserSelect')?.addEventListener('change', loadAttendance);
+        document.getElementById('attMonth')?.addEventListener('change', loadAttendance);
+        await loadAttendance();
     }
 
-    function updateMyLeaves(){
-        const container = document.getElementById('myLeavesContainer');
-        let total=0, approved=0, pending=0, rejected=0;
-        let html = '';
-        const userLeaves = Object.values(appState.leaveRequests||{}).filter(l=>l.empID===appState.currentUser.id).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
-        userLeaves.forEach(l=>{
-            total++;
-            if(l.status==='Approved') approved++;
-            else if(l.status==='Pending') pending++;
-            else if(l.status==='Rejected') rejected++;
-            html += `<div class="leave-card ${l.status.toLowerCase()}"><strong>${LEAVE_TYPES[l.type]||l.type}</strong><div>${l.startDate} - ${l.endDate||l.startDate}</div><div>${l.reason}</div><div>Status: ${l.status}</div></div>`;
+    // ========== LEAVE REQUESTS with Approval Hierarchy (HR > Admin > OPS) ==========
+    async function renderLeaveRequests(container) {
+        const role = currentProfile?.role;
+        const isApprover = role === 'HR' || role === 'Admin' || role === 'OPS';
+        let html = `<div class="card"><h3>Leave Requests</h3>${!isApprover ? '<button id="newLeaveBtn" class="btn btn-primary">+ New Request</button>' : ''}<div id="leaveList"></div></div>`;
+        container.innerHTML = html;
+        const fetchLeaves = async () => {
+            let query = supabase.from('leave_requests').select(`*, profiles!leave_requests_user_id_fkey(full_name, department, role)`);
+            if (!isApprover) query = query.eq('user_id', currentUser.id);
+            const { data } = await query.order('created_at', { ascending: false });
+            const canApprove = (leave) => {
+                if (role === 'HR') return true;
+                if (role === 'Admin') {
+                    return leave.profiles.department === currentProfile.department && (leave.profiles.role === 'Employee' || leave.profiles.role === 'OPS');
+                }
+                if (role === 'OPS') {
+                    return leave.profiles.department === currentProfile.department && leave.profiles.role === 'Employee';
+                }
+                return false;
+            };
+            const listHtml = `<table><tr><th>Employee</th><th>Dept</th><th>Type</th><th>Dates</th><th>Reason</th><th>Status</th>${isApprover ? '<th>Action</th>' : ''}</tr>${data?.map(l => `<tr><td>${l.profiles.full_name}</td><td>${l.profiles.department || '-'}</td><td>${l.leave_type}</td><td>${l.start_date} → ${l.end_date}</td><td>${l.reason}</td><td><span class="status-badge">${l.status}</span></td>${isApprover ? `<td>${canApprove(l) && l.status === 'pending' ? `<button data-id="${l.id}" class="approveLeave btn btn-success btn-sm">Approve</button> <button data-id="${l.id}" class="rejectLeave btn btn-danger btn-sm">Deny</button>` : (l.status === 'pending' ? 'Unauthorized' : '—')}</td>` : ''}</tr>`).join('')}</table>`;
+            document.getElementById('leaveList').innerHTML = listHtml;
+            document.querySelectorAll('.approveLeave').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = btn.dataset.id;
+                await supabase.from('leave_requests').update({ status: 'approved' }).eq('id', id);
+                const { data: req } = await supabase.from('leave_requests').select('user_id').eq('id', id).single();
+                if(req) await addNotification(req.user_id, "Leave Approved", "Your leave request has been approved");
+                showToast('Approved'); fetchLeaves(); addAuditLog('Approve Leave', `Request ${id}`);
+            }));
+            document.querySelectorAll('.rejectLeave').forEach(btn => btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                await supabase.from('leave_requests').update({ status: 'denied' }).eq('id', id);
+                showToast('Denied'); fetchLeaves();
+            }));
+        };
+        if (!isApprover) document.getElementById('newLeaveBtn')?.addEventListener('click', () => {
+            const modalHtml = `<div id="leaveModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;"><div class="card" style="width:400px;"><h3>Request Leave</h3><select id="leaveType"><option value="Sick">Sick Leave</option><option value="Vacation">Vacation Leave</option></select><input type="date" id="startDate"><input type="date" id="endDate"><textarea id="reason" placeholder="Reason"></textarea><div style="display:flex;gap:1rem;margin-top:1rem;"><button id="submitLeaveBtn" class="btn btn-primary">Submit</button><button id="closeModalBtn" class="btn">Cancel</button></div></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('submitLeaveBtn').onclick = async () => {
+                const leave_type = document.getElementById('leaveType').value;
+                const start_date = document.getElementById('startDate').value;
+                const end_date = document.getElementById('endDate').value;
+                const reason = document.getElementById('reason').value;
+                await supabase.from('leave_requests').insert([{ user_id: currentUser.id, leave_type, start_date, end_date, reason, status: 'pending' }]);
+                showToast('Request submitted'); document.getElementById('leaveModal')?.remove(); fetchLeaves(); addAuditLog('Submit Leave', '');
+                const { data: managers } = await supabase.from('profiles').select('id').in('role', ['HR','Admin','OPS']).eq('department', currentProfile.department);
+                managers?.forEach(m => addNotification(m.id, 'New Leave Request', `${currentProfile.full_name} requested ${leave_type}`));
+            };
+            document.getElementById('closeModalBtn').onclick = () => document.getElementById('leaveModal')?.remove();
         });
-        document.getElementById('totalLeaves').textContent = total;
-        document.getElementById('approvedLeaves').textContent = approved;
-        document.getElementById('pendingLeaves').textContent = pending;
-        document.getElementById('rejectedLeaves').textContent = rejected;
-        container.innerHTML = html || '<div>No leave requests</div>';
+        await fetchLeaves();
     }
 
-    function updateInbox(){
-        const content = document.getElementById('inboxContent');
-        let pending = 0, html = '';
-        Object.entries(appState.leaveRequests||{}).forEach(([id,l])=>{
-            if(l.status==='Pending' && canApproveLeave(l)){
-                pending++;
-                html += `<div class="leave-item"><strong>${l.name}</strong> (${l.empID})<br>${LEAVE_TYPES[l.type]}: ${l.startDate} - ${l.endDate||l.startDate}<br>${l.reason}<div class="leave-actions"><button class="action-btn btn-small" onclick="approveLeave('${id}')">Approve</button><button class="action-btn btn-small" style="background:var(--danger);" onclick="rejectLeave('${id}')">Reject</button></div></div>`;
+    // ========== EMPLOYEE DIRECTORY (read-only for OPS/Employee, limited for Admin) ==========
+    async function renderEmployeeDirectory(container) {
+        const role = currentProfile?.role;
+        let query = supabase.from('profiles').select('*');
+        if (role === 'Admin') query = query.eq('department', currentProfile.department);
+        const { data: employees } = await query;
+        container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td>${emp.department || 'General'}</td><td>${emp.role}</td></tr>`).join('')}</table></div>`;
+    }
+
+    // ========== MANAGE EMPLOYEES (Admin: same dept, HR: all) ==========
+    async function renderManageEmployees(container) {
+        const role = currentProfile?.role;
+        let query = supabase.from('profiles').select('*');
+        if (role === 'Admin') query = query.eq('department', currentProfile.department);
+        const { data: employees } = await query;
+        container.innerHTML = `<div class="card"><h3>Manage Employees (Add/Edit/Delete)</h3><button id="addEmpBtn" class="btn btn-primary">+ Add Employee</button><div id="empList"></div></div>`;
+        const renderList = () => {
+            const listHtml = `<table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')}</table>`;
+            document.getElementById('empList').innerHTML = listHtml;
+            document.querySelectorAll('.updateEmpBtn').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = btn.dataset.id;
+                const newDept = document.querySelector(`.deptInput[data-id="${id}"]`).value;
+                const newRole = document.querySelector(`.roleSelect[data-id="${id}"]`).value;
+                await supabase.from('profiles').update({ department: newDept, role: newRole }).eq('id', id);
+                showToast('Updated'); addAuditLog('Update Employee', `${id} -> ${newRole}`);
+                renderManageEmployees(container);
+            }));
+            document.querySelectorAll('.deleteEmpBtn').forEach(btn => btn.addEventListener('click', async () => {
+                if(confirm('Delete employee?')) { await supabase.from('profiles').delete().eq('id', btn.dataset.id); renderManageEmployees(container); }
+            }));
+        };
+        document.getElementById('addEmpBtn')?.addEventListener('click', () => {
+            const email = prompt("Email"); const name = prompt("Full Name"); const dept = prompt("Department");
+            if(email && name) supabase.auth.admin.createUser({ email, password: 'temp123', email_confirm: true, user_metadata: { full_name: name, department: dept, role: 'Employee' } }).then(() => { showToast('User created'); renderManageEmployees(container); });
+        });
+        renderList();
+    }
+
+    // ========== MASTER SCHEDULE (OPS/Admin/HR) ==========
+    async function renderMasterSchedule(container) {
+        const { data: schedules } = await supabase.from('master_schedule').select('*').order('day_of_week');
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        container.innerHTML = `<div class="card"><h3>Master Schedule</h3><div id="scheduleForm"></div><button id="saveScheduleBtn" class="btn btn-primary">Save Changes</button></div>`;
+        let html = `<table><tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th></tr>`;
+        schedules?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td><input type="checkbox" class="restChk" data-day="${s.day_of_week}" ${s.is_rest_day ? 'checked' : ''}></td><td><input type="time" class="startTime" data-day="${s.day_of_week}" value="${s.start_time || '09:00'}"></td><td><input type="time" class="endTime" data-day="${s.day_of_week}" value="${s.end_time || '17:00'}"></td></tr>`; });
+        document.getElementById('scheduleForm').innerHTML = html;
+        document.getElementById('saveScheduleBtn').onclick = async () => {
+            for (let s of schedules) {
+                const isRest = document.querySelector(`.restChk[data-day="${s.day_of_week}"]`).checked;
+                const start = document.querySelector(`.startTime[data-day="${s.day_of_week}"]`).value;
+                const end = document.querySelector(`.endTime[data-day="${s.day_of_week}"]`).value;
+                await supabase.from('master_schedule').update({ is_rest_day: isRest, start_time: start, end_time: end }).eq('id', s.id);
             }
-        });
-        document.getElementById('inboxCount').textContent = pending;
-        content.innerHTML = html || '<div>No pending requests</div>';
+            showToast('Schedule updated'); addAuditLog('Update Schedule','');
+        };
     }
 
-    function updateNotifications(){
-        const content = document.getElementById('notificationsContent');
-        let unread=0, html='';
-        Object.values(appState.notifications||{}).filter(n=>n.userId===appState.currentUser.id).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(n=>{
-            if(!n.read) unread++;
-            html += `<div class="leave-item"><strong>${n.title}</strong><br>${n.message}<br><small>${new Date(n.timestamp).toLocaleString()}</small></div>`;
-        });
-        document.getElementById('notificationCount').textContent = unread;
-        document.getElementById('notificationBadge').textContent = unread;
-        document.getElementById('notificationBadge').classList.toggle('hidden', unread===0);
-        content.innerHTML = html || '<div>No notifications</div>';
-    }
-
-    function renderAudit(logs){
-        let html = `<table><thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead><tbody>`;
-        const arr = Object.entries(logs||{}).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp)).slice(0,50);
-        arr.forEach(([id,l])=>{
-            html += `<tr><td>${new Date(l.timestamp).toLocaleString()}</td><td>${l.name||''}</td><td>${l.action||''}</td></tr>`;
-        });
-        html += `</tbody></table>`;
-        document.getElementById('auditTable').innerHTML = html;
-    }
-
-    // ==================== EXPORTS & MISC ====================
-    window.searchEmployees = ()=> { const term = document.getElementById('directorySearch').value.toLowerCase(); document.querySelectorAll('#dirTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.searchActive = ()=> { const term = document.getElementById('activeSearch').value.toLowerCase(); document.querySelectorAll('#activeTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.searchSchedules = ()=> { const term = document.getElementById('scheduleSearch').value.toLowerCase(); document.querySelectorAll('#schedTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.searchAttendance = ()=> { const term = document.getElementById('attendanceSearch').value.toLowerCase(); document.querySelectorAll('#payTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.searchAudit = ()=> { const term = document.getElementById('auditSearch').value.toLowerCase(); document.querySelectorAll('#auditTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.searchMyLeaves = ()=> { const term = document.getElementById('leaveSearch').value.toLowerCase(); document.querySelectorAll('.leave-card').forEach(c=> c.style.display = c.textContent.toLowerCase().includes(term) ? '' : 'none'); };
-    window.exportToExcel = ()=> {
-        const month = parseInt(document.getElementById('pMonth').value);
-        const period = document.getElementById('pPeriod').value;
-        const [s,e] = period.split('-').map(Number);
-        const data = [['Emp ID','Name','Dept','Shift',...Array.from({length:e-s+1},(_,i)=>s+i),'Total Lates']];
-        for(const [empId, user] of Object.entries(appState.users)){
-            const ts = user['out_'+month]||'';
-            const shift = detectShiftType(ts);
-            const row = [empId, user.fullName, user.dept, shift];
-            let lates=0;
-            for(let d=s; d<=e; d++){
-                const key = `${month}_${d}`;
-                const status = appState.attendance[empId]?.[key]||'';
-                const late = appState.attendance[empId]?.[key+'_late']||0;
-                lates += parseInt(late);
-                row.push(status+(late?` (${late}m)`:'')); 
+    async function renderCompanyCalendar(container) { /* same as before but compact */ 
+        const yearMonth = new Date().toISOString().slice(0,7);
+        container.innerHTML = `<div class="card"><h3>Company Calendar</h3><input type="month" id="calMonth" value="${yearMonth}"><div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:1rem;"></div></div>`;
+        const loadCalendar = async () => {
+            const month = document.getElementById('calMonth').value; const [year, monthIdx] = month.split('-');
+            const firstDay = new Date(year, monthIdx-1, 1); const lastDay = new Date(year, monthIdx, 0);
+            const daysInMonth = lastDay.getDate(); const startWeekday = firstDay.getDay();
+            const { data: leaves } = await supabase.from('leave_requests').select('*').eq('status','approved').gte('start_date', `${year}-${monthIdx}-01`).lte('end_date', `${year}-${monthIdx}-${daysInMonth}`);
+            let gridHtml = `<div style="font-weight:bold;">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>`;
+            for(let i=0;i<startWeekday;i++) gridHtml += `<div></div>`;
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${monthIdx}-${String(d).padStart(2,'0')}`;
+                const leavesToday = leaves?.filter(l => dateStr >= l.start_date && dateStr <= l.end_date).map(l => l.leave_type).join(',');
+                gridHtml += `<div style="border:1px solid #ddd; padding:8px; border-radius:12px;"><strong>${d}</strong><br><span style="font-size:11px;">${leavesToday || 'Working'}</span></div>`;
             }
-            row.push(lates);
-            data.push(row);
+            document.getElementById('calendarGrid').innerHTML = gridHtml;
+        };
+        document.getElementById('calMonth')?.addEventListener('change', loadCalendar);
+        await loadCalendar();
+    }
+
+    async function renderAuditLogs(container) {
+        let query = supabase.from('audit_logs').select('*, profiles!audit_logs_user_id_fkey(full_name)').order('created_at', { ascending: false }).limit(200);
+        if (currentProfile?.role === 'Admin') {
+            const { data: deptUsers } = await supabase.from('profiles').select('id').eq('department', currentProfile.department);
+            const userIds = deptUsers.map(u => u.id);
+            query = query.in('user_id', userIds);
         }
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Attendance');
-        XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}.xlsx`);
-    };
-    window.changeCalendarView = ()=> { appState.calendarInstance?.changeView(document.getElementById('calendarView').value); };
-    window.refreshCalendarEvents = ()=> { if(appState.calendarInstance){ appState.calendarInstance.removeAllEvents(); appState.calendarInstance.addEventSource(getCalendarEvents()); } };
-    window.updateScheduleField = (empId, field, value) => { document.getElementById('saveSchedulesBtn').classList.remove('hidden'); if(!appState.scheduleChanges[empId]) appState.scheduleChanges[empId] = {}; appState.scheduleChanges[empId][field] = value; };
-    window.saveSchedule = async (empId, month) => { await update(ref(db, `users/users/${empId}`), appState.scheduleChanges[empId]||{}); showToast('Schedule saved','success'); };
-    window.saveAllSchedules = async ()=> { for(const [empId, changes] of Object.entries(appState.scheduleChanges)) await update(ref(db, `users/users/${empId}`), changes); appState.scheduleChanges = {}; document.getElementById('saveSchedulesBtn').classList.add('hidden'); showToast('All schedules published','success'); };
-    window.changeAttendanceStatus = async (empId, dateKey) => {
-        if(appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR') return;
-        const cur = appState.attendance[empId]?.[dateKey] || '';
-        const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];
-        await update(ref(db, `attendance/${empId}`), {[dateKey]: next});
-        await push(ref(db, 'audit_logs'), {name: appState.currentUser.fullName, action: `Changed ${empId} ${dateKey} to ${next}`, timestamp: new Date().toISOString()});
-    };
-    window.submitLeave = async ()=> {
-        const type = document.getElementById('lvType').value;
-        const start = document.getElementById('lvStartDate').value, end = document.getElementById('lvEndDate').value;
-        const reason = document.getElementById('lvReason').value.trim();
-        if(!start) return showToast('Select start date','error');
-        if(hasOverlappingLeave(appState.currentUser.id, start, end)) return showToast('Overlapping leave exists','error');
-        const workingDays = calculateWorkingDays(start, end, appState.currentUser.id);
-        const available = parseInt(document.getElementById('availableBalance').textContent);
-        if(available < workingDays) return showToast('Insufficient balance','error');
-        const leaveRequest = { empID: appState.currentUser.id, name: appState.currentUser.fullName, type, startDate: start, endDate: end||start, reason, status: 'Pending', department: appState.currentUser.dept, submittedAt: new Date().toISOString(), workingDays };
-        const res = await safeFirebaseOp('submit_leave', {leaveRequest, auditLog:{name:appState.currentUser.fullName, action:'Submit leave', timestamp:new Date().toISOString()}});
-        if(res.success){ showToast('Request submitted','success'); toggleLeaveForm(); }
-    };
-    window.approveLeave = async (leaveId) => {
-        const req = appState.leaveRequests[leaveId];
-        if(!canApproveLeave(req)) return showToast('Not authorized','error');
-        const updates = { status: 'Approved', approvedBy: appState.currentUser.fullName, approvedAt: new Date().toISOString() };
-        await update(ref(db, `leave_requests/${leaveId}`), updates);
-        const dates = {}; let d = new Date(req.startDate), end = new Date(req.endDate||req.startDate);
-        while(d <= end){ dates[`${d.getMonth()}_${d.getDate()}`] = req.type; d.setDate(d.getDate()+1); }
-        await update(ref(db, `attendance/${req.empID}`), dates);
-        await push(ref(db, 'notifications'), { userId: req.empID, title: 'Leave Approved', message: `Your ${LEAVE_TYPES[req.type]} request was approved`, type: 'success', timestamp: new Date().toISOString(), read: false });
-        showToast('Approved','success');
-    };
-    window.rejectLeave = async (leaveId) => {
-        if(!canApproveLeave(appState.leaveRequests[leaveId])) return showToast('Not authorized','error');
-        await update(ref(db, `leave_requests/${leaveId}`), { status: 'Rejected', rejectedBy: appState.currentUser.fullName, rejectedAt: new Date().toISOString() });
-        await push(ref(db, 'notifications'), { userId: appState.leaveRequests[leaveId].empID, title: 'Leave Rejected', message: `Your leave request was rejected`, type: 'error', timestamp: new Date().toISOString(), read: false });
-        showToast('Rejected','success');
-    };
-    window.addEmployee = async ()=> {
-        const empId = document.getElementById('addEmpNum').value.trim();
-        if(!empId) return showToast('Emp ID required','error');
-        const data = { fullName: document.getElementById('addFullName').value, username: document.getElementById('addUser').value, password: document.getElementById('addPass').value, dept: document.getElementById('addDept').value, role: document.getElementById('addRole').value, slMax: parseInt(document.getElementById('addSL').value)||10, vlMax: parseInt(document.getElementById('addVL').value)||10, maxConsecutiveLeave: parseInt(document.getElementById('addMaxConsecutive').value)||30 };
-        await safeFirebaseOp('add_employee', {empId, employeeData: data});
-        showToast('Employee added','success');
-    };
-    window.editEmployee = (empId) => {
-        const user = appState.users[empId];
-        if(!user) return;
-        appState.editingEmployeeId = empId;
-        document.getElementById('addEmpNum').value = empId; document.getElementById('addEmpNum').disabled = true;
-        document.getElementById('addFullName').value = user.fullName||''; document.getElementById('addUser').value = user.username||'';
-        document.getElementById('addPass').value = ''; document.getElementById('addDept').value = user.dept||'RC';
-        document.getElementById('addRole').value = user.role||'Employee'; document.getElementById('addSL').value = user.slMax||10;
-        document.getElementById('addVL').value = user.vlMax||10; document.getElementById('addMaxConsecutive').value = user.maxConsecutiveLeave||30;
-        document.getElementById('cancelEditBtn').style.display = 'inline-block';
-        document.getElementById('addEmployeeBtn').textContent = 'UPDATE';
-    };
-    window.cancelEdit = ()=> { appState.editingEmployeeId = null; document.getElementById('addEmpNum').disabled = false; document.getElementById('addEmpNum').value = ''; document.getElementById('addFullName').value = ''; document.getElementById('addUser').value = ''; document.getElementById('addPass').value = ''; document.getElementById('cancelEditBtn').style.display = 'none'; document.getElementById('addEmployeeBtn').textContent = 'ADD'; };
-    window.deleteEmployee = async (empId) => { if(confirm('Delete?')){ await safeFirebaseOp('delete_employee', {empId}); showToast('Deleted','success'); } };
-    window.toggleInbox = ()=> document.getElementById('leaveInbox').classList.toggle('hidden');
-    window.toggleNotifications = ()=> document.getElementById('notificationsModal').classList.toggle('hidden');
-    window.toggleLeaveForm = ()=> { document.getElementById('leaveFormSection').classList.toggle('hidden'); updateLeaveBalance(); };
-    window.updateLeaveBalance = ()=> {
-        const type = document.getElementById('lvType').value;
-        const start = document.getElementById('lvStartDate').value;
-        const end = document.getElementById('lvEndDate').value;
-        const user = appState.users[appState.currentUser.id]||appState.currentUser;
-        const used = calculateUsedLeaves(appState.currentUser.id, type);
-        const max = type==='SL'? (user.slMax||0) : (user.vlMax||0);
-        document.getElementById('availableBalance').textContent = Math.max(0, max-used);
-        if(start) document.getElementById('requestedDays').textContent = calculateWorkingDays(start, end, appState.currentUser.id);
-    };
-    window.manualClockOutNow = ()=> userClockAction('OUT');
-
-    function setupRealtimeListeners(){
-        Object.values(appState.listeners).forEach(f=>f&&f());
-        appState.listeners.users = onValue(ref(db,'users/users'), s=>{ appState.users=s.val()||{}; renderCurrentTabOnly(); });
-        appState.listeners.attendance = onValue(query(ref(db,'attendance'), limitToLast(100)), s=>{ appState.attendance=s.val()||{}; renderCurrentTabOnly(); });
-        appState.listeners.leaveRequests = onValue(query(ref(db,'leave_requests'), limitToLast(200)), s=>{ appState.leaveRequests=s.val()||{}; updateInbox(); updateMyLeaves(); if(appState.calendarInstance) refreshCalendarEvents(); });
-        appState.listeners.notifications = onValue(ref(db,'notifications'), s=>{ appState.notifications=s.val()||{}; updateNotifications(); });
-        appState.listeners.auditLogs = onValue(ref(db,'audit_logs'), s=>{ renderAudit(s.val()); });
+        const { data } = await query;
+        container.innerHTML = `<div class="card"><h3>Audit Logs</h3><table><tr><th>User</th><th>Action</th><th>Details</th><th>Timestamp</th></tr>${data?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${l.details || ''}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
     }
 
-    window.switchTab = (name, btn) => {
-        document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        document.getElementById(`sec-${name}`).classList.remove('hidden');
-        btn.classList.add('active');
-        if(name==='calendar' && !appState.calendarInitialized) setTimeout(initializeCalendar,100);
-        renderCurrentTabOnly();
-    };
+    async function renderNotifications(container) {
+        const { data } = await supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        container.innerHTML = `<div class="card"><h3>Notifications</h3><ul>${data?.map(n => `<li style="padding:8px; border-bottom:1px solid #e2e8f0;"><b>${n.title}</b><br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></li>`).join('') || '<li>No notifications</li>'}</ul></div>`;
+        await supabase.from('notifications').update({ read: true }).eq('user_id', currentUser.id);
+    }
 
-    document.addEventListener('DOMContentLoaded', ()=>{
-        document.querySelectorAll('#pMonth, #sMonth').forEach(s=>{ s.innerHTML = MONTHS.map((m,i)=>`<option value="${i}" ${new Date().getMonth()===i?'selected':''}>${m}</option>`).join(''); });
-        document.getElementById('pPeriod').value = new Date().getDate()<=15?"1-15":"16-31";
-        setInterval(()=>{ document.getElementById('liveClock').textContent = new Date().toLocaleTimeString(); }, 1000);
-        const saved = localStorage.getItem('hr_currentUser');
-        if(saved){ try{ appState.currentUser = JSON.parse(saved); showAdminPanel(); setupRealtimeListeners(); }catch(e){ localStorage.removeItem('hr_currentUser'); } }
+    // ========== AUTH INIT ==========
+    async function initApp() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { document.getElementById('loginSection').style.display = 'flex'; document.getElementById('appContainer').style.display = 'none'; return; }
+        currentUser = session.user;
+        currentProfile = await fetchProfile(currentUser.id);
+        if (!currentProfile) { await supabase.auth.signOut(); location.reload(); return; }
+        document.getElementById('userRoleBadge').innerHTML = currentProfile.role;
+        document.getElementById('userNameDisplay').innerHTML = currentProfile.full_name;
+        document.getElementById('userDeptDisplay').innerHTML = currentProfile.department || 'General';
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        renderNav();
+        activeTab = "dashboard";
+        await loadMainContent();
+    }
+
+    document.getElementById('loginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value, password = document.getElementById('loginPassword').value;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) showToast(error.message, 'error');
+        else { showToast('Login success'); initApp(); addAuditLog('Login', 'User logged in'); }
+    };
+    document.getElementById('showSignup')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signupForm').style.display = 'block'; });
+    document.getElementById('doSignup')?.addEventListener('click', async () => {
+        const email = document.getElementById('signupEmail').value, password = document.getElementById('signupPassword').value, full_name = document.getElementById('signupName').value, department = document.getElementById('signupDept').value;
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name, department, role: 'Employee' } } });
+        if (error) showToast(error.message); else { showToast('Account created! Please login'); document.getElementById('signupForm').style.display = 'none'; }
     });
+    document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
+    supabase.auth.onAuthStateChange(() => initApp());
+    initApp();
 </script>
 </body>
 </html>
