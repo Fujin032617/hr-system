@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Master Pro – Fully Working</title>
+    <title>HR Master Pro | Enterprise Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css">
     <style>
-        :root { --primary: #1e40af; --primary-light: #3b82f6; --accent: #2563eb; --accent-hover: #1d4ed8; --header-red: #ef4444; --bg: #f1f5f9; --text-main: #1e293b; --text-light: #64748b; --card-bg: #ffffff; --green: #10b981; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); --warning: #f59e0b; --danger: #ef4444; --success: #10b981; }
+        :root { --primary: #1e40af; --primary-light: #3b82f6; --accent: #2563eb; --accent-hover: #1d4ed8; --header-red: #ef4444; --bg: #f1f5f9; --text-main: #1e293b; --text-light: #64748b; --card-bg: #ffffff; --green: #10b981; --border: #e2e8f0; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); --warning: #f59e0b; --danger: #ef4444; --success: #10b981; --orange: #f97316; --purple: #8b5cf6; --cyan: #06b6d4; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; font-size: 11px; color: var(--text-main); line-height: 1.6; }
         header { background: var(--primary); padding: 0 40px; height: 60px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo-box { background: var(--primary-light); padding: 6px 12px; border-radius: 8px; font-weight: 800; letter-spacing: 1px; }
@@ -123,7 +123,7 @@
 </head>
 <body>
 <header>
-    <div class="flex-center"><div class="logo-box">HR</div><h2>MASTER<span style="font-weight:300;">LIST</span></h2><span id="roleBadge" style="padding:4px 10px;border-radius:20px;font-size:9px;font-weight:700;background:rgba(255,255,255,0.15);"></span></div>
+    <div class="flex-center"><div class="logo-box">HR</div><h2 style="margin:0;font-size:18px;">MASTER<span style="font-weight:300;">LIST</span></h2><span id="roleBadge" style="padding:4px 10px;border-radius:20px;font-size:9px;font-weight:700;background:rgba(255,255,255,0.15);"></span></div>
     <div class="flex-center">
         <div id="notificationBell" class="notification-bell hidden" onclick="toggleNotifications()"><span>🔔</span><span id="notificationBadge" class="badge hidden">0</span></div>
         <div id="mailIcon" class="hidden" style="position:relative;cursor:pointer;" onclick="toggleInbox()"><span>✉</span><span id="mailBadge" class="badge hidden">0</span></div>
@@ -180,6 +180,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get, update, onValue, push, remove, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    // Your Firebase config (complete with databaseURL)
     const firebaseConfig = {
         apiKey: "AIzaSyByHriu33qnYyuvcsQlSA_PSmZITteAae4",
         authDomain: "hr-system-hue.firebaseapp.com",
@@ -192,9 +193,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Password hashing
     const hashPassword = (p, s) => { if(!s) s = CryptoJS.lib.WordArray.random(128/8).toString(); return { hash: CryptoJS.SHA256(p + s).toString(), salt: s }; };
     const verify = (p, s, h) => CryptoJS.SHA256(p + s).toString() === h;
 
+    // Offline queue handlers
     const ACTION_HANDLERS = {
         clock_in: async (d) => { await update(ref(db, `attendance/${d.userId}`), d.updates); await push(ref(db, 'audit_logs'), d.auditLog); },
         clock_out: async (d) => { await update(ref(db, `attendance/${d.userId}`), d.updates); await push(ref(db, 'audit_logs'), d.auditLog); if(d.notification) await push(ref(db, 'notifications'), d.notification); },
@@ -543,12 +546,12 @@
     }
 
     // ==================== EXPORTS & MISC ====================
-    window.searchEmployees = ()=> { /* filter dirTable */ };
-    window.searchActive = ()=> { /* filter activeTable */ };
-    window.searchSchedules = ()=> { /* filter schedTable */ };
-    window.searchAttendance = ()=> { /* filter payTable */ };
-    window.searchAudit = ()=> { /* filter auditTable */ };
-    window.searchMyLeaves = ()=> { /* filter leaves */ };
+    window.searchEmployees = ()=> { const term = document.getElementById('directorySearch').value.toLowerCase(); document.querySelectorAll('#dirTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
+    window.searchActive = ()=> { const term = document.getElementById('activeSearch').value.toLowerCase(); document.querySelectorAll('#activeTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
+    window.searchSchedules = ()=> { const term = document.getElementById('scheduleSearch').value.toLowerCase(); document.querySelectorAll('#schedTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
+    window.searchAttendance = ()=> { const term = document.getElementById('attendanceSearch').value.toLowerCase(); document.querySelectorAll('#payTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
+    window.searchAudit = ()=> { const term = document.getElementById('auditSearch').value.toLowerCase(); document.querySelectorAll('#auditTable tbody tr').forEach(r=> r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none'); };
+    window.searchMyLeaves = ()=> { const term = document.getElementById('leaveSearch').value.toLowerCase(); document.querySelectorAll('.leave-card').forEach(c=> c.style.display = c.textContent.toLowerCase().includes(term) ? '' : 'none'); };
     window.exportToExcel = ()=> {
         const month = parseInt(document.getElementById('pMonth').value);
         const period = document.getElementById('pPeriod').value;
@@ -564,4 +567,118 @@
                 const status = appState.attendance[empId]?.[key]||'';
                 const late = appState.attendance[empId]?.[key+'_late']||0;
                 lates += parseInt(late);
-                row.push(status+(late?` (${late}m)`:''));
+                row.push(status+(late?` (${late}m)`:'')); 
+            }
+            row.push(lates);
+            data.push(row);
+        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Attendance');
+        XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}.xlsx`);
+    };
+    window.changeCalendarView = ()=> { appState.calendarInstance?.changeView(document.getElementById('calendarView').value); };
+    window.refreshCalendarEvents = ()=> { if(appState.calendarInstance){ appState.calendarInstance.removeAllEvents(); appState.calendarInstance.addEventSource(getCalendarEvents()); } };
+    window.updateScheduleField = (empId, field, value) => { document.getElementById('saveSchedulesBtn').classList.remove('hidden'); if(!appState.scheduleChanges[empId]) appState.scheduleChanges[empId] = {}; appState.scheduleChanges[empId][field] = value; };
+    window.saveSchedule = async (empId, month) => { await update(ref(db, `users/users/${empId}`), appState.scheduleChanges[empId]||{}); showToast('Schedule saved','success'); };
+    window.saveAllSchedules = async ()=> { for(const [empId, changes] of Object.entries(appState.scheduleChanges)) await update(ref(db, `users/users/${empId}`), changes); appState.scheduleChanges = {}; document.getElementById('saveSchedulesBtn').classList.add('hidden'); showToast('All schedules published','success'); };
+    window.changeAttendanceStatus = async (empId, dateKey) => {
+        if(appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR') return;
+        const cur = appState.attendance[empId]?.[dateKey] || '';
+        const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];
+        await update(ref(db, `attendance/${empId}`), {[dateKey]: next});
+        await push(ref(db, 'audit_logs'), {name: appState.currentUser.fullName, action: `Changed ${empId} ${dateKey} to ${next}`, timestamp: new Date().toISOString()});
+    };
+    window.submitLeave = async ()=> {
+        const type = document.getElementById('lvType').value;
+        const start = document.getElementById('lvStartDate').value, end = document.getElementById('lvEndDate').value;
+        const reason = document.getElementById('lvReason').value.trim();
+        if(!start) return showToast('Select start date','error');
+        if(hasOverlappingLeave(appState.currentUser.id, start, end)) return showToast('Overlapping leave exists','error');
+        const workingDays = calculateWorkingDays(start, end, appState.currentUser.id);
+        const available = parseInt(document.getElementById('availableBalance').textContent);
+        if(available < workingDays) return showToast('Insufficient balance','error');
+        const leaveRequest = { empID: appState.currentUser.id, name: appState.currentUser.fullName, type, startDate: start, endDate: end||start, reason, status: 'Pending', department: appState.currentUser.dept, submittedAt: new Date().toISOString(), workingDays };
+        const res = await safeFirebaseOp('submit_leave', {leaveRequest, auditLog:{name:appState.currentUser.fullName, action:'Submit leave', timestamp:new Date().toISOString()}});
+        if(res.success){ showToast('Request submitted','success'); toggleLeaveForm(); }
+    };
+    window.approveLeave = async (leaveId) => {
+        const req = appState.leaveRequests[leaveId];
+        if(!canApproveLeave(req)) return showToast('Not authorized','error');
+        const updates = { status: 'Approved', approvedBy: appState.currentUser.fullName, approvedAt: new Date().toISOString() };
+        await update(ref(db, `leave_requests/${leaveId}`), updates);
+        const dates = {}; let d = new Date(req.startDate), end = new Date(req.endDate||req.startDate);
+        while(d <= end){ dates[`${d.getMonth()}_${d.getDate()}`] = req.type; d.setDate(d.getDate()+1); }
+        await update(ref(db, `attendance/${req.empID}`), dates);
+        await push(ref(db, 'notifications'), { userId: req.empID, title: 'Leave Approved', message: `Your ${LEAVE_TYPES[req.type]} request was approved`, type: 'success', timestamp: new Date().toISOString(), read: false });
+        showToast('Approved','success');
+    };
+    window.rejectLeave = async (leaveId) => {
+        if(!canApproveLeave(appState.leaveRequests[leaveId])) return showToast('Not authorized','error');
+        await update(ref(db, `leave_requests/${leaveId}`), { status: 'Rejected', rejectedBy: appState.currentUser.fullName, rejectedAt: new Date().toISOString() });
+        await push(ref(db, 'notifications'), { userId: appState.leaveRequests[leaveId].empID, title: 'Leave Rejected', message: `Your leave request was rejected`, type: 'error', timestamp: new Date().toISOString(), read: false });
+        showToast('Rejected','success');
+    };
+    window.addEmployee = async ()=> {
+        const empId = document.getElementById('addEmpNum').value.trim();
+        if(!empId) return showToast('Emp ID required','error');
+        const data = { fullName: document.getElementById('addFullName').value, username: document.getElementById('addUser').value, password: document.getElementById('addPass').value, dept: document.getElementById('addDept').value, role: document.getElementById('addRole').value, slMax: parseInt(document.getElementById('addSL').value)||10, vlMax: parseInt(document.getElementById('addVL').value)||10, maxConsecutiveLeave: parseInt(document.getElementById('addMaxConsecutive').value)||30 };
+        await safeFirebaseOp('add_employee', {empId, employeeData: data});
+        showToast('Employee added','success');
+    };
+    window.editEmployee = (empId) => {
+        const user = appState.users[empId];
+        if(!user) return;
+        appState.editingEmployeeId = empId;
+        document.getElementById('addEmpNum').value = empId; document.getElementById('addEmpNum').disabled = true;
+        document.getElementById('addFullName').value = user.fullName||''; document.getElementById('addUser').value = user.username||'';
+        document.getElementById('addPass').value = ''; document.getElementById('addDept').value = user.dept||'RC';
+        document.getElementById('addRole').value = user.role||'Employee'; document.getElementById('addSL').value = user.slMax||10;
+        document.getElementById('addVL').value = user.vlMax||10; document.getElementById('addMaxConsecutive').value = user.maxConsecutiveLeave||30;
+        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+        document.getElementById('addEmployeeBtn').textContent = 'UPDATE';
+    };
+    window.cancelEdit = ()=> { appState.editingEmployeeId = null; document.getElementById('addEmpNum').disabled = false; document.getElementById('addEmpNum').value = ''; document.getElementById('addFullName').value = ''; document.getElementById('addUser').value = ''; document.getElementById('addPass').value = ''; document.getElementById('cancelEditBtn').style.display = 'none'; document.getElementById('addEmployeeBtn').textContent = 'ADD'; };
+    window.deleteEmployee = async (empId) => { if(confirm('Delete?')){ await safeFirebaseOp('delete_employee', {empId}); showToast('Deleted','success'); } };
+    window.toggleInbox = ()=> document.getElementById('leaveInbox').classList.toggle('hidden');
+    window.toggleNotifications = ()=> document.getElementById('notificationsModal').classList.toggle('hidden');
+    window.toggleLeaveForm = ()=> { document.getElementById('leaveFormSection').classList.toggle('hidden'); updateLeaveBalance(); };
+    window.updateLeaveBalance = ()=> {
+        const type = document.getElementById('lvType').value;
+        const start = document.getElementById('lvStartDate').value;
+        const end = document.getElementById('lvEndDate').value;
+        const user = appState.users[appState.currentUser.id]||appState.currentUser;
+        const used = calculateUsedLeaves(appState.currentUser.id, type);
+        const max = type==='SL'? (user.slMax||0) : (user.vlMax||0);
+        document.getElementById('availableBalance').textContent = Math.max(0, max-used);
+        if(start) document.getElementById('requestedDays').textContent = calculateWorkingDays(start, end, appState.currentUser.id);
+    };
+    window.manualClockOutNow = ()=> userClockAction('OUT');
+
+    function setupRealtimeListeners(){
+        Object.values(appState.listeners).forEach(f=>f&&f());
+        appState.listeners.users = onValue(ref(db,'users/users'), s=>{ appState.users=s.val()||{}; renderCurrentTabOnly(); });
+        appState.listeners.attendance = onValue(query(ref(db,'attendance'), limitToLast(100)), s=>{ appState.attendance=s.val()||{}; renderCurrentTabOnly(); });
+        appState.listeners.leaveRequests = onValue(query(ref(db,'leave_requests'), limitToLast(200)), s=>{ appState.leaveRequests=s.val()||{}; updateInbox(); updateMyLeaves(); if(appState.calendarInstance) refreshCalendarEvents(); });
+        appState.listeners.notifications = onValue(ref(db,'notifications'), s=>{ appState.notifications=s.val()||{}; updateNotifications(); });
+        appState.listeners.auditLogs = onValue(ref(db,'audit_logs'), s=>{ renderAudit(s.val()); });
+    }
+
+    window.switchTab = (name, btn) => {
+        document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(`sec-${name}`).classList.remove('hidden');
+        btn.classList.add('active');
+        if(name==='calendar' && !appState.calendarInitialized) setTimeout(initializeCalendar,100);
+        renderCurrentTabOnly();
+    };
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        document.querySelectorAll('#pMonth, #sMonth').forEach(s=>{ s.innerHTML = MONTHS.map((m,i)=>`<option value="${i}" ${new Date().getMonth()===i?'selected':''}>${m}</option>`).join(''); });
+        document.getElementById('pPeriod').value = new Date().getDate()<=15?"1-15":"16-31";
+        setInterval(()=>{ document.getElementById('liveClock').textContent = new Date().toLocaleTimeString(); }, 1000);
+        const saved = localStorage.getItem('hr_currentUser');
+        if(saved){ try{ appState.currentUser = JSON.parse(saved); showAdminPanel(); setupRealtimeListeners(); }catch(e){ localStorage.removeItem('hr_currentUser'); } }
+    });
+</script>
+</body>
+</html>
