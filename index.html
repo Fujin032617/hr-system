@@ -177,7 +177,7 @@
             showToast('Clocked out', 'success'); addAuditLog('Clock Out', ''); loadMainContent();
         });
         const { data: lastDays } = await sb.from('attendances').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }).limit(7);
-        const tableHtml = `<tr><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${lastDays?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code || 'Present'}</td></tr>`).join('') || '<tr><td colspan="4">No records</td></tr>'}</table>`;
+        const tableHtml = `<table><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>${lastDays?.map(a => `<tr><td>${a.date}</td><td>${a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td><td>${a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : '-'}</td><td>${a.status_code || 'Present'}</td></tr>`).join('') || '<tr><td colspan="4">No records</td></tr>'}</table>`;
         document.getElementById('recentAttendanceTable').innerHTML = tableHtml;
     }
 
@@ -286,7 +286,7 @@
         let query = sb.from('profiles').select('*');
         if (role === 'Admin') query = query.eq('department', currentProfile.department);
         const { data: employees } = await query;
-        container.innerHTML = `<div class="card"><h3>Employee Directory</h3> table <tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th> </tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td>${emp.department || 'General'}</td><td>${emp.role}</td></tr>`).join('')} </table></div>`;
+        container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td>${emp.department || 'General'}</td><td>${emp.role}</td></tr>`).join('')}</table></div>`;
     }
 
     async function renderManageEmployees(container) {
@@ -296,7 +296,7 @@
         const { data: employees } = await query;
         container.innerHTML = `<div class="card"><h3>Manage Employees (Add/Edit/Delete)</h3><button id="addEmpBtn" class="btn btn-primary">+ Add Employee</button><div id="empList"></div></div>`;
         const renderList = () => {
-            const listHtml = ` table <tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th> <tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')} </table>`;
+            const listHtml = `<table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th><tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')}</table>`;
             document.getElementById('empList').innerHTML = listHtml;
             document.querySelectorAll('.updateEmpBtn').forEach(btn => btn.addEventListener('click', async (e) => {
                 const id = btn.dataset.id;
@@ -321,7 +321,7 @@
         const { data: schedules } = await sb.from('master_schedule').select('*').order('day_of_week');
         const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         container.innerHTML = `<div class="card"><h3>Master Schedule</h3><div id="scheduleForm"></div><button id="saveScheduleBtn" class="btn btn-primary">Save Changes</button></div>`;
-        let html = ` table <tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th> </tr>`;
+        let html = `<tr><tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th></tr>`;
         schedules?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td><input type="checkbox" class="restChk" data-day="${s.day_of_week}" ${s.is_rest_day ? 'checked' : ''}></td><td><input type="time" class="startTime" data-day="${s.day_of_week}" value="${s.start_time || '09:00'}"></td><td><input type="time" class="endTime" data-day="${s.day_of_week}" value="${s.end_time || '17:00'}"></td></tr>`; });
         document.getElementById('scheduleForm').innerHTML = html;
         document.getElementById('saveScheduleBtn').onclick = async () => {
