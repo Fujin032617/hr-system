@@ -50,7 +50,9 @@
         <input type="email" id="loginEmail" placeholder="Email" style="width:100%; margin-bottom: 1rem; padding:12px;">
         <input type="password" id="loginPassword" placeholder="Password" style="width:100%; margin-bottom: 1.5rem; padding:12px;">
         <button id="loginBtn" class="btn btn-primary" style="width:100%;">Login</button>
-        <p style="margin-top: 1rem; text-align:center; font-size:0.85rem;">Demo: hr@example.com (HR) / admin@example.com (Admin) / ops@example.com (OPS) / emp@example.com (Employee)<br>Password: 123456</p>
+        <p style="margin-top: 1rem; text-align:center; font-size:0.85rem;">
+            <a href="#" id="showSignupLink">Create new account</a>
+        </p>
         <div id="signupForm" style="display:none; margin-top: 1rem;">
             <input type="text" id="signupName" placeholder="Full Name" style="width:100%; margin-bottom:0.8rem;">
             <input type="email" id="signupEmail" placeholder="Email" style="width:100%; margin-bottom:0.8rem;">
@@ -58,6 +60,9 @@
             <input type="password" id="signupPassword" placeholder="Password" style="width:100%; margin-bottom:0.8rem;">
             <button id="doSignup" class="btn btn-primary" style="width:100%;">Register</button>
         </div>
+        <p style="margin-top: 1rem; text-align:center; font-size:0.7rem; color:#64748b;">
+            Demo: hr@example.com (HR) / admin@example.com (Admin)<br>Password for all: 123456
+        </p>
     </div>
 </div>
 
@@ -80,8 +85,8 @@
 
 <script>
     // ========== SUPABASE CONFIGURATION ==========
-    const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";     // REPLACE WITH YOUR URL
-    const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";                 // REPLACE WITH YOUR KEY
+    const SUPABASE_URL = "https://dkzsmiwlrrnvfdxblsvx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_NNtC2TPNlchs0QoQPqlhWQ_sqB2AZMq";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null, currentProfile = null, activeTab = "dashboard";
@@ -109,7 +114,6 @@
         return null;
     }
 
-    // Role-based menu generation (with department awareness)
     function renderNav() {
         const role = currentProfile?.role;
         let items = [{ id: 'dashboard', icon: 'tachometer-alt', label: 'Dashboard' }];
@@ -143,7 +147,6 @@
         else if (activeTab === 'manageemployees') await renderManageEmployees(contentDiv);
     }
 
-    // ========== DASHBOARD ==========
     async function renderDashboard(container) {
         const today = new Date().toISOString().slice(0,10);
         const { data: attend } = await supabase.from('attendances').select('*').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
@@ -172,29 +175,30 @@
         document.getElementById('recentAttendanceTable').innerHTML = tableHtml;
     }
 
-    // ========== ACTIVE NOW (for OPS/Admin/HR) ==========
     async function renderActiveNow(container) {
         const today = new Date().toISOString().slice(0,10);
-        const { data: active } = await supabase.from('attendances').select('user_id, clock_in, profiles!inner(full_name, department, role)').eq('date', today).is('clock_out', null);
+        // Fixed query: clock_in not null and clock_out is null
+        const { data: active } = await supabase
+            .from('attendances')
+            .select('user_id, clock_in, profiles!inner(full_name, department, role)')
+            .eq('date', today)
+            .not('clock_in', 'is', null)
+            .is('clock_out', null);
         container.innerHTML = `<div class="card"><h3><i class="fas fa-user-check"></i> Active Now (Clocked In)</h3>${active?.length ? active.map(a => `<div class="active-user-card"><strong>${a.profiles.full_name}</strong> (${a.profiles.role}) - ${a.profiles.department || 'General'}<br><small>Since ${new Date(a.clock_in).toLocaleTimeString()}</small></div>`).join('') : '<p>No one is currently clocked in.</p>'}</div>`;
     }
 
-    // ========== ATTENDANCE TRACKER (with export) ==========
     async function renderAttendanceTracker(container) {
         const role = currentProfile?.role;
         let users = [{ id: currentUser.id, full_name: currentProfile.full_name }];
         if (role === 'HR') {
             const { data } = await supabase.from('profiles').select('id, full_name');
             if (data) users = data;
-        } else if (role === 'Admin') {
-            const { data } = await supabase.from('profiles').select('id, full_name').eq('department', currentProfile.department);
-            if (data) users = data;
-        } else if (role === 'OPS') {
+        } else if (role === 'Admin' || role === 'OPS') {
             const { data } = await supabase.from('profiles').select('id, full_name').eq('department', currentProfile.department);
             if (data) users = data;
         }
         const selectedUserId = users.length>1 ? `<select id="attUserSelect">${users.map(u => `<option value="${u.id}">${u.full_name}</option>`).join('')}</select>` : '';
-        container.innerHTML = `<div class="card"><h3>Attendance Tracker</h3><div class="filter-bar">${selectedUserId}<input type="month" id="attMonth" value="2026-04"><button id="exportExcelBtn" class="btn btn-primary"><i class="fas fa-file-excel"></i> Export Excel</button></div><div id="attTableContainer"></div></div>`;
+        container.innerHTML = `<div class="card"><h3>Attendance Tracker</h3><div class="filter-bar">${selectedUserId}<input type="month" id="attMonth" value="${new Date().toISOString().slice(0,7)}"><button id="exportExcelBtn" class="btn btn-primary"><i class="fas fa-file-excel"></i> Export Excel</button></div><div id="attTableContainer"></div></div>`;
         const loadAttendance = async () => {
             const userId = document.getElementById('attUserSelect')?.value || currentUser.id;
             const month = document.getElementById('attMonth').value;
@@ -224,7 +228,6 @@
         await loadAttendance();
     }
 
-    // ========== LEAVE REQUESTS with Approval Hierarchy (HR > Admin > OPS) ==========
     async function renderLeaveRequests(container) {
         const role = currentProfile?.role;
         const isApprover = role === 'HR' || role === 'Admin' || role === 'OPS';
@@ -277,7 +280,6 @@
         await fetchLeaves();
     }
 
-    // ========== EMPLOYEE DIRECTORY (read-only for OPS/Employee, limited for Admin) ==========
     async function renderEmployeeDirectory(container) {
         const role = currentProfile?.role;
         let query = supabase.from('profiles').select('*');
@@ -286,7 +288,6 @@
         container.innerHTML = `<div class="card"><h3>Employee Directory</h3><table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td>${emp.department || 'General'}</td><td>${emp.role}</td></tr>`).join('')}</table></div>`;
     }
 
-    // ========== MANAGE EMPLOYEES (Admin: same dept, HR: all) ==========
     async function renderManageEmployees(container) {
         const role = currentProfile?.role;
         let query = supabase.from('profiles').select('*');
@@ -294,7 +295,7 @@
         const { data: employees } = await query;
         container.innerHTML = `<div class="card"><h3>Manage Employees (Add/Edit/Delete)</h3><button id="addEmpBtn" class="btn btn-primary">+ Add Employee</button><div id="empList"></div></div>`;
         const renderList = () => {
-            const listHtml = `<table><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th></tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')}</table>`;
+            const listHtml = ` table <tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Actions</th> <tr>${employees?.map(emp => `<tr><td>${emp.full_name}</td><td>${emp.email}</td><td><input type="text" class="deptInput" data-id="${emp.id}" value="${emp.department || ''}" placeholder="Dept"></td><td><select class="roleSelect" data-id="${emp.id}">${['Employee','OPS','Admin','HR'].map(r => `<option ${emp.role===r ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td><button class="updateEmpBtn" data-id="${emp.id}">Update</button> <button class="deleteEmpBtn" data-id="${emp.id}" style="background:#dc2626;color:white;">Delete</button></td></tr>`).join('')} </table>`;
             document.getElementById('empList').innerHTML = listHtml;
             document.querySelectorAll('.updateEmpBtn').forEach(btn => btn.addEventListener('click', async (e) => {
                 const id = btn.dataset.id;
@@ -315,12 +316,11 @@
         renderList();
     }
 
-    // ========== MASTER SCHEDULE (OPS/Admin/HR) ==========
     async function renderMasterSchedule(container) {
         const { data: schedules } = await supabase.from('master_schedule').select('*').order('day_of_week');
         const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         container.innerHTML = `<div class="card"><h3>Master Schedule</h3><div id="scheduleForm"></div><button id="saveScheduleBtn" class="btn btn-primary">Save Changes</button></div>`;
-        let html = `<table><tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th></tr>`;
+        let html = ` table <tr><th>Day</th><th>Rest Day?</th><th>Start Time</th><th>End Time</th> </tr>`;
         schedules?.forEach(s => { html += `<tr><td>${days[s.day_of_week]}</td><td><input type="checkbox" class="restChk" data-day="${s.day_of_week}" ${s.is_rest_day ? 'checked' : ''}></td><td><input type="time" class="startTime" data-day="${s.day_of_week}" value="${s.start_time || '09:00'}"></td><td><input type="time" class="endTime" data-day="${s.day_of_week}" value="${s.end_time || '17:00'}"></td></tr>`; });
         document.getElementById('scheduleForm').innerHTML = html;
         document.getElementById('saveScheduleBtn').onclick = async () => {
@@ -334,7 +334,7 @@
         };
     }
 
-    async function renderCompanyCalendar(container) { /* same as before but compact */ 
+    async function renderCompanyCalendar(container) {
         const yearMonth = new Date().toISOString().slice(0,7);
         container.innerHTML = `<div class="card"><h3>Company Calendar</h3><input type="month" id="calMonth" value="${yearMonth}"><div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:1rem;"></div></div>`;
         const loadCalendar = async () => {
@@ -363,7 +363,7 @@
             query = query.in('user_id', userIds);
         }
         const { data } = await query;
-        container.innerHTML = `<div class="card"><h3>Audit Logs</h3><table><tr><th>User</th><th>Action</th><th>Details</th><th>Timestamp</th></tr>${data?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${l.details || ''}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
+        container.innerHTML = `<div class="card"><h3>Audit Logs</h3> table <tr><th>User</th><th>Action</th><th>Details</th><th>Timestamp</th> </tr>${data?.map(l => `<tr><td>${l.profiles?.full_name || l.user_id}</td><td>${l.action}</td><td>${l.details || ''}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')} </table></div>`;
     }
 
     async function renderNotifications(container) {
@@ -395,11 +395,15 @@
         if (error) showToast(error.message, 'error');
         else { showToast('Login success'); initApp(); addAuditLog('Login', 'User logged in'); }
     };
-    document.getElementById('showSignupLink')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signupForm').style.display = 'block'; });
-    document.getElementById('doSignup')?.addEventListener('click', async () => {
+    document.getElementById('showSignupLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('signupForm').style.display = 'block';
+    });
+    document.getElementById('doSignup').addEventListener('click', async () => {
         const email = document.getElementById('signupEmail').value, password = document.getElementById('signupPassword').value, full_name = document.getElementById('signupName').value, department = document.getElementById('signupDept').value;
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name, department, role: 'Employee' } } });
-        if (error) showToast(error.message); else { showToast('Account created! Please login'); document.getElementById('signupForm').style.display = 'none'; }
+        if (error) showToast(error.message, 'error');
+        else { showToast('Account created! Please login', 'success'); document.getElementById('signupForm').style.display = 'none'; document.getElementById('signupEmail').value = ''; document.getElementById('signupPassword').value = ''; }
     });
     document.getElementById('logoutBtn').onclick = async () => { await supabase.auth.signOut(); location.reload(); };
     supabase.auth.onAuthStateChange(() => initApp());
