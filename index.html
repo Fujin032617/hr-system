@@ -658,7 +658,7 @@
             padding: 5px 7px;
         }
 
-        /* ── FIX 1: Shift search box in Attendance toolbar ── */
+        /* ── Shift search box in Attendance toolbar ── */
         .shift-search-wrap {
             position: relative;
             display: flex;
@@ -730,7 +730,7 @@
     <div style="max-width:320px; margin:100px auto; background:white; padding:40px; border-radius:20px; text-align:center; box-shadow: var(--shadow); border: 1px solid var(--border);">
         <h2 style="margin-bottom:30px; font-weight:800; color:var(--primary);">Sign In</h2>
         <div id="loginError" class="error-message hidden"></div>
-        <input type="text" id="lUser" placeholder="Username" style="width:100%; margin-bottom:15px; box-sizing: border-box; padding:12px;" autocomplete="username">
+        <input type="email" id="lUser" placeholder="Email" style="width:100%; margin-bottom:15px; box-sizing: border-box; padding:12px;" autocomplete="email">
         <input type="password" id="lPass" placeholder="Password" style="width:100%; margin-bottom:25px; box-sizing: border-box; padding:12px;" autocomplete="current-password">
         <button onclick="handleLogin()" style="width:100%;" class="action-btn" id="loginButton">ACCESS PORTAL</button>
     </div>
@@ -872,7 +872,7 @@
             <div class="grid-inputs" style="margin-bottom:20px; background:#f8fafc; padding:20px; border-radius:12px;">
                 <input type="text" id="addEmpNum" placeholder="Emp ID*" required>
                 <input type="text" id="addFullName" placeholder="Full Name*" required>
-                <input type="text" id="addUser" placeholder="Username*" required>
+                <input type="email" id="addUser" placeholder="Email*" required>
                 <input type="password" id="addPass" placeholder="Password*" required>
                 <select id="addDept">
                     <option value="RC">RC</option>
@@ -1060,6 +1060,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get, child, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",
@@ -1074,6 +1075,7 @@
     
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
 
     // ── Helper: per-user offline queue key ──────────────────────────────────
     function offlineQueueKey() {
@@ -1214,6 +1216,33 @@
         return { valid: totalDays <= maxConsecutive, days: totalDays, max: maxConsecutive };
     }
 
+    // ── Auth state listener ────────────────────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            if (!appState.currentUser) {
+                const userSnap = await get(ref(db, `users/${user.uid}`));
+                if (userSnap.exists()) {
+                    const userData = userSnap.val();
+                    appState.currentUser = { id: user.uid, ...userData };
+                    // FIX 4: load user-scoped queue
+                    const qKey = offlineQueueKey();
+                    if (qKey) {
+                        const saved = localStorage.getItem(qKey);
+                        if (saved) appState.offlineQueue = JSON.parse(saved);
+                    }
+                    showAdminPanel();
+                    setupRealtimeListeners();
+                } else {
+                    await signOut(auth);
+                }
+            }
+        } else {
+            if (appState.currentUser) {
+                handleLogout(true); // silent logout
+            }
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         const currentDate = new Date();
         const monthSelectors = document.querySelectorAll('#pMonth, #sMonth');
@@ -1236,22 +1265,6 @@
         setInterval(updateLiveClock, 1000);
         setupOfflineSupport();
         checkForgotLogout();
-        const savedUser = localStorage.getItem('hr_currentUser');
-        if (savedUser) {
-            try {
-                const parsedUser = JSON.parse(savedUser);
-                appState.currentUser = parsedUser;
-                // FIX 4: load user-scoped queue immediately after session restore
-                const qKey = offlineQueueKey();
-                if (qKey) {
-                    appState.offlineQueue = JSON.parse(localStorage.getItem(qKey) || '[]');
-                }
-                showAdminPanel();
-                setupRealtimeListeners();
-            } catch (e) {
-                localStorage.removeItem('hr_currentUser');
-            }
-        }
         document.getElementById('lPass').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleLogin();
         });
@@ -1354,10 +1367,10 @@
                 await push(ref(db, 'audit_logs'), data.auditLog);
                 break;
             case 'add_employee':
-                await set(ref(db, `users/${data.empId}`), data.employeeData);
+                await set(ref(db, `users/${data.uid}`), data.employeeData);
                 break;
             case 'update_employee':
-                await update(ref(db, `users/${data.empId}`), data.employeeData);
+                await update(ref(db, `users/${data.uid}`), data.employeeData);
                 break;
             case 'auto_clock_out':
                 await update(ref(db, `attendance/${data.userId}`), data.updates);
@@ -1413,6 +1426,13 @@
         const [schedHour, schedMin] = parseTime(firstPart);
         const scheduled = new Date(clockInTime);
         scheduled.setHours(schedHour, schedMin, 0, 0);
+        
+        // Night shift fix: if scheduled start is in evening and clock-in is early morning,
+        // shift scheduled date back by one day
+        if (schedHour >= 18 && clockInTime.getHours() < 12) {
+            scheduled.setDate(scheduled.getDate() - 1);
+        }
+
         const diffMs = clockInTime - scheduled;
         if (diffMs <= 0) return 0;
         return Math.floor(diffMs / 60000);
@@ -1650,49 +1670,23 @@
     
     async function handleLogin() {
         if (appState.isProcessing) return;
-        const username = document.getElementById('lUser').value.trim();
+        const email = document.getElementById('lUser').value.trim();
         const password = document.getElementById('lPass').value;
-        if (!username || !password) { showError('Please enter both username and password', 'loginError'); return; }
+        if (!email || !password) { showError('Please enter email and password', 'loginError'); return; }
         appState.isProcessing = true;
         const loginButton = document.getElementById('loginButton');
         loginButton.textContent = 'LOGGING IN...';
         loginButton.disabled = true;
         try {
-            const usersSnapshot = await get(ref(db, 'users'));
-            const users = usersSnapshot.val();
-            if (!users) { showError('No users found. Please contact system administrator.', 'loginError'); return; }
-            const userId = Object.keys(users).find(key => users[key].username === username && users[key].password === password);
-            if (userId) {
-                const userData = { id: userId, ...users[userId] };
-                localStorage.setItem('hr_currentUser', JSON.stringify(userData));
-                localStorage.setItem('hr_last_login', new Date().toISOString());
-                appState.currentUser = userData;
-
-                // FIX 4: load user-scoped queue; clean up any legacy generic key
-                const qKey = offlineQueueKey();
-                const savedQueue = localStorage.getItem(qKey);
-                if (savedQueue) {
-                    try {
-                        const restoredQueue = JSON.parse(savedQueue);
-                        if (restoredQueue.length > 0) {
-                            appState.offlineQueue = restoredQueue;
-                            showInfo(`${restoredQueue.length} queued action(s) from your last session will sync shortly.`, null, 4000);
-                        }
-                    } catch (e) { localStorage.removeItem(qKey); }
-                } else {
-                    appState.offlineQueue = [];
-                }
-                // Remove the old generic key so it doesn't survive across users
-                localStorage.removeItem('hr_offline_queue');
-
-                showAdminPanel();
-                setupRealtimeListeners();
-                setTimeout(() => checkPreviousDayClockOut(), 3000);
-            } else {
-                showError('Invalid username or password', 'loginError');
-            }
+            await signInWithEmailAndPassword(auth, email, password);
+            // onAuthStateChanged will handle the rest
         } catch (error) {
-            showError(!navigator.onLine ? 'You are offline. Cannot login without internet connection.' : 'Login failed. Please try again.', 'loginError');
+            console.error(error);
+            let message = 'Login failed.';
+            if (error.code === 'auth/invalid-email') message = 'Invalid email format.';
+            else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') message = 'Invalid email or password.';
+            else if (!navigator.onLine) message = 'You are offline. Cannot login.';
+            showError(message, 'loginError');
         } finally {
             appState.isProcessing = false;
             loginButton.textContent = 'ACCESS PORTAL';
@@ -1726,40 +1720,42 @@
         }
     }
     
-    function handleLogout() {
-        if (confirm('Are you sure you want to logout?')) {
-            if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
-            if (appState.forgotLogoutTimer) clearInterval(appState.forgotLogoutTimer);
-            if (appState.calendarInstance) {
-                appState.calendarInstance.destroy();
-                appState.calendarInstance = null;
-                appState.calendarInitialized = false;
-            }
-            // FIX 4: save remaining queue under user-scoped key before clearing state
-            const qKey = offlineQueueKey();
-            if (qKey && appState.offlineQueue.length > 0) {
-                localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
-            }
-            // Ensure the legacy generic key is gone
-            localStorage.removeItem('hr_offline_queue');
-            localStorage.removeItem('hr_currentUser');
-            appState.currentUser = null;
-            appState.users = {};
-            appState.attendance = {};
-            appState.leaveRequests = {};
-            appState.listeners = {};
-            appState.offlineQueue = [];
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('leaveInbox').classList.add('hidden');
-            document.getElementById('notificationsModal').classList.add('hidden');
-            document.getElementById('forgotLogoutAlert').classList.add('hidden');
-            document.getElementById('connectionStatus').classList.add('hidden');
-            document.getElementById('lUser').value = '';
-            document.getElementById('lPass').value = '';
-            document.getElementById('loginError').classList.add('hidden');
-            document.getElementById('lUser').focus();
+    async function handleLogout(silent = false) {
+        if (!silent && !confirm('Are you sure you want to logout?')) return;
+        if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
+        if (appState.forgotLogoutTimer) clearInterval(appState.forgotLogoutTimer);
+        if (appState.calendarInstance) {
+            appState.calendarInstance.destroy();
+            appState.calendarInstance = null;
+            appState.calendarInitialized = false;
         }
+        const qKey = offlineQueueKey();
+        if (qKey && appState.offlineQueue.length > 0) {
+            localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
+        }
+        localStorage.removeItem('hr_offline_queue');
+        localStorage.removeItem('hr_currentUser');
+        
+        // Unsubscribe all Firebase listeners
+        Object.values(appState.listeners).forEach(fn => { if (typeof fn === 'function') fn(); });
+        
+        await signOut(auth);
+        appState.currentUser = null;
+        appState.users = {};
+        appState.attendance = {};
+        appState.leaveRequests = {};
+        appState.listeners = {};
+        appState.offlineQueue = [];
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('leaveInbox').classList.add('hidden');
+        document.getElementById('notificationsModal').classList.add('hidden');
+        document.getElementById('forgotLogoutAlert').classList.add('hidden');
+        document.getElementById('connectionStatus').classList.add('hidden');
+        document.getElementById('lUser').value = '';
+        document.getElementById('lPass').value = '';
+        document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('lUser').focus();
     }
     
     function showAdminPanel() {
@@ -2022,15 +2018,14 @@
         document.getElementById('addEmpNum').value = empId;
         document.getElementById('addEmpNum').disabled = true;
         document.getElementById('addFullName').value = user.fullName || '';
-        document.getElementById('addUser').value = user.username || '';
-        document.getElementById('addPass').value = user.password || '';
+        document.getElementById('addUser').value = user.email || user.username || '';
+        document.getElementById('addPass').value = ''; // password not shown
         document.getElementById('addDept').value = user.dept || 'RC';
         document.getElementById('addBday').value = user.birthday || '';
         document.getElementById('addContact').value = user.contact || '';
         document.getElementById('addEmergency').value = user.emergency || '';
         document.getElementById('addBackend').value = user.backendID || '';
         document.getElementById('addAssets').value = user.assets || '';
-        // FIX 2: populate default shift label on edit
         document.getElementById('addDefaultShift').value = user.defaultShift || '';
         document.getElementById('addSL').value = user.slMax || 10;
         document.getElementById('addVL').value = user.vlMax || 10;
@@ -2061,21 +2056,33 @@
     async function addEmployee() {
         if (appState.isProcessing) return;
         appState.isProcessing = true;
-        const empId = document.getElementById('addEmpNum').value.trim();
-        const fullName = document.getElementById('addFullName').value.trim();
-        const username = document.getElementById('addUser').value.trim();
+        const email = document.getElementById('addUser').value.trim();
         const password = document.getElementById('addPass').value;
-        if (!empId || !fullName || !username || !password) { showError('Please fill in all required fields (marked with *)', 'directoryMessage'); appState.isProcessing = false; return; }
-        if (!appState.editingEmployeeId && password.length < 6) { showError('Password must be at least 6 characters long', 'directoryMessage'); appState.isProcessing = false; return; }
-        if (!appState.editingEmployeeId) {
-            const existingUser = Object.values(appState.users).find(u => u.username === username);
-            if (existingUser) { showError('Username already exists', 'directoryMessage'); appState.isProcessing = false; return; }
-            if (appState.users[empId]) { showError('Employee ID already exists', 'directoryMessage'); appState.isProcessing = false; return; }
+        const fullName = document.getElementById('addFullName').value.trim();
+        const oldEmpId = document.getElementById('addEmpNum').value.trim();
+        if (!email || !fullName || !password) {
+            showError('Email, full name, and password are required', 'directoryMessage');
+            appState.isProcessing = false;
+            return;
+        }
+        if (!appState.editingEmployeeId && password.length < 6) {
+            showError('Password must be at least 6 characters', 'directoryMessage');
+            appState.isProcessing = false;
+            return;
         }
         try {
-            // FIX 2: include defaultShift in saved employee data
+            let uid;
+            if (appState.editingEmployeeId) {
+                uid = appState.editingEmployeeId;
+                // Editing: just update DB record, not Auth account
+            } else {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                uid = userCredential.user.uid;
+            }
             const employeeData = {
-                empID: empId, fullName, username, password,
+                fullName,
+                email,
+                empID: oldEmpId || uid,
                 dept: document.getElementById('addDept').value,
                 birthday: document.getElementById('addBday').value,
                 contact: document.getElementById('addContact').value.trim(),
@@ -2089,38 +2096,31 @@
                 maxConsecutiveLeave: Math.max(1, parseInt(document.getElementById('addMaxConsecutive').value) || 30)
             };
             const actionType = appState.editingEmployeeId ? 'update_employee' : 'add_employee';
-            const result = await safeFirebaseOperation(async () => {
-                if (appState.editingEmployeeId) {
-                    if (appState.editingEmployeeId === empId) {
-                        await update(ref(db, `users/${empId}`), employeeData);
-                    } else {
-                        await set(ref(db, `users/${empId}`), employeeData);
-                        await remove(ref(db, `users/${appState.editingEmployeeId}`));
-                        const attendanceSnapshot = await get(ref(db, `attendance/${appState.editingEmployeeId}`));
-                        if (attendanceSnapshot.exists()) {
-                            await set(ref(db, `attendance/${empId}`), attendanceSnapshot.val());
-                            await remove(ref(db, `attendance/${appState.editingEmployeeId}`));
-                        }
-                    }
-                } else {
-                    await set(ref(db, `users/${empId}`), employeeData);
-                }
-            }, { empId, employeeData, oldEmpId: appState.editingEmployeeId }, actionType);
-            if (result.success) { showSuccess(appState.editingEmployeeId ? 'Employee updated successfully!' : 'Employee added successfully!', 'directoryMessage', 3000); cancelEdit(); renderDirectory(); }
-            else if (result.queued) { showError('Offline. Employee will be saved when connection is restored.', 'directoryMessage', false); cancelEdit(); }
-        } catch (error) { showError('Failed to save employee', 'directoryMessage'); }
-        finally { appState.isProcessing = false; }
+            await set(ref(db, `users/${uid}`), employeeData);
+            showSuccess(appState.editingEmployeeId ? 'Employee updated!' : 'Employee created!', 'directoryMessage', 3000);
+            cancelEdit();
+            renderDirectory();
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/email-already-in-use') {
+                showError('Email already in use', 'directoryMessage');
+            } else {
+                showError('Failed to save employee', 'directoryMessage');
+            }
+        } finally {
+            appState.isProcessing = false;
+        }
     }
     
     function renderDirectory() {
         const dirTable = document.getElementById('dirTable');
         if (!dirTable) return;
-        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>Default Shift</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
+        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Email</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>Default Shift</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
         for (const [empId, user] of Object.entries(appState.users)) {
             const slUsed = calculateUsedLeaves(empId, 'SL');
             const vlUsed = calculateUsedLeaves(empId, 'VL');
             const slMax = user.slMax || 0, vlMax = user.vlMax || 0;
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td><td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td><td>${user.contact || ''}</td><td>${user.emergency || ''}</td><td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
+            html += `<tr><td>${user.empID || empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.email || '')}</td><td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td><td>${user.contact || ''}</td><td>${user.emergency || ''}</td><td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
             <td>${escapeHtml(user.defaultShift || '—')}</td>
             <td><div class="balance-display"><span class="balance-remaining">SL: ${Math.max(0, slMax-slUsed)}/${slMax}</span><br><span class="balance-used">Used: ${slUsed}</span></div><div class="balance-display"><span class="balance-remaining">VL: ${Math.max(0, vlMax-vlUsed)}/${vlMax}</span><br><span class="balance-used">Used: ${vlUsed}</span></div></td>
             <td>${user.maxConsecutiveLeave || 30} days</td>
@@ -2135,44 +2135,31 @@
         document.querySelectorAll('#dirTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX 1 + FIX 3: renderAttendance ─────────────────────────────────────
-    // • Replaced broken Day/Night dropdown filter with a case-insensitive
-    //   substring search against the stored shift_<month> label.
-    // • Uses actual days-in-month (not hardcoded 31) for correct column count.
-    // • Reads stored shift label directly — no auto-detection.
     function renderAttendance() {
         const payTable = document.getElementById('payTable');
         if (!payTable) return;
         const month = parseInt(document.getElementById('pMonth').value);
-        // FIX 1: read text from the search box instead of a dropdown value
         const shiftFilter = (document.getElementById('pShiftSearch')?.value || '').trim().toLowerCase();
         const period = document.getElementById('pPeriod').value;
         const [periodStart, _periodEnd] = period.split('-').map(Number);
-
-        // Correct last day for the selected month (fixes Feb/30-day months)
         const selectedYear = new Date().getFullYear();
         const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
         const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
-
         let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
         for (let day = periodStart; day <= periodEnd; day++) html += `<th>${day}</th>`;
         html += `<th class="total-lates-col">Total Lates (min)</th></tr></thead><tbody>`;
-
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX 3: use stored shift label; fall back to defaultShift then empty
             const shiftLabel = user['shift_' + month] || user.defaultShift || '';
-
-            // FIX 1: case-insensitive substring match; empty filter = show all
             if (shiftFilter && !shiftLabel.toLowerCase().includes(shiftFilter)) continue;
-
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td>`;
+            html += `<tr><td>${user.empID || empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td>`;
             let totalLates = 0;
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
-                const status = appState.attendance[empId]?.[dateKey] || '';
-                const lateMins = appState.attendance[empId]?.[dateKey + "_late"] || 0;
+                const attId = empId; // attendance key is now uid
+                const status = appState.attendance[attId]?.[dateKey] || '';
+                const lateMins = appState.attendance[attId]?.[dateKey + "_late"] || 0;
                 if (lateMins) totalLates += parseInt(lateMins);
-                html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${empId}', '${dateKey}')">${status || ''}${lateMins ? `<span class="late-badge">${lateMins}m</span>` : ''}</td>`;
+                html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${attId}', '${dateKey}')">${status || ''}${lateMins ? `<span class="late-badge">${lateMins}m</span>` : ''}</td>`;
             }
             html += `<td class="total-lates-col">${totalLates}</td></tr>`;
         }
@@ -2196,21 +2183,17 @@
         document.querySelectorAll('#payTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX 3: renderSchedules — Shift is a free-text editable field ─────────
     function renderSchedules() {
         const schedTable = document.getElementById('schedTable');
         if (!schedTable) return;
         const month = parseInt(document.getElementById('sMonth').value);
         const monthName = MONTHS[month];
-
         const sorted = Object.entries(appState.users).sort(([,a],[,b]) => {
             if (a.dept !== b.dept) return a.dept.localeCompare(b.dept);
             return (a.fullName || '').localeCompare(b.fullName || '');
         });
-
         const dayOptions = (selected) => ['', ...DAYS_OF_WEEK].map(d =>
             `<option value="${d}" ${d === selected ? 'selected' : ''}>${d || '— none —'}</option>`).join('');
-
         let html = `
         <div class="sched-hint">
             Editing schedule for <strong>${monthName}</strong>.
@@ -2224,55 +2207,27 @@
                 <th>Working Days</th><th>Time Slot</th><th>Shift Label</th>
                 <th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
             </tr></thead><tbody>`;
-
         for (const [empId, user] of sorted) {
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const workingDays = ('in_'  + month) in pending ? pending['in_'  + month] : (user['in_'  + month] || '');
             const timeSlot    = ('out_' + month) in pending ? pending['out_' + month] : (user['out_' + month] || '');
-            // FIX 3: stored shift label; fall back to defaultShift for new employees
             const shiftLabel  = ('shift_' + month) in pending ? pending['shift_' + month] : (user['shift_' + month] || user.defaultShift || '');
             const off1        = ('off1_'+ month) in pending ? pending['off1_'+ month] : (user['off1_'+ month] || '');
             const off2        = ('off2_'+ month) in pending ? pending['off2_'+ month] : (user['off2_'+ month] || '');
             const safeId      = empId.replace(/'/g, "\\'");
-
             html += `
             <tr id="sched-row-${empId}">
-                <td>${empId}</td>
+                <td>${user.empID || empId}</td>
                 <td style="text-align:left;padding-left:8px;">${escapeHtml(user.fullName)}</td>
                 <td>${user.dept}</td>
-                <td>
-                    <input type="text" value="${escapeHtml(workingDays)}"
-                        list="wd-presets-${month}"
-                        placeholder="e.g. Mon-Fri"
-                        oninput="updateScheduleField('${safeId}', 'in_${month}', this.value)"
-                        style="width:120px;">
-                </td>
-                <td>
-                    <input type="text" value="${escapeHtml(timeSlot)}"
-                        placeholder="e.g. 8:00 AM - 5:00 PM"
-                        oninput="updateScheduleField('${safeId}', 'out_${month}', this.value)"
-                        style="width:150px;">
-                </td>
-                <td>
-                    <input type="text" value="${escapeHtml(shiftLabel)}"
-                        placeholder="e.g. Morning, Night..."
-                        oninput="updateScheduleField('${safeId}', 'shift_${month}', this.value)"
-                        style="width:110px;">
-                </td>
-                <td>
-                    <select oninput="updateScheduleField('${safeId}', 'off1_${month}', this.value)"
-                            style="width:110px;">${dayOptions(off1)}</select>
-                </td>
-                <td>
-                    <select oninput="updateScheduleField('${safeId}', 'off2_${month}', this.value)"
-                            style="width:110px;">${dayOptions(off2)}</select>
-                </td>
-                <td>
-                    <button class="row-save-btn" onclick="saveSchedule('${safeId}', ${month})">Save</button>
-                </td>
+                <td><input type="text" value="${escapeHtml(workingDays)}" list="wd-presets-${month}" placeholder="e.g. Mon-Fri" oninput="updateScheduleField('${safeId}', 'in_${month}', this.value)" style="width:120px;"></td>
+                <td><input type="text" value="${escapeHtml(timeSlot)}" placeholder="e.g. 8:00 AM - 5:00 PM" oninput="updateScheduleField('${safeId}', 'out_${month}', this.value)" style="width:150px;"></td>
+                <td><input type="text" value="${escapeHtml(shiftLabel)}" placeholder="e.g. Morning, Night..." oninput="updateScheduleField('${safeId}', 'shift_${month}', this.value)" style="width:110px;"></td>
+                <td><select oninput="updateScheduleField('${safeId}', 'off1_${month}', this.value)" style="width:110px;">${dayOptions(off1)}</select></td>
+                <td><select oninput="updateScheduleField('${safeId}', 'off2_${month}', this.value)" style="width:110px;">${dayOptions(off2)}</select></td>
+                <td><button class="row-save-btn" onclick="saveSchedule('${safeId}', ${month})">Save</button></td>
             </tr>`;
         }
-
         html += `</tbody></table>
         <datalist id="wd-presets-${month}">
             ${WORKING_DAYS_PRESETS.map(p => `<option value="${p}">`).join('')}
@@ -2299,13 +2254,10 @@
             await update(ref(db, `users/${empId}`), updates);
             if (appState.scheduleChanges && appState.scheduleChanges[empId]) {
                 fields.forEach(f => delete appState.scheduleChanges[empId][f]);
-                if (Object.keys(appState.scheduleChanges[empId]).length === 0) {
-                    delete appState.scheduleChanges[empId];
-                }
+                if (Object.keys(appState.scheduleChanges[empId]).length === 0) delete appState.scheduleChanges[empId];
             }
             if (!appState.scheduleChanges || Object.keys(appState.scheduleChanges).length === 0) {
-                const btn = document.getElementById('saveSchedulesBtn');
-                if (btn) btn.classList.add('hidden');
+                document.getElementById('saveSchedulesBtn').classList.add('hidden');
             }
             showSuccess(`Schedule saved for ${user.fullName || empId}!`, null, 2500);
         } catch (error) { showError('Failed to save schedule'); }
@@ -2342,9 +2294,8 @@
             if (status === 'P' && !clockOutTime) {
                 activeCount++;
                 const timeIn = appState.attendance[empId]?.[todayKey + '_time'];
-                // FIX 3: stored shift label with defaultShift fallback
                 const shiftLabel = user['shift_' + currentMonth] || user.defaultShift || '';
-                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td>${escapeHtml(shiftLabel)}</td></tr>`;
+                html += `<tr><td>${user.empID || empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td>${escapeHtml(shiftLabel)}</td></tr>`;
             }
         }
         if (activeCount === 0) html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-light);">No active employees</td></tr>`;
@@ -2562,10 +2513,9 @@
                 ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
                 : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
 
-            // FIX 5: compute end date using local-date arithmetic to avoid UTC/DST off-by-one
             const endStr = leave.endDate || leave.startDate;
             const [ey, em, ed] = endStr.split('-').map(Number);
-            const endLocal = new Date(ey, em - 1, ed + 1); // add 1 day, stays in local time
+            const endLocal = new Date(ey, em - 1, ed + 1);
             const endISO = `${endLocal.getFullYear()}-${String(endLocal.getMonth()+1).padStart(2,'0')}-${String(endLocal.getDate()).padStart(2,'0')}`;
 
             events.push({
@@ -2638,21 +2588,20 @@
         const selectedYear = new Date().getFullYear();
         const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
         const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
-
         const data = [];
         const headers = ['Emp ID', 'Name', 'Dept', 'Shift'];
         for (let day = periodStart; day <= periodEnd; day++) headers.push(`Day ${day}`);
         headers.push('Total Lates (min)');
         data.push(headers);
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX 3: stored shift label with defaultShift fallback in export
             const shiftLabel = user['shift_' + month] || user.defaultShift || '';
-            const row = [empId, user.fullName, user.dept, shiftLabel];
+            const row = [user.empID || empId, user.fullName, user.dept, shiftLabel];
             let totalLates = 0;
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
-                const status = appState.attendance[empId]?.[dateKey] || '';
-                const lateMins = appState.attendance[empId]?.[dateKey + "_late"] || 0;
+                const attId = empId;
+                const status = appState.attendance[attId]?.[dateKey] || '';
+                const lateMins = appState.attendance[attId]?.[dateKey + "_late"] || 0;
                 if (lateMins) totalLates += parseInt(lateMins);
                 row.push(lateMins ? `${status} (${lateMins}m late)` : status);
             }
@@ -2670,11 +2619,11 @@
         try {
             await remove(ref(db, `users/${empId}`));
             await remove(ref(db, `attendance/${empId}`));
+            // Also try to delete Auth user (requires admin SDK or recent login)
             showSuccess('Employee deleted successfully!', null, 3000);
         } catch (error) { showError('Failed to delete employee'); }
     }
     
-    // ── Debounced render queue (FIX D) ──────────────────────────────────────
     const _renderQueue = new Set();
     let _renderTimer = null;
     function queueRender(...tasks) {
@@ -2695,27 +2644,22 @@
 
     function setupRealtimeListeners() {
         Object.values(appState.listeners).forEach(u => { if (typeof u === 'function') u(); });
-
         appState.listeners.users = onValue(ref(db, 'users'), snapshot => {
             appState.users = snapshot.val() || {};
             queueRender('tab');
         });
-
         appState.listeners.attendance = onValue(ref(db, 'attendance'), snapshot => {
             appState.attendance = snapshot.val() || {};
             queueRender('tab');
         });
-
         appState.listeners.leaveRequests = onValue(ref(db, 'leave_requests'), snapshot => {
             appState.leaveRequests = snapshot.val() || {};
             queueRender('inbox', 'myLeaves', 'calendar');
         });
-
         appState.listeners.notifications = onValue(ref(db, 'notifications'), snapshot => {
             appState.notifications = snapshot.val() || {};
             queueRender('notifications');
         });
-
         appState.listeners.auditLogs = onValue(ref(db, 'audit_logs'), snapshot => {
             renderAudit(snapshot.val());
         });
@@ -2724,7 +2668,7 @@
     function exportFn(name, fn) { window[name] = fn; window['__hr_' + name] = fn; }
 
     exportFn('handleLogin', handleLogin);
-    exportFn('handleLogout', handleLogout);
+    exportFn('handleLogout', () => handleLogout(false));
     exportFn('userClockAction', userClockAction);
     exportFn('submitLeave', submitLeave);
     exportFn('cancelLeave', cancelLeave);
