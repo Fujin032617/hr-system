@@ -1167,6 +1167,7 @@
     // Falls back to parsing the time slot string's first segment only if
     // no dedicated shiftStart is stored. Returns 0 (not an error) if no
     // schedule is configured, so no false lates are generated.
+    // LATE MINUTES FIX: Correctly computes minutes by taking diffMs / (1000 * 60)
     function computeLateMins(clockInTime, empId, month) {
         const user = appState.users[empId] || appState.currentUser;
         if (!user) return 0;
@@ -1196,7 +1197,8 @@
 
         const diffMs = clockInTime - scheduled;
         if (diffMs <= 0) return 0; // On time or early
-        return Math.floor(diffMs / 60000);
+        // Convert milliseconds to minutes: ms / (1000 ms/sec * 60 sec/min)
+        return Math.floor(diffMs / (1000 * 60));
     }
 
     function calculateUsedLeaves(employeeId, leaveType) {
@@ -1960,7 +1962,10 @@
             const dateKey = `${currentMonth}_${day}`;
             const status = appState.attendance[appState.currentUser.id]?.[dateKey];
             const lateMins = appState.attendance[appState.currentUser.id]?.[dateKey + "_late"] || 0;
-            if (status === 'P') { daysPresent++; totalLates += parseInt(lateMins); }
+            if (status === 'P') {
+                daysPresent++;
+                totalLates += (typeof lateMins === 'string' ? parseInt(lateMins) : lateMins);
+            }
         }
         document.getElementById('monthAttendance').textContent = daysPresent;
         document.getElementById('monthLates').textContent = totalLates;
@@ -2256,7 +2261,7 @@
 
         const selectedYear = new Date().getFullYear();
         const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
-        const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
+        const periodEnd = Math.min(_periodEnd, daysInMonth);
 
         let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
         for (let day = periodStart; day <= periodEnd; day++) html += `<th>${day}</th>`;
@@ -2272,7 +2277,7 @@
                 const dateKey = `${month}_${day}`;
                 const status = appState.attendance[empId]?.[dateKey] || '';
                 const lateMins = appState.attendance[empId]?.[dateKey + "_late"] || 0;
-                if (lateMins) totalLates += parseInt(lateMins);
+                if (lateMins) totalLates += (typeof lateMins === 'string' ? parseInt(lateMins) : lateMins);
                 html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${empId}', '${dateKey}')">${status || ''}${lateMins ? `<span class="late-badge">${lateMins}m</span>` : ''}</td>`;
             }
             html += `<td class="total-lates-col">${totalLates}</td></tr>`;
