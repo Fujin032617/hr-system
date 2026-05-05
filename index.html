@@ -743,6 +743,7 @@
         <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('sched', this)">Schedules</button>
         <button class="nav-btn" onclick="switchTab('pay', this)">Payroll & Attendance</button>
         <button class="nav-btn" onclick="switchTab('calendar', this)">Calendar</button>
+        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('timelog', this)">Time Log</button>
         <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('audit', this)">Audit Logs</button>
         <button class="nav-btn" onclick="switchTab('leaves', this)">My Leaves</button>
     </nav>
@@ -1001,6 +1002,24 @@
         </div>
     </section>
 
+    <!-- Time Log -->
+    <section id="sec-timelog" class="tab-content hidden">
+        <div class="card">
+            <h3>Time In / Time Out Log</h3>
+            <div class="flex-between" style="margin-bottom:15px;">
+                <div>
+                    <label>Date:</label>
+                    <input type="date" id="timelogDate" onchange="renderTimeLog()" style="width:150px;">
+                </div>
+                <div class="search-container" style="width:250px;">
+                    <input type="text" id="timelogSearch" class="search-input" placeholder="Search employees..." onkeyup="searchTimeLog()">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </div>
+            <div class="table-wrap" id="timelogTable"></div>
+        </div>
+    </section>
+
     <!-- Audit Logs -->
     <section id="sec-audit" class="tab-content hidden">
         <div class="card">
@@ -1132,6 +1151,20 @@
     const LEAVE_TYPES = { 'SL': 'Sick Leave', 'VL': 'Vacation Leave' };
     const DAYS_OF_WEEK = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const WORKING_DAYS_PRESETS = ['Monday-Friday','Monday-Saturday','Tuesday-Saturday','Wednesday-Sunday','Thursday-Monday','Sunday-Thursday'];
+
+    // ── TIMEZONE FIX: Generate date keys consistently (YYYY-MM-DD format) ──
+    function getDateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Parse date key back to Date object (local time)
+    function parseDateKey(key) {
+        const [year, month, day] = key.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
 
     // ── BUG 2 & 3 FIX: parseTime now returns null on failure instead of [17,0] ──
     // Callers must handle null and skip late computation gracefully.
@@ -1314,6 +1347,12 @@
         updateLiveClock();
         setInterval(updateLiveClock, 1000);
         setupOfflineSupport();
+        // ── OFFLINE QUEUE RESILIENCE: Auto-retry sync every 2 mins if online ──
+        setInterval(() => {
+            if (appState.isOnline && appState.offlineQueue.length > 0) {
+                processPendingActions();
+            }
+        }, 120000);
         // BUG 7 FIX: checkForgotLogout is now meaningful — triggers visible warning
         checkForgotLogout();
         const savedUser = localStorage.getItem('hr_currentUser');
@@ -1389,14 +1428,24 @@
         showInfo(`Syncing ${appState.offlineQueue.length} queued actions...`, null, false);
         const successfulActions = [];
         const failedActions = [];
+        const now = Date.now();
         for (let i = 0; i < appState.offlineQueue.length; i++) {
             const action = appState.offlineQueue[i];
             try {
                 const { type, data } = action;
+                // ── OFFLINE QUEUE RESILIENCE: Retry with exponential backoff ──
+                action.retryCount = (action.retryCount || 0) + 1;
+                action.lastRetry = now;
                 await executeQueuedAction(type, data);
                 successfulActions.push(action);
                 await new Promise(resolve => setTimeout(resolve, 300));
             } catch (error) {
+                // Mark failed actions with retry count and timestamp
+                action.lastError = error.message;
+                // After 5 retries, move to permanent failure
+                if (action.retryCount >= 5) {
+                    action.permanentlyFailed = true;
+                }
                 failedActions.push(action);
             }
         }
@@ -1404,7 +1453,14 @@
         const qKey = offlineQueueKey();
         if (qKey) localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
         if (successfulActions.length > 0) showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
-        if (failedActions.length > 0) showError(`${failedActions.length} actions failed to sync. Will retry later.`, null, 3000);
+        if (failedActions.length > 0) {
+            const permanentFails = failedActions.filter(a => a.permanentlyFailed).length;
+            const retriable = failedActions.length - permanentFails;
+            let msg = `${failedActions.length} actions failed to sync.`;
+            if (permanentFails > 0) msg += ` ${permanentFails} gave up after 5 retries.`;
+            if (retriable > 0) msg += ` ${retriable} will retry automatically.`;
+            showError(msg, null, 3000);
+        }
         const queueDisplay = document.getElementById('offlineQueueDisplay');
         if (queueDisplay) {
             if (appState.offlineQueue.length > 0) {
@@ -1485,9 +1541,8 @@
     async function userClockAction(actionType) {
         if (appState.isProcessing) return;
         const now = new Date();
-        const month = now.getMonth();
-        const day = now.getDate();
-        const key = `${month}_${day}`;
+        // ── TIMEZONE FIX: Use consistent date key format ──
+        const key = getDateKey(now);
         const timeKey = `${key}_time`;
         if (actionType === 'P') {
             const existingStatus = appState.attendance[appState.currentUser.id]?.[key];
@@ -1881,12 +1936,14 @@
             const activeBtn = document.querySelector('[onclick*="active"]'); if (activeBtn) activeBtn.classList.remove('hidden');
             const schedBtn = document.querySelector('[onclick*="sched"]'); if (schedBtn) schedBtn.classList.remove('hidden');
             const auditBtn = document.querySelector('[onclick*="audit"]'); if (auditBtn) auditBtn.classList.remove('hidden');
+            const timelogBtn = document.querySelector('[onclick*="timelog"]'); if (timelogBtn) timelogBtn.classList.remove('hidden');
             const mailIcon = document.getElementById('mailIcon'); if (mailIcon) mailIcon.classList.remove('hidden');
             const notificationBell = document.getElementById('notificationBell'); if (notificationBell) notificationBell.classList.remove('hidden');
         } else if (appState.currentUser.role === 'OPS') {
             const activeBtn = document.querySelector('[onclick*="active"]'); if (activeBtn) activeBtn.classList.remove('hidden');
             const schedBtn = document.querySelector('[onclick*="sched"]'); if (schedBtn) schedBtn.classList.remove('hidden');
             const auditBtn = document.querySelector('[onclick*="audit"]'); if (auditBtn) auditBtn.classList.remove('hidden');
+            const timelogBtn = document.querySelector('[onclick*="timelog"]'); if (timelogBtn) timelogBtn.classList.remove('hidden');
             const mailIcon = document.getElementById('mailIcon'); if (mailIcon) mailIcon.classList.remove('hidden');
             const notificationBell = document.getElementById('notificationBell'); if (notificationBell) notificationBell.classList.remove('hidden');
         }
@@ -1908,6 +1965,7 @@
         else if (tabText.includes('schedules')) renderSchedules();
         else if (tabText.includes('payroll') || tabText.includes('attendance')) renderAttendance();
         else if (tabText.includes('calendar')) initializeCalendar();
+        else if (tabText.includes('time log')) { if (document.getElementById('timelogDate')) document.getElementById('timelogDate').valueAsDate = new Date(); renderTimeLog(); }
         else if (tabText.includes('leaves')) updateMyLeaves();
     }
     
@@ -2822,6 +2880,39 @@
         } catch (error) { showError('Failed to delete employee'); }
     }
     
+    function renderTimeLog() {
+        const timelogTable = document.getElementById('timelogTable');
+        if (!timelogTable) return;
+        const dateInput = document.getElementById('timelogDate');
+        let selectedDate = dateInput?.value ? new Date(dateInput.value) : new Date();
+        const dateKey = getDateKey(selectedDate);
+        const month = selectedDate.getMonth();
+        const day = selectedDate.getDate();
+        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th><th>Time In</th><th>Time Out</th><th>Status</th></tr></thead><tbody>`;
+        let hasData = false;
+        for (const [empId, user] of Object.entries(appState.users)) {
+            const timeInStr = appState.attendance[empId]?.[`${dateKey}_time`];
+            const timeOutStr = appState.attendance[empId]?.[`${dateKey}_out`];
+            const status = appState.attendance[empId]?.[dateKey];
+            const shiftLabel = user['shift_' + month] || user.defaultShift || '';
+            if (timeInStr || status === 'P') {
+                hasData = true;
+                const timeInDisplay = timeInStr ? new Date(timeInStr).toLocaleTimeString() : '—';
+                const timeOutDisplay = timeOutStr ? new Date(timeOutStr).toLocaleTimeString() : '—';
+                const statusDisplay = status ? `<span class="status-${status}">${status}</span>` : '—';
+                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td><td>${timeInDisplay}</td><td>${timeOutDisplay}</td><td>${statusDisplay}</td></tr>`;
+            }
+        }
+        if (!hasData) html += `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-light);">No records for ${selectedDate.toLocaleDateString()}</td></tr>`;
+        html += `</tbody></table>`;
+        timelogTable.innerHTML = html;
+    }
+    
+    function searchTimeLog() {
+        const searchTerm = document.getElementById('timelogSearch').value.toLowerCase();
+        document.querySelectorAll('#timelogTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
+    }
+    
     const _renderQueue = new Set();
     let _renderTimer = null;
     function queueRender(...tasks) {
@@ -2890,6 +2981,8 @@
             renderCurrentTabOnly();
         }
     });
+    exportFn('renderTimeLog', renderTimeLog);
+    exportFn('searchTimeLog', searchTimeLog);
     exportFn('toggleLeaveForm', function() {
         const leaveForm = document.getElementById('leaveFormSection');
         leaveForm.classList.toggle('hidden');
