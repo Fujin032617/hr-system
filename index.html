@@ -644,6 +644,22 @@ text-align: center;
             font-size: 10px;
             color: #0369a1;
         }
+
+        /* ── Schedule tab improvements ── */
+        .sched-hint {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 10px;
+            color: #0369a1;
+        }
+        #schedTable table { min-width: 1100px; }
+        #schedTable input[type=text], #schedTable select {
+            font-size: 11px;
+            padding: 5px 7px;
+        }
     </style>
 </head>
 <body>
@@ -665,10 +681,8 @@ text-align: center;
     </div>
 </header>
 
-<!-- Connection Status Indicator -->
 <div id="connectionStatus" class="hidden"></div>
 
-<!-- Forgot Logout Alert -->
 <div id="forgotLogoutAlert" class="forgot-logout-alert hidden">
     <div style="font-weight:bold; margin-bottom:5px;">⚠️ AUTO CLOCK-OUT WARNING</div>
     <div style="font-size:10px;">You forgot to clock out! System will auto clock-out in <span id="autoClockoutTimer">5:00</span></div>
@@ -677,7 +691,6 @@ text-align: center;
     </button>
 </div>
 
-<!-- Leave Inbox Modal -->
 <div id="leaveInbox" class="inbox-modal hidden">
     <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:700; background:#f8fafc;">
         Department Leave Requests
@@ -686,7 +699,6 @@ text-align: center;
     <div id="inboxContent" style="max-height: 350px; overflow-y: auto; padding:15px;"></div>
 </div>
 
-<!-- Notifications Modal -->
 <div id="notificationsModal" class="inbox-modal hidden" style="right: 350px;">
     <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:700; background:#f8fafc;">
         Notifications
@@ -699,10 +711,7 @@ text-align: center;
 <div id="loginSection">
     <div style="max-width:320px; margin:100px auto; background:white; padding:40px; border-radius:20px; text-align:center; box-shadow: var(--shadow); border: 1px solid var(--border);">
         <h2 style="margin-bottom:30px; font-weight:800; color:var(--primary);">Sign In</h2>
-        
-        <!-- Error Message Display -->
         <div id="loginError" class="error-message hidden"></div>
-        
         <input type="text" id="lUser" placeholder="Username" style="width:100%; margin-bottom:15px; box-sizing: border-box; padding:12px;" autocomplete="username">
         <input type="password" id="lPass" placeholder="Password" style="width:100%; margin-bottom:25px; box-sizing: border-box; padding:12px;" autocomplete="current-password">
         <button onclick="handleLogin()" style="width:100%;" class="action-btn" id="loginButton">ACCESS PORTAL</button>
@@ -728,17 +737,13 @@ text-align: center;
             <div class="card" style="width:400px; max-width:100%; text-align:center;">
                 <h1 id="profName" style="margin-bottom:5px; font-weight:800; color:var(--primary);">User</h1>
                 <div id="liveClock" style="font-size:36px; font-weight:800; color:var(--accent); margin:10px 0;">00:00:00</div>
-                
-                <!-- Offline Queue Display -->
                 <div id="offlineQueueDisplay" class="offline-queue hidden" style="margin:10px 0;">
                     <span id="offlineQueueCount">0</span> actions queued (offline)
                 </div>
-                
                 <div id="clockControls" style="margin: 20px 0;">
                     <button id="btnClockIn" onclick="userClockAction('P')" class="action-btn" style="width:100%; height:55px; background:var(--green);">CLOCK IN</button>
                     <button id="btnClockOut" onclick="userClockAction('OUT')" class="action-btn hidden" style="width:100%; height:55px; background:var(--header-red);">CLOCK OUT</button>
                 </div>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                     <div class="bal-box" style="border-bottom: 4px solid #fbbf24; background:#fffcf0;">
                         <span class="bal-label">SICK LEAVE</span>
@@ -815,37 +820,29 @@ text-align: center;
                         <option value="SL">Sick Leave (SL)</option>
                         <option value="VL">Vacation Leave (VL)</option>
                     </select>
-                    
                     <label>Date Range</label>
                     <div class="date-range">
                         <input type="date" id="lvStartDate" onchange="checkDateRange()">
                         <input type="date" id="lvEndDate" onchange="checkDateRange()">
                     </div>
-                    
-                    <div id="dateRangeError" class="error-message hidden" style="margin: 5px 0; font-size: 9px;"></div>
-                    
-                    <div id="overlapError" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#fef3f2; color:#dc2626; border-color:#fecaca;"></div>
-                    
-                    <div id="scheduleConflict" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#f0f9ff; color:#0369a1; border-color:#bae6fd;"></div>
-                    
-                    <div id="consecutiveError" class="error-message hidden" style="margin: 5px 0; font-size: 9px; background:#fffbeb; color:#b45309; border-color:#fde68a;"></div>
-                    
+                    <div id="dateRangeError" class="error-message hidden"></div>
+                    <div id="overlapError" class="error-message hidden"></div>
+                    <div id="scheduleConflict" class="error-message hidden"></div>
+                    <div id="consecutiveError" class="error-message hidden"></div>
                     <label>Reason</label>
                     <textarea id="lvReason" placeholder="Brief reason for leave..."></textarea>
-                    
                     <div style="font-size:10px; color:var(--text-light); margin: 5px 0;">
                         Available Balance: <span id="availableBalance">0</span> days | 
                         Requested: <span id="requestedDays">0</span> working days<br>
                         Max Consecutive Leave: <span id="maxConsecutiveDisplay">0</span> days
                     </div>
-                    
                     <button onclick="submitLeave()" class="action-btn" style="width:100%;">SUBMIT REQUEST</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Directory - ADMIN/HR ONLY -->
+    <!-- Directory -->
     <section id="sec-dir" class="tab-content hidden">
         <div class="card">
             <h3>Staff Directory</h3>
@@ -911,7 +908,7 @@ text-align: center;
                 <span class="search-icon">🔍</span>
             </div>
             <div class="table-wrap" id="schedTable"></div>
-            <button id="saveSchedulesBtn" class="action-btn hidden" onclick="saveAllSchedules()" style="margin-top:15px;">PUBLISH CHANGES</button>
+            <button id="saveSchedulesBtn" class="action-btn hidden" onclick="saveAllSchedules()" style="margin-top:15px;">PUBLISH ALL CHANGES</button>
         </div>
     </section>
 
@@ -942,7 +939,7 @@ text-align: center;
         </div>
     </section>
 
-    <!-- Calendar - FIXED VERSION -->
+    <!-- Calendar -->
     <section id="sec-calendar" class="tab-content hidden">
         <div class="card">
             <div class="flex-between" style="margin-bottom:15px;">
@@ -963,37 +960,17 @@ text-align: center;
                         <option value="approved">Approved Only</option>
                         <option value="pending">Pending Only</option>
                     </select>
-                    <button class="action-btn btn-small" onclick="refreshCalendarEvents()" style="padding:6px 12px;">
-                        🔄 Refresh
-                    </button>
+                    <button class="action-btn btn-small" onclick="refreshCalendarEvents()" style="padding:6px 12px;">🔄 Refresh</button>
                 </div>
             </div>
             <div id="calendar"></div>
             <div class="calendar-legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #10b981;"></div>
-                    <span>Approved SL</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #fbbf24;"></div>
-                    <span>Pending SL</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ef4444;"></div>
-                    <span>Rejected SL</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #6366f1;"></div>
-                    <span>Approved VL</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #f59e0b;"></div>
-                    <span>Pending VL</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #dc2626;"></div>
-                    <span>Rejected VL</span>
-                </div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #10b981;"></div><span>Approved SL</span></div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #fbbf24;"></div><span>Pending SL</span></div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #ef4444;"></div><span>Rejected SL</span></div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #6366f1;"></div><span>Approved VL</span></div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #f59e0b;"></div><span>Pending VL</span></div>
+                <div class="legend-item"><div class="legend-color" style="background-color: #dc2626;"></div><span>Rejected VL</span></div>
             </div>
         </div>
     </section>
@@ -1015,39 +992,21 @@ text-align: center;
         <div class="card">
             <h3>My Leave History</h3>
             <div class="stats-grid" style="margin-bottom: 20px;">
-                <div class="stat-card">
-                    <div class="stat-label">Total Requests</div>
-                    <div class="stat-number" id="totalLeaves">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Approved</div>
-                    <div class="stat-number" id="approvedLeaves">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Pending</div>
-                    <div class="stat-number" id="pendingLeaves">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Rejected</div>
-                    <div class="stat-number" id="rejectedLeaves">0</div>
-                </div>
+                <div class="stat-card"><div class="stat-label">Total Requests</div><div class="stat-number" id="totalLeaves">0</div></div>
+                <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-number" id="approvedLeaves">0</div></div>
+                <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-number" id="pendingLeaves">0</div></div>
+                <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-number" id="rejectedLeaves">0</div></div>
             </div>
             <div class="search-container">
                 <input type="text" id="leaveSearch" class="search-input" placeholder="Search your leave requests..." onkeyup="searchMyLeaves()">
                 <span class="search-icon">🔍</span>
             </div>
-            <div class="my-leaves-container" id="myLeavesContainer">
-                <!-- Leave cards will be dynamically inserted here -->
-            </div>
+            <div class="my-leaves-container" id="myLeavesContainer"></div>
         </div>
     </section>
 </div>
 
 <script>
-    // Plain (non-module) script runs synchronously before the module loads.
-    // Registers stub functions on window for every onclick handler in the HTML.
-    // Each stub queues the call and retries every 50ms until the real function
-    // is registered by the module via exportFn().
     (function() {
         var names = [
             'handleLogin','handleLogout','userClockAction','submitLeave','cancelLeave',
@@ -1078,7 +1037,6 @@ text-align: center;
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, get, child, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",
         authDomain: "realtime-database-49a47.firebaseapp.com",
@@ -1090,11 +1048,9 @@ text-align: center;
         measurementId: "G-BWYQ1P2PM5"
     };
     
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     
-    // Application State
     const appState = {
         users: {},
         attendance: {},
@@ -1116,61 +1072,39 @@ text-align: center;
         calendarInitialized: false
     };
     
-    // Constants
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const STATUS_CYCLE = ['', 'P', 'RD', 'SL', 'VL', 'A', 'NPL', 'NPSL', 'S', 'UT', 'HD', 'BL', 'PL', 'ML'];
-    const LEAVE_TYPES = {
-        'SL': 'Sick Leave',
-        'VL': 'Vacation Leave'
-    };
+    const LEAVE_TYPES = { 'SL': 'Sick Leave', 'VL': 'Vacation Leave' };
 
+    // ── Allowed values for schedule dropdowns ────────────────────────────────
+    const DAYS_OF_WEEK = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const WORKING_DAYS_PRESETS = ['Monday-Friday','Monday-Saturday','Tuesday-Saturday','Wednesday-Sunday','Thursday-Monday','Sunday-Thursday'];
 
-
-    // Parse time string to hours and minutes
     function parseTime(timeStr) {
         if (!timeStr) return [17, 0];
-        
         timeStr = timeStr.trim().toUpperCase();
-        
         if (timeStr.includes(':')) {
             const parts = timeStr.split(':');
             let hours = parseInt(parts[0]) || 0;
             const minutes = parseInt(parts[1]) || 0;
-            
-            if (timeStr.includes('PM') && hours < 12) {
-                hours += 12;
-            }
-            if (timeStr.includes('AM') && hours === 12) {
-                hours = 0;
-            }
-            
+            if (timeStr.includes('PM') && hours < 12) hours += 12;
+            if (timeStr.includes('AM') && hours === 12) hours = 0;
             return [hours, minutes];
         }
-        
         const match = timeStr.match(/(\d+)\s*(AM|PM)?/i);
         if (match) {
             let hours = parseInt(match[1]) || 0;
             const period = match[2] ? match[2].toUpperCase() : 'AM';
-            
-            if (period === 'PM' && hours < 12) {
-                hours += 12;
-            }
-            if (period === 'AM' && hours === 12) {
-                hours = 0;
-            }
-            
+            if (period === 'PM' && hours < 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
             return [hours, 0];
         }
-        
         return [17, 0];
     }
 
-    // Detect shift type from time slot
     function detectShiftType(timeSlot) {
         if (!timeSlot) return 'Day';
-        
         timeSlot = timeSlot.toLowerCase();
-        
         if (timeSlot.includes('night') || 
             timeSlot.includes('20:00') || timeSlot.includes('21:00') || 
             timeSlot.includes('22:00') || timeSlot.includes('23:00') || 
@@ -1184,245 +1118,133 @@ text-align: center;
             timeSlot.includes('12 am')) {
             return 'Night';
         }
-        
         return 'Day';
     }
 
-    // Get shift CSS class
     function getShiftClass(shiftType) {
-        switch(shiftType.toLowerCase()) {
-            case 'night': return 'shift-night';
-            default: return 'shift-day';
-        }
+        return shiftType.toLowerCase() === 'night' ? 'shift-night' : 'shift-day';
     }
 
-    // Calculate used leaves from APPROVED leave requests
-    // Uses calculateWorkingDays() so rest days are excluded — matches submission logic
     function calculateUsedLeaves(employeeId, leaveType) {
         let usedDays = 0;
-        
         if (!appState.leaveRequests) return 0;
-        
         Object.values(appState.leaveRequests).forEach(leave => {
-            if (leave.empID === employeeId && 
-                leave.type === leaveType && 
-                leave.status === 'Approved') {
-                
-                // Use the unified working-day counter so rest days are never charged
+            if (leave.empID === employeeId && leave.type === leaveType && leave.status === 'Approved') {
                 usedDays += calculateWorkingDays(leave.startDate, leave.endDate || leave.startDate, employeeId);
             }
         });
-        
         return usedDays;
     }
 
-    // ==================== FIXED HIERARCHY FUNCTION ====================
-    // Check if user can approve leave based on hierarchy: Employee → OPS → Admin → HR
     function canApproveLeave(request) {
         if (!appState.currentUser) return false;
-        
         const employee = appState.users[request.empID];
         if (!employee) return false;
-        
         const currentUser = appState.currentUser;
-        
-        // HR can approve both departments (top of hierarchy)
-        if (currentUser.role === 'HR') {
-            return true;
-        }
-        
-        // OPS and Admin can only approve same department
-        if (employee.dept !== currentUser.dept) {
-            return false;
-        }
-        
-        // Hierarchy check based on roles
-        const roleHierarchy = {
-            'Employee': 1,
-            'OPS': 2,
-            'Admin': 3,
-            'HR': 4
-        };
-        
+        if (currentUser.role === 'HR') return true;
+        if (employee.dept !== currentUser.dept) return false;
+        const roleHierarchy = { 'Employee': 1, 'OPS': 2, 'Admin': 3, 'HR': 4 };
         const requesterLevel = roleHierarchy[employee.role] || 0;
         const approverLevel = roleHierarchy[currentUser.role] || 0;
-        
-        // Approver must be higher in hierarchy than requester
         return approverLevel > requesterLevel;
     }
 
-    // Check if user can cancel leave
     function canCancelLeave(request) {
         if (!appState.currentUser) return false;
-        
         const currentUser = appState.currentUser;
         const requester = appState.users[request.empID];
-        
-        // HR can cancel any leave
+        if (!requester) return currentUser.role === 'HR';
         if (currentUser.role === 'HR') return true;
-        
-        // Admin can cancel any leave in same department
-        if (currentUser.role === 'Admin') {
-            return requester.dept === currentUser.dept;
-        }
-        
-        // Employees can only cancel their own pending leaves
-        if (currentUser.id === request.empID && request.status === 'Pending') {
-            return true;
-        }
-        
+        if (currentUser.role === 'Admin') return requester.dept === currentUser.dept;
+        if (currentUser.id === request.empID && request.status === 'Pending') return true;
         return false;
     }
 
-    // Check for overlapping leaves
     function hasOverlappingLeave(empId, startDate, endDate, excludeLeaveId = null) {
         if (!appState.leaveRequests) return false;
-        
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : start;
-        
         for (const [leaveId, leave] of Object.entries(appState.leaveRequests)) {
             if (excludeLeaveId && leaveId === excludeLeaveId) continue;
             if (leave.empID !== empId) continue;
             if (leave.status === 'Rejected') continue;
-            
             const existingStart = new Date(leave.startDate);
             const existingEnd = leave.endDate ? new Date(leave.endDate) : existingStart;
-            
-            // Check for overlap (including same day)
-            if ((start <= existingEnd && end >= existingStart)) {
-                return true;
-            }
+            if (start <= existingEnd && end >= existingStart) return true;
         }
-        
         return false;
     }
 
-    // Calculate working days excluding rest days
     function calculateWorkingDays(startDate, endDate, empId) {
         if (!startDate) return 0;
-        
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : start;
         const user = appState.users[empId];
-        
         if (!user) return 0;
-        
         let workingDays = 0;
         const currentDate = new Date(start);
-        
         while (currentDate <= end) {
             const month = currentDate.getMonth();
             const dayOfWeek = currentDate.getDay();
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const dayName = dayNames[dayOfWeek];
-            
-            // Get schedule for this month
             const off1 = user['off1_' + month] || '';
             const off2 = user['off2_' + month] || '';
-            
-            // Check if it's a rest day
-            const isRestDay = off1 === dayName || off2 === dayName;
-            
-            if (!isRestDay) {
-                workingDays++;
-            }
-            
+            if (off1 !== dayName && off2 !== dayName) workingDays++;
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
         return workingDays;
     }
 
-    // Check consecutive leave days against max limit
-    // Uses working days so rest days within the range are not counted against the limit
     function checkConsecutiveLimit(empId, startDate, endDate) {
         const user = appState.users[empId];
         if (!user) return { valid: true, days: 0, max: 30 };
-        
         const totalDays = calculateWorkingDays(startDate, endDate || startDate, empId);
-        
         const maxConsecutive = user.maxConsecutiveLeave || 30;
-        
-        return {
-            valid: totalDays <= maxConsecutive,
-            days: totalDays,
-            max: maxConsecutive
-        };
+        return { valid: totalDays <= maxConsecutive, days: totalDays, max: maxConsecutive };
     }
 
-    // Initialize the application
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('HR System Initializing...');
-        
-        try {
-            // Initialize date selectors
-            const currentDate = new Date();
-            const monthSelectors = document.querySelectorAll('#pMonth, #sMonth');
-            monthSelectors.forEach(select => {
-                select.innerHTML = MONTHS.map((month, index) => 
-                    `<option value="${index}" ${currentDate.getMonth() === index ? 'selected' : ''}>${month}</option>`
-                ).join('');
-            });
-            
-            // Set default period
-            const periodSelect = document.getElementById('pPeriod');
-            if (periodSelect) {
-                periodSelect.value = currentDate.getDate() <= 15 ? "1-15" : "16-31";
-            }
-            
-            // Set default leave dates
-            const startDateInput = document.getElementById('lvStartDate');
-            const endDateInput = document.getElementById('lvEndDate');
-            if (startDateInput && endDateInput) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                startDateInput.min = tomorrow.toISOString().split('T')[0];
-                endDateInput.min = tomorrow.toISOString().split('T')[0];
-            }
-            
-            // Initialize live clock
-            updateLiveClock();
-            setInterval(updateLiveClock, 1000);
-            
-            // Setup online/offline detection
-            setupOfflineSupport();
-            
-            // Check for forgot logout on page load
-            checkForgotLogout();
-            
-            // Load saved user session
-            const savedUser = localStorage.getItem('hr_currentUser');
-            if (savedUser) {
-                try {
-                    const parsedUser = JSON.parse(savedUser);
-                    appState.currentUser = parsedUser;
-                    showAdminPanel();
-                    setupRealtimeListeners();
-                } catch (e) {
-                    console.error('Error parsing saved user:', e);
-                    localStorage.removeItem('hr_currentUser');
-                }
-            }
-            
-            // Add event listener for Enter key in login form
-            document.getElementById('lPass').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-            
-        } catch (error) {
-            console.error('Initialization error:', error);
-            showError('Failed to initialize application', 'loginError');
+        const currentDate = new Date();
+        const monthSelectors = document.querySelectorAll('#pMonth, #sMonth');
+        monthSelectors.forEach(select => {
+            select.innerHTML = MONTHS.map((month, index) => 
+                `<option value="${index}" ${currentDate.getMonth() === index ? 'selected' : ''}>${month}</option>`
+            ).join('');
+        });
+        const periodSelect = document.getElementById('pPeriod');
+        if (periodSelect) periodSelect.value = currentDate.getDate() <= 15 ? "1-15" : "16-31";
+        const startDateInput = document.getElementById('lvStartDate');
+        const endDateInput = document.getElementById('lvEndDate');
+        if (startDateInput && endDateInput) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            startDateInput.min = tomorrow.toISOString().split('T')[0];
+            endDateInput.min = tomorrow.toISOString().split('T')[0];
         }
+        updateLiveClock();
+        setInterval(updateLiveClock, 1000);
+        setupOfflineSupport();
+        checkForgotLogout();
+        const savedUser = localStorage.getItem('hr_currentUser');
+        if (savedUser) {
+            try {
+                const parsedUser = JSON.parse(savedUser);
+                appState.currentUser = parsedUser;
+                showAdminPanel();
+                setupRealtimeListeners();
+            } catch (e) {
+                localStorage.removeItem('hr_currentUser');
+            }
+        }
+        document.getElementById('lPass').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
     });
     
-    // Setup offline support with auto-sync
     function setupOfflineSupport() {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
-        
         updateConnectionStatus();
         startAutoClockOutCheck();
         startOfflineSyncCheck();
@@ -1432,11 +1254,7 @@ text-align: center;
         appState.isOnline = true;
         updateConnectionStatus();
         showSuccess('Connection restored! Syncing queued actions...', null, 3000);
-        
-        // Process offline queue immediately
-        setTimeout(() => {
-            processPendingActions();
-        }, 1000);
+        setTimeout(() => processPendingActions(), 1000);
     }
     
     function handleOffline() {
@@ -1448,19 +1266,16 @@ text-align: center;
     function updateConnectionStatus() {
         const statusEl = document.getElementById('connectionStatus');
         if (!statusEl) return;
-        
         if (appState.isOnline) {
             statusEl.textContent = '🟢 ONLINE';
             statusEl.classList.remove('offline');
             statusEl.classList.add('hidden');
-            
             const queueDisplay = document.getElementById('offlineQueueDisplay');
             if (queueDisplay) queueDisplay.classList.add('hidden');
         } else {
             statusEl.textContent = '🔴 OFFLINE - Changes queued';
             statusEl.classList.add('offline');
             statusEl.classList.remove('hidden');
-            
             const queueDisplay = document.getElementById('offlineQueueDisplay');
             if (queueDisplay) {
                 queueDisplay.classList.remove('hidden');
@@ -1469,55 +1284,32 @@ text-align: center;
         }
     }
     
-    // Start offline sync check
     function startOfflineSyncCheck() {
         setInterval(() => {
-            if (appState.isOnline && appState.offlineQueue.length > 0) {
-                processPendingActions();
-            }
+            if (appState.isOnline && appState.offlineQueue.length > 0) processPendingActions();
         }, 30000);
     }
     
-    // Process pending actions when back online - FIXED VERSION
     async function processPendingActions() {
         if (appState.offlineQueue.length === 0 || !appState.isOnline) return;
-        
         showInfo(`Syncing ${appState.offlineQueue.length} queued actions...`, null, false);
-        
         const successfulActions = [];
         const failedActions = [];
-        
         for (let i = 0; i < appState.offlineQueue.length; i++) {
             const action = appState.offlineQueue[i];
             try {
-                // Execute the action function
-                if (typeof action === 'function') {
-                    await action();
-                } else {
-                    // Handle action data directly
-                    const { type, data } = action;
-                    await executeQueuedAction(type, data);
-                }
+                const { type, data } = action;
+                await executeQueuedAction(type, data);
                 successfulActions.push(action);
                 await new Promise(resolve => setTimeout(resolve, 300));
             } catch (error) {
-                console.error('Failed to sync action:', error);
                 failedActions.push(action);
             }
         }
-        
-        // Update queue
         appState.offlineQueue = failedActions;
         localStorage.setItem('hr_offline_queue', JSON.stringify(appState.offlineQueue));
-        
-        if (successfulActions.length > 0) {
-            showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
-        }
-        
-        if (failedActions.length > 0) {
-            showError(`${failedActions.length} actions failed to sync. Will retry later.`, null, 3000);
-        }
-        
+        if (successfulActions.length > 0) showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
+        if (failedActions.length > 0) showError(`${failedActions.length} actions failed to sync. Will retry later.`, null, 3000);
         const queueDisplay = document.getElementById('offlineQueueDisplay');
         if (queueDisplay) {
             if (appState.offlineQueue.length > 0) {
@@ -1529,7 +1321,6 @@ text-align: center;
         }
     }
     
-    // Execute queued action
     async function executeQueuedAction(type, data) {
         switch(type) {
             case 'clock_in':
@@ -1562,12 +1353,10 @@ text-align: center;
         }
     }
     
-    // Add action to offline queue - FIXED VERSION
     function addToOfflineQueue(type, data) {
         const action = { type, data, timestamp: new Date().toISOString() };
         appState.offlineQueue.push(action);
         localStorage.setItem('hr_offline_queue', JSON.stringify(appState.offlineQueue));
-        
         const queueDisplay = document.getElementById('offlineQueueDisplay');
         if (queueDisplay) {
             queueDisplay.classList.remove('hidden');
@@ -1575,19 +1364,15 @@ text-align: center;
         }
     }
     
-    // Safe Firebase operation with offline support
     async function safeFirebaseOperation(operation, data, actionType) {
         if (!appState.isOnline) {
-            // Store the operation details for later execution
             addToOfflineQueue(actionType, data);
             return { success: false, queued: true };
         }
-        
         try {
             const result = await operation(data);
             return { success: true, data: result };
         } catch (error) {
-            console.error('Firebase operation error:', error);
             if (!navigator.onLine) {
                 addToOfflineQueue(actionType, data);
                 return { success: false, queued: true };
@@ -1596,51 +1381,32 @@ text-align: center;
         }
     }
     
-    // Start auto clock-out check for forgotten logouts
     function startAutoClockOutCheck() {
-        if (appState.autoClockOutInterval) {
-            clearInterval(appState.autoClockOutInterval);
-        }
-        appState.autoClockOutInterval = setInterval(checkAutoClockOut, 60 * 1000); // Check every minute
+        if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
+        appState.autoClockOutInterval = setInterval(checkAutoClockOut, 60 * 1000);
     }
     
-    // ── Helper: compute late minutes for a given clock-in time ──────────────
-    // Compares actual clock-in against the scheduled start time from the
-    // employee's time slot (e.g. "8 AM - 8 PM" → start is 8 AM).
-    // Returns 0 if on time or early.
     function computeLateMins(clockInTime, empId, month) {
         const user = appState.users[empId] || appState.currentUser;
         const timeSlot = user['out_' + month] || '';
         if (!timeSlot) return 0;
-
-        // Parse first time in slot as scheduled start (e.g. "8 AM - 8 PM" → 8:00)
         const firstPart = timeSlot.split(/[-–]/)[0].trim();
         const [schedHour, schedMin] = parseTime(firstPart);
-
-        // Build scheduled start as a Date on the clock-in day
         const scheduled = new Date(clockInTime);
         scheduled.setHours(schedHour, schedMin, 0, 0);
-
-        // Night shift: if scheduled start is in the evening (≥ 18:00) and
-        // clock-in is in the morning, the scheduled start was the previous day.
-        // But we only care about being late vs the start, so use the same day.
         const diffMs = clockInTime - scheduled;
-        if (diffMs <= 0) return 0; // on time or early
-        return Math.floor(diffMs / 60000); // convert ms → minutes
+        if (diffMs <= 0) return 0;
+        return Math.floor(diffMs / 60000);
     }
 
-    // Clock In/Out Action
     async function userClockAction(actionType) {
         if (appState.isProcessing) return;
-
         const now = new Date();
         const month = now.getMonth();
         const day = now.getDate();
         const key = `${month}_${day}`;
         const timeKey = `${key}_time`;
-
         if (actionType === 'P') {
-            // ── Guard: prevent double clock-in ───────────────────────────────
             const existingStatus = appState.attendance[appState.currentUser.id]?.[key];
             const existingClockOut = appState.attendance[appState.currentUser.id]?.[`${key}_out`];
             if (existingStatus === 'P' && !existingClockOut) {
@@ -1648,69 +1414,40 @@ text-align: center;
                 return;
             }
         }
-
         appState.isProcessing = true;
-
         try {
             if (actionType === 'P') {
-                // ── Clock In ──────────────────────────────────────────────────
                 const lateMins = computeLateMins(now, appState.currentUser.id, month);
-                const clockInUpdates = {
-                    [key]: 'P',
-                    [timeKey]: now.toISOString()
-                };
+                const clockInUpdates = { [key]: 'P', [timeKey]: now.toISOString() };
                 if (lateMins > 0) clockInUpdates[`${key}_late`] = lateMins;
-
                 localStorage.setItem('hr_last_clock_action', JSON.stringify({
-                    status: 'P',
-                    timestamp: now.toISOString(),
-                    dateKey: key,
-                    userId: appState.currentUser.id
+                    status: 'P', timestamp: now.toISOString(), dateKey: key, userId: appState.currentUser.id
                 }));
-
                 const result = await safeFirebaseOperation(async () => {
                     await update(ref(db, `attendance/${appState.currentUser.id}`), clockInUpdates);
                     await push(ref(db, 'audit_logs'), {
                         name: appState.currentUser.fullName,
                         action: lateMins > 0 ? `CLOCK IN (${lateMins} min late)` : 'CLOCK IN',
-                        timestamp: now.toISOString(),
-                        empID: appState.currentUser.id,
-                        department: appState.currentUser.dept,
-                        time: now.toLocaleTimeString()
+                        timestamp: now.toISOString(), empID: appState.currentUser.id,
+                        department: appState.currentUser.dept, time: now.toLocaleTimeString()
                     });
                 }, {
-                    userId: appState.currentUser.id,
-                    updates: clockInUpdates,
+                    userId: appState.currentUser.id, updates: clockInUpdates,
                     auditLog: {
                         name: appState.currentUser.fullName,
                         action: lateMins > 0 ? `CLOCK IN (${lateMins} min late)` : 'CLOCK IN',
-                        timestamp: now.toISOString(),
-                        empID: appState.currentUser.id,
-                        department: appState.currentUser.dept,
-                        time: now.toLocaleTimeString()
+                        timestamp: now.toISOString(), empID: appState.currentUser.id,
+                        department: appState.currentUser.dept, time: now.toLocaleTimeString()
                     }
                 }, 'clock_in');
-
                 if (result.success) {
-                    const msg = lateMins > 0
-                        ? `Clocked in — ${lateMins} minute(s) late.`
-                        : 'Clocked in successfully!';
+                    const msg = lateMins > 0 ? `Clocked in — ${lateMins} minute(s) late.` : 'Clocked in successfully!';
                     showSuccess(msg, null, 3000);
-                    const clockInBtn = document.getElementById('btnClockIn');
-                    const clockOutBtn = document.getElementById('btnClockOut');
-                    if (clockInBtn && clockOutBtn) {
-                        clockInBtn.classList.add('hidden');
-                        clockOutBtn.classList.remove('hidden');
-                    }
+                    document.getElementById('btnClockIn').classList.add('hidden');
+                    document.getElementById('btnClockOut').classList.remove('hidden');
                 }
-
             } else if (actionType === 'OUT') {
-                // ── Clock Out ─────────────────────────────────────────────────
-                // For night shift: find the date key from the clock-in record,
-                // not from today's date, so clock-out is saved under the same
-                // day as clock-in (e.g. clocked in Mon 8 PM, out Tue 8 AM →
-                // clock-out is saved under Monday's key).
-                let clockInDateKey = key; // default: same day
+                let clockInDateKey = key;
                 const savedAction = localStorage.getItem('hr_last_clock_action');
                 if (savedAction) {
                     try {
@@ -1720,171 +1457,92 @@ text-align: center;
                         }
                     } catch(e) {}
                 }
-                // Also check Firebase snapshot for today or yesterday
                 const todayClockIn = appState.attendance[appState.currentUser.id]?.[`${key}_time`];
                 const yesterday = new Date(now);
                 yesterday.setDate(yesterday.getDate() - 1);
                 const yKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
                 const yClockIn = appState.attendance[appState.currentUser.id]?.[`${yKey}_time`];
                 const yClockOut = appState.attendance[appState.currentUser.id]?.[`${yKey}_out`];
-
-                // If yesterday has a clock-in with no clock-out and today does NOT,
-                // this is a night-shift clock-out for yesterday's record.
-                if (!todayClockIn && yClockIn && !yClockOut) {
-                    clockInDateKey = yKey;
-                }
-
+                if (!todayClockIn && yClockIn && !yClockOut) clockInDateKey = yKey;
                 const outKey = `${clockInDateKey}_out`;
-
                 localStorage.setItem('hr_last_clock_action', JSON.stringify({
-                    status: 'P',
-                    timestamp: now.toISOString(),
-                    dateKey: clockInDateKey,
-                    userId: appState.currentUser.id,
-                    clockOut: true
+                    status: 'P', timestamp: now.toISOString(), dateKey: clockInDateKey,
+                    userId: appState.currentUser.id, clockOut: true
                 }));
-
                 const result = await safeFirebaseOperation(async () => {
-                    await update(ref(db, `attendance/${appState.currentUser.id}`), {
-                        [outKey]: now.toISOString()
-                    });
+                    await update(ref(db, `attendance/${appState.currentUser.id}`), { [outKey]: now.toISOString() });
                     await push(ref(db, 'audit_logs'), {
-                        name: appState.currentUser.fullName,
-                        action: 'CLOCK OUT',
-                        timestamp: now.toISOString(),
-                        empID: appState.currentUser.id,
-                        department: appState.currentUser.dept,
-                        time: now.toLocaleTimeString()
+                        name: appState.currentUser.fullName, action: 'CLOCK OUT',
+                        timestamp: now.toISOString(), empID: appState.currentUser.id,
+                        department: appState.currentUser.dept, time: now.toLocaleTimeString()
                     });
                     await push(ref(db, 'notifications'), {
-                        userId: appState.currentUser.id,
-                        title: 'Clock Out',
+                        userId: appState.currentUser.id, title: 'Clock Out',
                         message: `You clocked out at ${now.toLocaleTimeString()}`,
-                        type: 'info',
-                        timestamp: now.toISOString(),
-                        read: false
+                        type: 'info', timestamp: now.toISOString(), read: false
                     });
                 }, {
-                    userId: appState.currentUser.id,
-                    updates: { [outKey]: now.toISOString() },
+                    userId: appState.currentUser.id, updates: { [outKey]: now.toISOString() },
                     auditLog: {
-                        name: appState.currentUser.fullName,
-                        action: 'CLOCK OUT',
-                        timestamp: now.toISOString(),
-                        empID: appState.currentUser.id,
-                        department: appState.currentUser.dept,
-                        time: now.toLocaleTimeString()
+                        name: appState.currentUser.fullName, action: 'CLOCK OUT',
+                        timestamp: now.toISOString(), empID: appState.currentUser.id,
+                        department: appState.currentUser.dept, time: now.toLocaleTimeString()
                     },
                     notification: {
-                        userId: appState.currentUser.id,
-                        title: 'Clock Out',
+                        userId: appState.currentUser.id, title: 'Clock Out',
                         message: `You clocked out at ${now.toLocaleTimeString()}`,
-                        type: 'info',
-                        timestamp: now.toISOString(),
-                        read: false
+                        type: 'info', timestamp: now.toISOString(), read: false
                     }
                 }, 'clock_out');
-
                 if (result.success || result.queued) {
                     if (result.success) showSuccess('Clocked out successfully!', null, 3000);
                     else showError('Offline. Clock out queued and will sync when connection is restored.', null, false);
                     localStorage.removeItem('hr_last_clock_action');
                     hideForgotLogoutWarning();
-                    const clockInBtn = document.getElementById('btnClockIn');
-                    const clockOutBtn = document.getElementById('btnClockOut');
-                    if (clockInBtn && clockOutBtn) {
-                        clockInBtn.classList.remove('hidden');
-                        clockOutBtn.classList.add('hidden');
-                    }
+                    document.getElementById('btnClockIn').classList.remove('hidden');
+                    document.getElementById('btnClockOut').classList.add('hidden');
                 }
             }
         } catch (error) {
-            console.error('Clock action error:', error);
-            showError(navigator.onLine
-                ? 'Failed to record clock action'
-                : 'You are offline. Clock action will sync when connection is restored.', null, 3000);
+            showError(navigator.onLine ? 'Failed to record clock action' : 'You are offline. Clock action will sync when connection is restored.', null, 3000);
         } finally {
             appState.isProcessing = false;
         }
     }
     
-    // AUTO CLOCK-OUT — night shift aware
-    // Checks both today's and yesterday's date key so night shift workers
-    // (who clocked in Mon evening and haven't clocked out by Tue morning)
-    // are handled correctly.
     async function checkAutoClockOut() {
         if (!appState.currentUser) return;
-
         const now = new Date();
-
-        // Build candidate date keys: today and yesterday (for night shift)
         const candidates = [now];
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
         candidates.push(yesterday);
-
-        let activeKey = null;
-        let clockInTimeStr = null;
-
+        let activeKey = null, clockInTimeStr = null;
         for (const d of candidates) {
             const k = `${d.getMonth()}_${d.getDate()}`;
             const status = appState.attendance[appState.currentUser.id]?.[k];
             const clockOut = appState.attendance[appState.currentUser.id]?.[`${k}_out`];
             const timeStr = appState.attendance[appState.currentUser.id]?.[`${k}_time`];
-            if (status === 'P' && !clockOut && timeStr) {
-                activeKey = k;
-                clockInTimeStr = timeStr;
-                break;
-            }
+            if (status === 'P' && !clockOut && timeStr) { activeKey = k; clockInTimeStr = timeStr; break; }
         }
-
         if (!activeKey || !clockInTimeStr) return;
-
         const clockInTime = new Date(clockInTimeStr);
-
-        // Calculate 12 hours from clock-in time
         const twelveHoursLater = new Date(clockInTime.getTime() + (12 * 60 * 60 * 1000));
-
-        // Add 15-minute grace period
         const autoClockOutTime = new Date(twelveHoursLater.getTime() + (15 * 60 * 1000));
-
-        // Check if it's time for auto clock-out
         if (now >= autoClockOutTime) {
-            console.log(`Auto clocking out ${appState.currentUser.fullName} after 12-hour shift`);
-            
             try {
                 await autoClockOutUser();
                 showInfo('You have been automatically clocked out after 12-hour shift.', null, 5000);
                 hideForgotLogoutWarning();
             } catch (error) {
-                console.error('Auto clock-out failed:', error);
                 addToOfflineQueue('auto_clock_out', {
                     userId: appState.currentUser.id,
-                    updates: {
-                        [`${activeKey}_out`]: now.toISOString(),
-                        [`${activeKey}_auto`]: true
-                    },
-                    auditLog: {
-                        name: appState.currentUser.fullName,
-                        action: 'AUTO CLOCK OUT (12-hour shift complete)',
-                        timestamp: now.toISOString(),
-                        empID: appState.currentUser.id,
-                        department: appState.currentUser.dept,
-                        time: now.toLocaleTimeString(),
-                        auto: true
-                    },
-                    notification: {
-                        userId: appState.currentUser.id,
-                        title: 'Auto Clock-Out',
-                        message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`,
-                        type: 'warning',
-                        timestamp: now.toISOString(),
-                        read: false
-                    }
+                    updates: { [`${activeKey}_out`]: now.toISOString(), [`${activeKey}_auto`]: true },
+                    auditLog: { name: appState.currentUser.fullName, action: 'AUTO CLOCK OUT (12-hour shift complete)', timestamp: now.toISOString(), empID: appState.currentUser.id, department: appState.currentUser.dept, time: now.toLocaleTimeString(), auto: true },
+                    notification: { userId: appState.currentUser.id, title: 'Auto Clock-Out', message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`, type: 'warning', timestamp: now.toISOString(), read: false }
                 });
             }
         } else {
-            // Show warning 30 minutes before auto clock-out
             const warningTime = new Date(twelveHoursLater.getTime() - (30 * 60 * 1000));
             if (now >= warningTime && now < autoClockOutTime) {
                 const minutesLeft = Math.ceil((autoClockOutTime - now) / (60 * 1000));
@@ -1893,137 +1551,62 @@ text-align: center;
         }
     }
     
-    // Auto clock-out function — night-shift aware
-    // Finds the active clock-in key (today or yesterday) so the clock-out
-    // is always stored under the same date as the clock-in.
     async function autoClockOutUser() {
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
-
         let key = `${now.getMonth()}_${now.getDate()}`;
         const todayStatus = appState.attendance[appState.currentUser.id]?.[key];
         const todayOut = appState.attendance[appState.currentUser.id]?.[`${key}_out`];
         if (!(todayStatus === 'P' && !todayOut)) {
-            // Try yesterday (night shift)
             const yKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
             const yStatus = appState.attendance[appState.currentUser.id]?.[yKey];
             const yOut = appState.attendance[appState.currentUser.id]?.[`${yKey}_out`];
             if (yStatus === 'P' && !yOut) key = yKey;
         }
-
-        const updates = {
-            [`${key}_out`]: now.toISOString(),
-            [`${key}_auto`]: true
-        };
-        
+        const updates = { [`${key}_out`]: now.toISOString(), [`${key}_auto`]: true };
         const result = await safeFirebaseOperation(async () => {
             await update(ref(db, `attendance/${appState.currentUser.id}`), updates);
-            
-            await push(ref(db, 'audit_logs'), {
-                name: appState.currentUser.fullName,
-                action: 'AUTO CLOCK OUT (12-hour shift complete)',
-                timestamp: now.toISOString(),
-                empID: appState.currentUser.id,
-                department: appState.currentUser.dept,
-                time: now.toLocaleTimeString(),
-                auto: true
-            });
-            
-            await push(ref(db, 'notifications'), {
-                userId: appState.currentUser.id,
-                title: 'Auto Clock-Out',
-                message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`,
-                type: 'warning',
-                timestamp: now.toISOString(),
-                read: false
-            });
+            await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: 'AUTO CLOCK OUT (12-hour shift complete)', timestamp: now.toISOString(), empID: appState.currentUser.id, department: appState.currentUser.dept, time: now.toLocaleTimeString(), auto: true });
+            await push(ref(db, 'notifications'), { userId: appState.currentUser.id, title: 'Auto Clock-Out', message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`, type: 'warning', timestamp: now.toISOString(), read: false });
         }, {
-            userId: appState.currentUser.id,
-            updates: updates,
-            auditLog: {
-                name: appState.currentUser.fullName,
-                action: 'AUTO CLOCK OUT (12-hour shift complete)',
-                timestamp: now.toISOString(),
-                empID: appState.currentUser.id,
-                department: appState.currentUser.dept,
-                time: now.toLocaleTimeString(),
-                auto: true
-            },
-            notification: {
-                userId: appState.currentUser.id,
-                title: 'Auto Clock-Out',
-                message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`,
-                type: 'warning',
-                timestamp: now.toISOString(),
-                read: false
-            }
+            userId: appState.currentUser.id, updates,
+            auditLog: { name: appState.currentUser.fullName, action: 'AUTO CLOCK OUT (12-hour shift complete)', timestamp: now.toISOString(), empID: appState.currentUser.id, department: appState.currentUser.dept, time: now.toLocaleTimeString(), auto: true },
+            notification: { userId: appState.currentUser.id, title: 'Auto Clock-Out', message: `You were automatically clocked out at ${now.toLocaleTimeString()} after completing 12-hour shift.`, type: 'warning', timestamp: now.toISOString(), read: false }
         }, 'auto_clock_out');
-        
         if (result.success) {
             localStorage.removeItem('hr_last_clock_action');
             hideForgotLogoutWarning();
-            
-            const clockInBtn = document.getElementById('btnClockIn');
-            const clockOutBtn = document.getElementById('btnClockOut');
-            if (clockInBtn && clockOutBtn) {
-                clockInBtn.classList.remove('hidden');
-                clockOutBtn.classList.add('hidden');
-            }
+            document.getElementById('btnClockIn').classList.remove('hidden');
+            document.getElementById('btnClockOut').classList.add('hidden');
         }
-        
         return result;
     }
     
-    // Show forgot logout warning
     function showForgotLogoutWarning(minutesLeft) {
         const alertEl = document.getElementById('forgotLogoutAlert');
         const timerEl = document.getElementById('autoClockoutTimer');
-        
         if (alertEl && timerEl) {
             alertEl.classList.remove('hidden');
-            const mins = Math.floor(minutesLeft / 60);
-            const secs = minutesLeft % 60;
-            timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            
-            if (appState.forgotLogoutTimer) {
-                clearInterval(appState.forgotLogoutTimer);
-            }
-            
             let secondsLeft = minutesLeft * 60;
+            timerEl.textContent = `${Math.floor(secondsLeft/60)}:${String(secondsLeft%60).padStart(2,'0')}`;
+            if (appState.forgotLogoutTimer) clearInterval(appState.forgotLogoutTimer);
             appState.forgotLogoutTimer = setInterval(() => {
                 secondsLeft--;
-                if (secondsLeft <= 0) {
-                    clearInterval(appState.forgotLogoutTimer);
-                    alertEl.classList.add('hidden');
-                } else {
-                    const mins = Math.floor(secondsLeft / 60);
-                    const secs = secondsLeft % 60;
-                    timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-                }
+                if (secondsLeft <= 0) { clearInterval(appState.forgotLogoutTimer); alertEl.classList.add('hidden'); }
+                else timerEl.textContent = `${Math.floor(secondsLeft/60)}:${String(secondsLeft%60).padStart(2,'0')}`;
             }, 1000);
         }
     }
     
-    // Hide forgot logout warning
     function hideForgotLogoutWarning() {
         const alertEl = document.getElementById('forgotLogoutAlert');
-        if (alertEl) {
-            alertEl.classList.add('hidden');
-        }
-        if (appState.forgotLogoutTimer) {
-            clearInterval(appState.forgotLogoutTimer);
-            appState.forgotLogoutTimer = null;
-        }
+        if (alertEl) alertEl.classList.add('hidden');
+        if (appState.forgotLogoutTimer) { clearInterval(appState.forgotLogoutTimer); appState.forgotLogoutTimer = null; }
     }
     
-    // Manual clock-out now button
-    function manualClockOutNow() {
-        userClockAction('OUT');
-        hideForgotLogoutWarning();
-    }
+    function manualClockOutNow() { userClockAction('OUT'); hideForgotLogoutWarning(); }
     
-    // Check for forgot logout on page load
     function checkForgotLogout() {
         const lastClockAction = localStorage.getItem('hr_last_clock_action');
         if (lastClockAction) {
@@ -2032,78 +1615,39 @@ text-align: center;
                 const now = new Date();
                 const actionTime = new Date(action.timestamp);
                 const hoursSinceAction = (now - actionTime) / (1000 * 60 * 60);
-                
-                if (action.status === 'P' && hoursSinceAction > 12) {
-                    console.log('Detected possible forgot logout from previous session');
-                }
-            } catch (e) {
-                console.error('Error parsing last clock action:', e);
-            }
+                if (action.status === 'P' && hoursSinceAction > 12) console.log('Detected possible forgot logout from previous session');
+            } catch (e) {}
         }
     }
     
-    // Live Clock
     function updateLiveClock() {
         const clockElement = document.getElementById('liveClock');
         if (clockElement) {
             const now = new Date();
             clockElement.textContent = now.toLocaleTimeString();
-            
-            if (now.getSeconds() === 0) {
-                updateDashboard();
-            }
+            if (now.getSeconds() === 0) updateDashboard();
         }
     }
     
-    // Login Handler
     async function handleLogin() {
-        console.log('Login attempted...');
-        
         if (appState.isProcessing) return;
-        
         const username = document.getElementById('lUser').value.trim();
         const password = document.getElementById('lPass').value;
-        
-        if (!username || !password) {
-            showError('Please enter both username and password', 'loginError');
-            return;
-        }
-        
+        if (!username || !password) { showError('Please enter both username and password', 'loginError'); return; }
         appState.isProcessing = true;
         const loginButton = document.getElementById('loginButton');
-        const originalText = loginButton.textContent;
         loginButton.textContent = 'LOGGING IN...';
         loginButton.disabled = true;
-        
         try {
             const usersSnapshot = await get(ref(db, 'users'));
             const users = usersSnapshot.val();
-            
-            if (!users) {
-                showError('No users found. Please contact system administrator.', 'loginError');
-                appState.isProcessing = false;
-                loginButton.textContent = originalText;
-                loginButton.disabled = false;
-                return;
-            }
-            
-            const userId = Object.keys(users).find(key => {
-                const user = users[key];
-                return user.username === username && user.password === password;
-            });
-            
+            if (!users) { showError('No users found. Please contact system administrator.', 'loginError'); return; }
+            const userId = Object.keys(users).find(key => users[key].username === username && users[key].password === password);
             if (userId) {
-                const userData = { 
-                    id: userId, 
-                    ...users[userId]
-                };
-                
+                const userData = { id: userId, ...users[userId] };
                 localStorage.setItem('hr_currentUser', JSON.stringify(userData));
                 localStorage.setItem('hr_last_login', new Date().toISOString());
-                
                 appState.currentUser = userData;
-                
-                // Restore any offline queue that was saved for this user on a previous logout
                 const userQueueKey = `hr_offline_queue_${userData.id}`;
                 const savedQueue = localStorage.getItem(userQueueKey);
                 if (savedQueue) {
@@ -2115,60 +1659,38 @@ text-align: center;
                             localStorage.removeItem(userQueueKey);
                             showInfo(`${restoredQueue.length} queued action(s) from your last session will sync shortly.`, null, 4000);
                         }
-                    } catch (e) {
-                        console.error('Error restoring offline queue:', e);
-                        localStorage.removeItem(userQueueKey);
-                    }
+                    } catch (e) { localStorage.removeItem(userQueueKey); }
                 }
-                
                 showAdminPanel();
                 setupRealtimeListeners();
-                
-                checkPreviousDayClockOut();
-                
+                // Delay previous-day clock-out check so the attendance listener has time to hydrate
+                setTimeout(() => checkPreviousDayClockOut(), 3000);
             } else {
                 showError('Invalid username or password', 'loginError');
             }
         } catch (error) {
-            console.error('Login error:', error);
-            if (!navigator.onLine) {
-                showError('You are offline. Cannot login without internet connection.', 'loginError');
-            } else {
-                showError('Login failed. Please try again.', 'loginError');
-            }
+            showError(!navigator.onLine ? 'You are offline. Cannot login without internet connection.' : 'Login failed. Please try again.', 'loginError');
         } finally {
             appState.isProcessing = false;
-            loginButton.textContent = originalText;
+            loginButton.textContent = 'ACCESS PORTAL';
             loginButton.disabled = false;
         }
     }
     
-    // Check if user forgot to clock out from previous day.
-    // Night-shift aware: if the user is a night shift worker and clocked in
-    // yesterday evening but it's still early morning (< 14 hours since clock-in),
-    // they are likely still mid-shift — don't prompt them.
     async function checkPreviousDayClockOut() {
         if (!appState.currentUser) return;
-
         const now = new Date();
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
-
         const yesterdayStatus = appState.attendance[appState.currentUser.id]?.[yesterdayKey];
         const yesterdayClockOut = appState.attendance[appState.currentUser.id]?.[`${yesterdayKey}_out`];
         const yesterdayTimeStr = appState.attendance[appState.currentUser.id]?.[`${yesterdayKey}_time`];
-
         if (yesterdayStatus === 'P' && !yesterdayClockOut && yesterdayTimeStr) {
             const clockInTime = new Date(yesterdayTimeStr);
             const hoursSinceClockIn = (now - clockInTime) / (1000 * 60 * 60);
-
-            // If less than 13 hours since clock-in, likely still mid-shift (12hr + 1hr buffer)
-            // Don't prompt — they haven't finished their shift yet.
             if (hoursSinceClockIn < 13) return;
-
             showInfo('⚠️ You were clocked in yesterday. Did you forget to clock out?', null, 5000);
-
             if (confirm('You were still clocked in from yesterday. Would you like to auto clock-out for yesterday?')) {
                 try {
                     await update(ref(db, `attendance/${appState.currentUser.id}`), {
@@ -2176,96 +1698,61 @@ text-align: center;
                         [`${yesterdayKey}_forgot`]: true
                     });
                     showSuccess('Auto clocked out for yesterday.', null, 3000);
-                } catch (error) {
-                    console.error('Failed to auto clock-out for yesterday:', error);
-                }
+                } catch (error) {}
             }
         }
     }
     
-    // Logout Handler
     function handleLogout() {
         if (confirm('Are you sure you want to logout?')) {
-            if (appState.autoClockOutInterval) {
-                clearInterval(appState.autoClockOutInterval);
-            }
-            
-            if (appState.forgotLogoutTimer) {
-                clearInterval(appState.forgotLogoutTimer);
-            }
-            
+            if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
+            if (appState.forgotLogoutTimer) clearInterval(appState.forgotLogoutTimer);
             if (appState.calendarInstance) {
                 appState.calendarInstance.destroy();
                 appState.calendarInstance = null;
                 appState.calendarInitialized = false;
             }
-            
-            // Preserve any unsynced offline queue under this user's ID
-            // so it can be resumed on next login instead of being lost
             if (appState.currentUser && appState.offlineQueue.length > 0) {
-                const userQueueKey = `hr_offline_queue_${appState.currentUser.id}`;
-                localStorage.setItem(userQueueKey, JSON.stringify(appState.offlineQueue));
+                localStorage.setItem(`hr_offline_queue_${appState.currentUser.id}`, JSON.stringify(appState.offlineQueue));
             }
-            // Clear the shared session queue slot
             localStorage.removeItem('hr_offline_queue');
             localStorage.removeItem('hr_currentUser');
-            
             appState.currentUser = null;
             appState.users = {};
             appState.attendance = {};
             appState.leaveRequests = {};
             appState.listeners = {};
             appState.offlineQueue = [];
-            
             document.getElementById('adminPanel').classList.add('hidden');
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('leaveInbox').classList.add('hidden');
             document.getElementById('notificationsModal').classList.add('hidden');
             document.getElementById('forgotLogoutAlert').classList.add('hidden');
             document.getElementById('connectionStatus').classList.add('hidden');
-            
             document.getElementById('lUser').value = '';
             document.getElementById('lPass').value = '';
             document.getElementById('loginError').classList.add('hidden');
-            
             document.getElementById('lUser').focus();
         }
     }
     
-    // Show Admin Panel with Role-Based Access Control
     function showAdminPanel() {
-        console.log('Showing admin panel for user:', appState.currentUser);
-        
         document.getElementById('adminPanel').classList.remove('hidden');
         document.getElementById('loginSection').classList.add('hidden');
-        
         document.getElementById('profName').textContent = appState.currentUser.fullName;
         const roleBadge = document.getElementById('roleBadge');
         if (roleBadge) {
             roleBadge.textContent = appState.currentUser.role;
-            if (appState.currentUser.role === 'HR') {
-                roleBadge.style.background = 'rgba(168, 85, 247, 0.3)';
-            } else if (appState.currentUser.role === 'Admin') {
-                roleBadge.style.background = 'rgba(99, 102, 241, 0.3)';
-            } else if (appState.currentUser.role === 'OPS') {
-                roleBadge.style.background = 'rgba(16, 185, 129, 0.3)';
-            } else {
-                roleBadge.style.background = 'rgba(255, 255, 255, 0.15)';
-            }
+            if (appState.currentUser.role === 'HR') roleBadge.style.background = 'rgba(168, 85, 247, 0.3)';
+            else if (appState.currentUser.role === 'Admin') roleBadge.style.background = 'rgba(99, 102, 241, 0.3)';
+            else if (appState.currentUser.role === 'OPS') roleBadge.style.background = 'rgba(16, 185, 129, 0.3)';
+            else roleBadge.style.background = 'rgba(255, 255, 255, 0.15)';
         }
-        
-        const navButtons = document.querySelectorAll('.nav-btn');
-        navButtons.forEach(btn => {
-            btn.classList.add('hidden');
-        });
-        
-        // Always show for all
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('hidden'));
         document.querySelectorAll('[onclick*="profile"]')[0].classList.remove('hidden');
         document.querySelectorAll('[onclick*="pay"]')[0].classList.remove('hidden');
         document.querySelectorAll('[onclick*="calendar"]')[0].classList.remove('hidden');
         document.querySelectorAll('[onclick*="leaves"]')[0].classList.remove('hidden');
-        
-        // Role-specific tabs
         if (appState.currentUser.role === 'Admin' || appState.currentUser.role === 'HR') {
             document.querySelectorAll('[onclick*="dir"]')[0].classList.remove('hidden');
             document.querySelectorAll('[onclick*="active"]')[0].classList.remove('hidden');
@@ -2280,145 +1767,85 @@ text-align: center;
             document.getElementById('mailIcon').classList.remove('hidden');
             document.getElementById('notificationBell').classList.remove('hidden');
         }
-        
         switchTab('profile', document.querySelector('.nav-btn:not(.hidden)'));
-        
         renderCurrentTabOnly();
     }
     
-    // FIXED: Only render the current tab, not all tabs
     function renderCurrentTabOnly(force = false) {
         if (!appState.currentUser) return;
-        
         const now = Date.now();
-        if (!force && now - appState.lastRenderTime < appState.renderThrottle) {
-            return; // Throttle rendering
-        }
+        if (!force && now - appState.lastRenderTime < appState.renderThrottle) return;
         appState.lastRenderTime = now;
-        
-        console.log('Rendering current tab only...');
-        
         const activeTab = document.querySelector('.nav-btn.active');
         if (!activeTab) return;
-        
         const tabText = activeTab.textContent.toLowerCase();
-        
-        // Only render what's needed based on current tab
-        if (tabText.includes('dashboard')) {
-            updateDashboard();
-        } else if (tabText.includes('directory')) {
-            renderDirectory();
-        } else if (tabText.includes('active')) {
-            renderActiveNow();
-        } else if (tabText.includes('schedules')) {
-            renderSchedules();
-        } else if (tabText.includes('payroll') || tabText.includes('attendance')) {
-            renderAttendance();
-        } else if (tabText.includes('calendar')) {
-            initializeCalendar();
-        } else if (tabText.includes('audit')) {
-            // Audit logs are auto-rendered via listener
-        } else if (tabText.includes('leaves')) {
-            updateMyLeaves();
-        }
+        if (tabText.includes('dashboard')) updateDashboard();
+        else if (tabText.includes('directory')) renderDirectory();
+        else if (tabText.includes('active')) renderActiveNow();
+        else if (tabText.includes('schedules')) renderSchedules();
+        else if (tabText.includes('payroll') || tabText.includes('attendance')) renderAttendance();
+        else if (tabText.includes('calendar')) initializeCalendar();
+        else if (tabText.includes('leaves')) updateMyLeaves();
     }
     
-    // Update Dashboard
     function updateDashboard() {
         if (!appState.currentUser) return;
-        
         const currentMonth = new Date().getMonth();
         const currentDay = new Date().getDate();
         const todayKey = `${currentMonth}_${currentDay}`;
-        
         const user = appState.users[appState.currentUser.id] || appState.currentUser;
-        
         const slUsed = calculateUsedLeaves(appState.currentUser.id, 'SL');
         const vlUsed = calculateUsedLeaves(appState.currentUser.id, 'VL');
-        
         const slMax = user.slMax || 0;
         const vlMax = user.vlMax || 0;
-        const slRemaining = Math.max(0, slMax - slUsed);
-        const vlRemaining = Math.max(0, vlMax - vlUsed);
-        
-        document.getElementById('slView').textContent = slRemaining;
-        document.getElementById('vlView').textContent = vlRemaining;
+        document.getElementById('slView').textContent = Math.max(0, slMax - slUsed);
+        document.getElementById('vlView').textContent = Math.max(0, vlMax - vlUsed);
         document.getElementById('slTotal').textContent = slMax;
         document.getElementById('vlTotal').textContent = vlMax;
         document.getElementById('slUsed').textContent = slUsed;
         document.getElementById('vlUsed').textContent = vlUsed;
-        
         const slProgress = document.getElementById('slProgress');
         const vlProgress = document.getElementById('vlProgress');
         if (slProgress) slProgress.style.width = slMax > 0 ? `${(slUsed / slMax) * 100}%` : '0%';
         if (vlProgress) vlProgress.style.width = vlMax > 0 ? `${(vlUsed / vlMax) * 100}%` : '0%';
-        
         const workingDays = user['in_' + currentMonth] || "TBA";
         const timeSlot = user['out_' + currentMonth] || "TBA";
         const off1 = user['off1_' + currentMonth] || '';
         const off2 = user['off2_' + currentMonth] || '';
-        
         const shiftType = detectShiftType(timeSlot);
-        const shiftClass = getShiftClass(shiftType);
-        
         document.getElementById('myShift').textContent = shiftType;
-        document.getElementById('myShift').className = shiftClass;
+        document.getElementById('myShift').className = getShiftClass(shiftType);
         document.getElementById('myDays').textContent = workingDays;
         document.getElementById('myTime').textContent = timeSlot;
         document.getElementById('myOff').textContent = `${off1} ${off2}`.trim() || "TBA";
-        
         updateAttendanceStats();
-        
-        // Check if user is clocked in (status 'P' AND no clock-out time).
-        // Check today first; if not found, check yesterday for night-shift workers
-        // who clocked in yesterday evening and haven't clocked out yet.
-        const yesterday = new Date(currentMonth === 0 && currentDay === 1
-            ? new Date(new Date().getFullYear() - 1, 11, 31)
-            : new Date());
+        const yesterday = new Date();
         yesterday.setDate(new Date().getDate() - 1);
-        const yesterdayKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
-
+        const yKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
         const status = appState.attendance[appState.currentUser.id]?.[todayKey] || '';
         const clockOutTime = appState.attendance[appState.currentUser.id]?.[`${todayKey}_out`] || '';
-        const yStatus = appState.attendance[appState.currentUser.id]?.[yesterdayKey] || '';
-        const yClockOut = appState.attendance[appState.currentUser.id]?.[`${yesterdayKey}_out`] || '';
-
-        const isClockedIn = (status === 'P' && !clockOutTime) ||
-                            (yStatus === 'P' && !yClockOut); // night shift
-
-        const clockInBtn = document.getElementById('btnClockIn');
-        const clockOutBtn = document.getElementById('btnClockOut');
-        if (clockInBtn && clockOutBtn) {
-            clockInBtn.classList.toggle('hidden', isClockedIn);
-            clockOutBtn.classList.toggle('hidden', !isClockedIn);
-        }
+        const yStatus = appState.attendance[appState.currentUser.id]?.[yKey] || '';
+        const yClockOut = appState.attendance[appState.currentUser.id]?.[`${yKey}_out`] || '';
+        const isClockedIn = (status === 'P' && !clockOutTime) || (yStatus === 'P' && !yClockOut);
+        document.getElementById('btnClockIn').classList.toggle('hidden', isClockedIn);
+        document.getElementById('btnClockOut').classList.toggle('hidden', !isClockedIn);
     }
     
-    // Update attendance statistics
     function updateAttendanceStats() {
         if (!appState.currentUser) return;
-        
         const currentMonth = new Date().getMonth();
         const currentDay = new Date().getDate();
-        let daysPresent = 0;
-        let totalLates = 0;
-        
+        let daysPresent = 0, totalLates = 0;
         for (let day = 1; day <= currentDay; day++) {
             const dateKey = `${currentMonth}_${day}`;
             const status = appState.attendance[appState.currentUser.id]?.[dateKey];
             const lateMins = appState.attendance[appState.currentUser.id]?.[dateKey + "_late"] || 0;
-            
-            if (status === 'P') {
-                daysPresent++;
-                totalLates += parseInt(lateMins);
-            }
+            if (status === 'P') { daysPresent++; totalLates += parseInt(lateMins); }
         }
-        
         document.getElementById('monthAttendance').textContent = daysPresent;
         document.getElementById('monthLates').textContent = totalLates;
     }
     
-    // ==================== FIXED: Check date range with schedule conflict ====================
     function checkDateRange() {
         const startDate = document.getElementById('lvStartDate').value;
         const endDate = document.getElementById('lvEndDate').value;
@@ -2426,331 +1853,147 @@ text-align: center;
         const overlapError = document.getElementById('overlapError');
         const scheduleConflict = document.getElementById('scheduleConflict');
         const consecutiveError = document.getElementById('consecutiveError');
-        
-        // Clear all errors
         errorDiv.classList.add('hidden');
         overlapError.classList.add('hidden');
         scheduleConflict.classList.add('hidden');
         consecutiveError.classList.add('hidden');
-        
-        if (!startDate) {
-            return;
-        }
-        
+        if (!startDate) return;
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : start;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        if (start < today) {
-            errorDiv.textContent = 'Cannot request leave for past dates';
-            errorDiv.classList.remove('hidden');
-            return;
-        }
-        
-        if (end < start) {
-            errorDiv.textContent = 'End date cannot be before start date';
-            errorDiv.classList.remove('hidden');
-            return;
-        }
-        
-        const diffTime = Math.abs(end - start);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        
-        // Check overlapping leaves
+        if (start < today) { errorDiv.textContent = 'Cannot request leave for past dates'; errorDiv.classList.remove('hidden'); return; }
+        if (end < start) { errorDiv.textContent = 'End date cannot be before start date'; errorDiv.classList.remove('hidden'); return; }
         if (hasOverlappingLeave(appState.currentUser.id, startDate, endDate)) {
             overlapError.textContent = 'You already have a pending or approved leave request during this period';
             overlapError.classList.remove('hidden');
         }
-        
-        // Check consecutive leave limit
         const consecutiveCheck = checkConsecutiveLimit(appState.currentUser.id, startDate, endDate);
         document.getElementById('maxConsecutiveDisplay').textContent = consecutiveCheck.max;
-        
         if (!consecutiveCheck.valid) {
             consecutiveError.textContent = `Maximum consecutive leave is ${consecutiveCheck.max} days. You requested ${consecutiveCheck.days} days.`;
             consecutiveError.classList.remove('hidden');
         }
-        
-        // Calculate working days (excluding rest days)
         const workingDays = calculateWorkingDays(startDate, endDate, appState.currentUser.id);
         document.getElementById('requestedDays').textContent = workingDays;
-        
-        // Check schedule conflict (for information only)
         checkScheduleConflictInfo(startDate, endDate);
-        
         updateLeaveBalance();
     }
     
-    // ==================== FIXED: Schedule conflict check ====================
     function checkScheduleConflictInfo(startDate, endDate) {
         if (!startDate) return;
-        
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : start;
         const conflictMsg = document.getElementById('scheduleConflict');
-        
         if (!conflictMsg) return;
-        
         const user = appState.users[appState.currentUser.id] || appState.currentUser;
-        
-        let restDaysInLeave = [];
-        let workingDaysCount = 0;
+        let restDaysInLeave = [], workingDaysCount = 0;
         const currentDate = new Date(start);
-        
         while (currentDate <= end) {
             const month = currentDate.getMonth();
             const dayOfWeek = currentDate.getDay();
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const selectedDay = dayNames[dayOfWeek];
-            
-            // Get schedule for the correct month
             const off1 = user['off1_' + month] || '';
             const off2 = user['off2_' + month] || '';
-            
-            const isRestDay = off1 === selectedDay || off2 === selectedDay;
-            
-            if (isRestDay) {
-                restDaysInLeave.push({
-                    date: currentDate.toISOString().split('T')[0],
-                    day: selectedDay
-                });
-            } else {
-                workingDaysCount++;
-            }
-            
+            if (off1 === selectedDay || off2 === selectedDay) restDaysInLeave.push({ date: currentDate.toISOString().split('T')[0], day: selectedDay });
+            else workingDaysCount++;
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
         if (restDaysInLeave.length > 0) {
             const uniqueRestDays = [...new Set(restDaysInLeave.map(day => day.day))];
-            conflictMsg.innerHTML = `ℹ️ Note: Your leave includes ${restDaysInLeave.length} rest day(s) (${uniqueRestDays.join(', ')}).<br>
-                                    <small>These ${restDaysInLeave.length} day(s) won't count against your leave balance.</small><br>
-                                    <small>Only ${workingDaysCount} working day(s) will be deducted.</small>`;
+            conflictMsg.innerHTML = `ℹ️ Note: Your leave includes ${restDaysInLeave.length} rest day(s) (${uniqueRestDays.join(', ')}).<br><small>These ${restDaysInLeave.length} day(s) won't count against your leave balance.</small><br><small>Only ${workingDaysCount} working day(s) will be deducted.</small>`;
             conflictMsg.classList.remove('hidden');
-        } else {
-            conflictMsg.classList.add('hidden');
-        }
+        } else { conflictMsg.classList.add('hidden'); }
     }
     
-    // Update available balance in leave form
     function updateLeaveBalance() {
         if (!appState.currentUser) return;
-        
         const leaveType = document.getElementById('lvType').value;
         const startDate = document.getElementById('lvStartDate').value;
         const endDate = document.getElementById('lvEndDate').value;
         const user = appState.users[appState.currentUser.id] || appState.currentUser;
-        
-        // Calculate working days (excluding rest days)
         const workingDays = startDate ? calculateWorkingDays(startDate, endDate, appState.currentUser.id) : 0;
         document.getElementById('requestedDays').textContent = workingDays;
-        
         const used = calculateUsedLeaves(appState.currentUser.id, leaveType);
-        
-        let maxBalance = 0;
-        if (leaveType === 'SL') maxBalance = user.slMax || 0;
-        if (leaveType === 'VL') maxBalance = user.vlMax || 0;
-        
+        let maxBalance = leaveType === 'SL' ? (user.slMax || 0) : (user.vlMax || 0);
         const available = Math.max(0, maxBalance - used);
         document.getElementById('availableBalance').textContent = available;
-        
         const submitBtn = document.querySelector('#leaveFormSection .action-btn');
         if (submitBtn) {
             const canSubmit = available >= workingDays && workingDays > 0;
             submitBtn.disabled = !canSubmit;
             submitBtn.style.opacity = canSubmit ? '1' : '0.5';
             submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+            submitBtn.title = !canSubmit && workingDays > 0 ? `Insufficient balance (${available} available, ${workingDays} needed)` : '';
         }
     }
     
-    // ==================== FIXED: Submit Leave Request ====================
     async function submitLeave() {
         if (appState.isProcessing) return;
-        
         const leaveType = document.getElementById('lvType').value;
         const startDate = document.getElementById('lvStartDate').value;
         const endDate = document.getElementById('lvEndDate').value;
         const leaveReason = document.getElementById('lvReason').value.trim();
-        
-        // Validation
-        if (!startDate) {
-            showError('Please select a start date');
-            return;
-        }
-        
-        if (!leaveReason) {
-            showError('Please provide a reason for leave');
-            return;
-        }
-        
+        if (!startDate) { showError('Please select a start date'); return; }
+        if (!leaveReason) { showError('Please provide a reason for leave'); return; }
         const selectedDate = new Date(startDate);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        if (selectedDate < today) {
-            showError('Cannot request leave for past dates');
-            return;
-        }
-        
-        // Check overlapping leaves
-        if (hasOverlappingLeave(appState.currentUser.id, startDate, endDate)) {
-            showError('You already have a pending or approved leave request during this period.');
-            return;
-        }
-        
-        // Check consecutive limit
+        if (selectedDate < today) { showError('Cannot request leave for past dates'); return; }
+        if (hasOverlappingLeave(appState.currentUser.id, startDate, endDate)) { showError('You already have a pending or approved leave request during this period.'); return; }
         const consecutiveCheck = checkConsecutiveLimit(appState.currentUser.id, startDate, endDate);
-        if (!consecutiveCheck.valid) {
-            showError(`Maximum consecutive leave is ${consecutiveCheck.max} days. You requested ${consecutiveCheck.days} days.`);
-            return;
-        }
-        
-        // Calculate working days
+        if (!consecutiveCheck.valid) { showError(`Maximum consecutive leave is ${consecutiveCheck.max} days. You requested ${consecutiveCheck.days} days.`); return; }
         const workingDays = calculateWorkingDays(startDate, endDate, appState.currentUser.id);
         const availableBalance = parseInt(document.getElementById('availableBalance').textContent);
-        
-        if (availableBalance < workingDays) {
-            showError(`Not enough available leave balance. You have ${availableBalance} days, but need ${workingDays} working days.`);
-            return;
-        }
-        
+        if (availableBalance < workingDays) { showError(`Not enough available leave balance. You have ${availableBalance} days, but need ${workingDays} working days.`); return; }
         appState.isProcessing = true;
-        
         try {
             const leaveRequest = {
-                empID: appState.currentUser.id,
-                name: appState.currentUser.fullName,
-                type: leaveType,
-                startDate: startDate,
-                endDate: endDate || startDate,
-                reason: leaveReason,
-                status: 'Pending',
-                department: appState.currentUser.dept,
-                submittedAt: new Date().toISOString(),
-                leaveTypeName: LEAVE_TYPES[leaveType] || leaveType,
-                workingDays: workingDays
+                empID: appState.currentUser.id, name: appState.currentUser.fullName,
+                type: leaveType, startDate, endDate: endDate || startDate,
+                reason: leaveReason, status: 'Pending', department: appState.currentUser.dept,
+                submittedAt: new Date().toISOString(), leaveTypeName: LEAVE_TYPES[leaveType] || leaveType, workingDays
             };
-            
             const result = await safeFirebaseOperation(async () => {
                 await push(ref(db, 'leave_requests'), leaveRequest);
-                
-                await push(ref(db, 'audit_logs'), {
-                    name: appState.currentUser.fullName,
-                    action: 'Submitted leave request',
-                    timestamp: new Date().toISOString(),
-                    empID: appState.currentUser.id,
-                    department: appState.currentUser.dept,
-                    leaveType: leaveType,
-                    startDate: startDate,
-                    endDate: endDate || startDate,
-                    workingDays: workingDays
-                });
-            }, {
-                leaveRequest: leaveRequest,
-                auditLog: {
-                    name: appState.currentUser.fullName,
-                    action: 'Submitted leave request',
-                    timestamp: new Date().toISOString(),
-                    empID: appState.currentUser.id,
-                    department: appState.currentUser.dept,
-                    leaveType: leaveType,
-                    startDate: startDate,
-                    endDate: endDate || startDate,
-                    workingDays: workingDays
-                }
-            }, 'submit_leave');
-            
+                await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: 'Submitted leave request', timestamp: new Date().toISOString(), empID: appState.currentUser.id, department: appState.currentUser.dept, leaveType, startDate, endDate: endDate || startDate, workingDays });
+            }, { leaveRequest, auditLog: { name: appState.currentUser.fullName, action: 'Submitted leave request', timestamp: new Date().toISOString(), empID: appState.currentUser.id, department: appState.currentUser.dept, leaveType, startDate, endDate: endDate || startDate, workingDays } }, 'submit_leave');
             if (result.success) {
-                // Reset form
                 document.getElementById('lvStartDate').value = '';
                 document.getElementById('lvEndDate').value = '';
                 document.getElementById('lvReason').value = '';
                 document.getElementById('leaveFormSection').classList.add('hidden');
-                
-                // Clear errors
-                document.getElementById('dateRangeError').classList.add('hidden');
-                document.getElementById('overlapError').classList.add('hidden');
-                document.getElementById('scheduleConflict').classList.add('hidden');
-                document.getElementById('consecutiveError').classList.add('hidden');
-                
+                ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id => document.getElementById(id).classList.add('hidden'));
                 showSuccess('Leave request submitted successfully! It will be reviewed by your department head.', null, 3000);
-                
                 refreshCalendarEvents();
             } else if (result.queued) {
                 showError('Offline. Leave request will be submitted when connection is restored.', null, false);
-                document.getElementById('lvStartDate').value = '';
-                document.getElementById('lvEndDate').value = '';
-                document.getElementById('lvReason').value = '';
                 document.getElementById('leaveFormSection').classList.add('hidden');
             }
-        } catch (error) {
-            console.error('Submit leave error:', error);
-            showError('Failed to submit leave request');
-        } finally {
-            appState.isProcessing = false;
-        }
+        } catch (error) { showError('Failed to submit leave request'); }
+        finally { appState.isProcessing = false; }
     }
     
-    // Cancel leave request
     async function cancelLeave(leaveId) {
-        if (!confirm('Are you sure you want to cancel this leave request?')) {
-            return;
-        }
-        
+        if (!confirm('Are you sure you want to cancel this leave request?')) return;
         try {
             const request = appState.leaveRequests[leaveId];
-            
-            // Check if user can cancel this leave
-            if (!canCancelLeave(request)) {
-                showError('You are not authorized to cancel this leave request.');
-                return;
-            }
-            
+            if (!request) { showError('Leave request not found.'); return; }
+            if (!canCancelLeave(request)) { showError('You are not authorized to cancel this leave request.'); return; }
             const result = await safeFirebaseOperation(async () => {
-                await update(ref(db, `leave_requests/${leaveId}`), {
-                    status: 'Cancelled',
-                    cancelledAt: new Date().toISOString(),
-                    cancelledBy: appState.currentUser.fullName
-                });
-                
-                await push(ref(db, 'audit_logs'), {
-                    name: appState.currentUser.fullName,
-                    action: 'Cancelled leave request',
-                    timestamp: new Date().toISOString(),
-                    empID: request.empID,
-                    department: request.department,
-                    leaveId: leaveId
-                });
-            }, {
-                leaveId: leaveId,
-                updates: {
-                    status: 'Cancelled',
-                    cancelledAt: new Date().toISOString(),
-                    cancelledBy: appState.currentUser.fullName
-                }
-            }, 'cancel_leave');
-            
-            if (result.success) {
-                showSuccess('Leave request cancelled successfully!', null, 3000);
-                updateInbox();
-                updateMyLeaves();
-            } else if (result.queued) {
-                showError('Offline. Cancellation will be processed when connection is restored.', null, false);
-            }
-        } catch (error) {
-            console.error('Cancel leave error:', error);
-            showError('Failed to cancel leave request');
-        }
+                await update(ref(db, `leave_requests/${leaveId}`), { status: 'Cancelled', cancelledAt: new Date().toISOString(), cancelledBy: appState.currentUser.fullName });
+                await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: 'Cancelled leave request', timestamp: new Date().toISOString(), empID: request.empID, department: request.department, leaveId });
+            }, { leaveId, updates: { status: 'Cancelled', cancelledAt: new Date().toISOString(), cancelledBy: appState.currentUser.fullName } }, 'cancel_leave');
+            if (result.success) { showSuccess('Leave request cancelled successfully!', null, 3000); updateInbox(); updateMyLeaves(); }
+            else if (result.queued) showError('Offline. Cancellation will be processed when connection is restored.', null, false);
+        } catch (error) { showError('Failed to cancel leave request'); }
     }
     
-    // Edit employee function
     function editEmployee(empId) {
         const user = appState.users[empId];
         if (!user) return;
-        
         appState.editingEmployeeId = empId;
-        
         document.getElementById('addEmpNum').value = empId;
         document.getElementById('addEmpNum').disabled = true;
         document.getElementById('addFullName').value = user.fullName || '';
@@ -2766,86 +2009,42 @@ text-align: center;
         document.getElementById('addVL').value = user.vlMax || 10;
         document.getElementById('addRole').value = user.role || 'Employee';
         document.getElementById('addMaxConsecutive').value = user.maxConsecutiveLeave || 30;
-        
         document.getElementById('addEmployeeBtn').textContent = 'UPDATE EMPLOYEE';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
-        
         document.getElementById('addEmpNum').scrollIntoView({ behavior: 'smooth' });
-        
         showInfo('Edit mode: Update values and click UPDATE EMPLOYEE to save changes', 'directoryMessage');
     }
     
-    // Cancel edit function
     function cancelEdit() {
         appState.editingEmployeeId = null;
-        
-        document.getElementById('addEmpNum').value = '';
-        document.getElementById('addEmpNum').disabled = false;
-        document.getElementById('addFullName').value = '';
-        document.getElementById('addUser').value = '';
-        document.getElementById('addPass').value = '';
+        ['addEmpNum','addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets'].forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; } });
         document.getElementById('addDept').value = 'RC';
-        document.getElementById('addBday').value = '';
-        document.getElementById('addContact').value = '';
-        document.getElementById('addEmergency').value = '';
-        document.getElementById('addBackend').value = '';
-        document.getElementById('addAssets').value = '';
         document.getElementById('addSL').value = '10';
         document.getElementById('addVL').value = '10';
         document.getElementById('addRole').value = 'Employee';
         document.getElementById('addMaxConsecutive').value = '30';
-        
         document.getElementById('addEmployeeBtn').textContent = 'ADD EMPLOYEE';
         document.getElementById('cancelEditBtn').style.display = 'none';
-        
         document.getElementById('directoryMessage').classList.add('hidden');
     }
     
-    // Add/Update Employee function
     async function addEmployee() {
         if (appState.isProcessing) return;
-        
         appState.isProcessing = true;
-        
         const empId = document.getElementById('addEmpNum').value.trim();
         const fullName = document.getElementById('addFullName').value.trim();
         const username = document.getElementById('addUser').value.trim();
         const password = document.getElementById('addPass').value;
-        
-        if (!empId || !fullName || !username || !password) {
-            showError('Please fill in all required fields (marked with *)', 'directoryMessage');
-            appState.isProcessing = false;
-            return;
-        }
-        
-        if (!appState.editingEmployeeId && password.length < 6) {
-            showError('Password must be at least 6 characters long', 'directoryMessage');
-            appState.isProcessing = false;
-            return;
-        }
-        
-        // Check for duplicate username when adding new employee
+        if (!empId || !fullName || !username || !password) { showError('Please fill in all required fields (marked with *)', 'directoryMessage'); appState.isProcessing = false; return; }
+        if (!appState.editingEmployeeId && password.length < 6) { showError('Password must be at least 6 characters long', 'directoryMessage'); appState.isProcessing = false; return; }
         if (!appState.editingEmployeeId) {
             const existingUser = Object.values(appState.users).find(u => u.username === username);
-            if (existingUser) {
-                showError('Username already exists', 'directoryMessage');
-                appState.isProcessing = false;
-                return;
-            }
-            
-            if (appState.users[empId]) {
-                showError('Employee ID already exists', 'directoryMessage');
-                appState.isProcessing = false;
-                return;
-            }
+            if (existingUser) { showError('Username already exists', 'directoryMessage'); appState.isProcessing = false; return; }
+            if (appState.users[empId]) { showError('Employee ID already exists', 'directoryMessage'); appState.isProcessing = false; return; }
         }
-        
         try {
             const employeeData = {
-                empID: empId,
-                fullName: fullName,
-                username: username,
-                password: password,
+                empID: empId, fullName, username, password,
                 dept: document.getElementById('addDept').value,
                 birthday: document.getElementById('addBday').value,
                 contact: document.getElementById('addContact').value.trim(),
@@ -2857,21 +2056,14 @@ text-align: center;
                 role: document.getElementById('addRole').value,
                 maxConsecutiveLeave: Math.max(1, parseInt(document.getElementById('addMaxConsecutive').value) || 30)
             };
-            
             const actionType = appState.editingEmployeeId ? 'update_employee' : 'add_employee';
-            
             const result = await safeFirebaseOperation(async () => {
                 if (appState.editingEmployeeId) {
-                    // Update existing employee
                     if (appState.editingEmployeeId === empId) {
-                        // Same ID, just update
                         await update(ref(db, `users/${empId}`), employeeData);
                     } else {
-                        // Different ID, move data
                         await set(ref(db, `users/${empId}`), employeeData);
                         await remove(ref(db, `users/${appState.editingEmployeeId}`));
-                        
-                        // Update attendance records
                         const attendanceSnapshot = await get(ref(db, `attendance/${appState.editingEmployeeId}`));
                         if (attendanceSnapshot.exists()) {
                             await set(ref(db, `attendance/${empId}`), attendanceSnapshot.val());
@@ -2879,909 +2071,496 @@ text-align: center;
                         }
                     }
                 } else {
-                    // Add new employee
                     await set(ref(db, `users/${empId}`), employeeData);
                 }
-            }, {
-                empId: empId,
-                employeeData: employeeData,
-                oldEmpId: appState.editingEmployeeId
-            }, actionType);
-            
-            if (result.success) {
-                showSuccess(appState.editingEmployeeId ? 'Employee updated successfully!' : 'Employee added successfully!', 'directoryMessage', 3000);
-                
-                cancelEdit();
-                renderDirectory();
-            } else if (result.queued) {
-                showError('Offline. Employee will be ' + (appState.editingEmployeeId ? 'updated' : 'added') + ' when connection is restored.', 'directoryMessage', false);
-                cancelEdit();
-            }
-        } catch (error) {
-            console.error('Add employee error:', error);
-            showError('Failed to ' + (appState.editingEmployeeId ? 'update' : 'add') + ' employee', 'directoryMessage');
-        } finally {
-            appState.isProcessing = false;
-        }
+            }, { empId, employeeData, oldEmpId: appState.editingEmployeeId }, actionType);
+            if (result.success) { showSuccess(appState.editingEmployeeId ? 'Employee updated successfully!' : 'Employee added successfully!', 'directoryMessage', 3000); cancelEdit(); renderDirectory(); }
+            else if (result.queued) { showError('Offline. Employee will be saved when connection is restored.', 'directoryMessage', false); cancelEdit(); }
+        } catch (error) { showError('Failed to save employee', 'directoryMessage'); }
+        finally { appState.isProcessing = false; }
     }
     
-    // ==================== DIRECTORY FUNCTIONS ====================
     function renderDirectory() {
         const dirTable = document.getElementById('dirTable');
         if (!dirTable) return;
-        
-        let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Emp ID</th>
-                    <th>Full Name</th>
-                    <th>Username</th>
-                    <th>Dept</th>
-                    <th>Role</th>
-                    <th>Birthday</th>
-                    <th>Contact #</th>
-                    <th>Emergency #</th>
-                    <th>Backend ID</th>
-                    <th>Assets</th>
-                    <th>SL/VL Balance</th>
-                    <th>Max Consecutive</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
+        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
         for (const [empId, user] of Object.entries(appState.users)) {
             const slUsed = calculateUsedLeaves(empId, 'SL');
             const vlUsed = calculateUsedLeaves(empId, 'VL');
-            const slMax = user.slMax || 0;
-            const vlMax = user.vlMax || 0;
-            const slRemaining = Math.max(0, slMax - slUsed);
-            const vlRemaining = Math.max(0, vlMax - vlUsed);
-            const maxConsecutive = user.maxConsecutiveLeave || 30;
-            
-            html += `
-            <tr>
-                <td>${empId}</td>
-                <td>${escapeHtml(user.fullName)}</td>
-                <td>${escapeHtml(user.username)}</td>
-                <td>${user.dept}</td>
-                <td>${user.role}</td>
-                <td>${user.birthday || ''}</td>
-                <td>${user.contact || ''}</td>
-                <td>${user.emergency || ''}</td>
-                <td>${user.backendID || ''}</td>
-                <td>${user.assets || ''}</td>
-                <td>
-                    <div class="balance-display">
-                        <span class="balance-remaining">SL: ${slRemaining}/${slMax}</span><br>
-                        <span class="balance-used">Used: ${slUsed}</span>
-                    </div>
-                    <div class="balance-display">
-                        <span class="balance-remaining">VL: ${vlRemaining}/${vlMax}</span><br>
-                        <span class="balance-used">Used: ${vlUsed}</span>
-                    </div>
-                </td>
-                <td>${maxConsecutive} days</td>
-                <td>
-                    <button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button>
-                    <button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button>
-                </td>
-            </tr>`;
+            const slMax = user.slMax || 0, vlMax = user.vlMax || 0;
+            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td><td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td><td>${user.contact || ''}</td><td>${user.emergency || ''}</td><td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
+            <td><div class="balance-display"><span class="balance-remaining">SL: ${Math.max(0, slMax-slUsed)}/${slMax}</span><br><span class="balance-used">Used: ${slUsed}</span></div><div class="balance-display"><span class="balance-remaining">VL: ${Math.max(0, vlMax-vlUsed)}/${vlMax}</span><br><span class="balance-used">Used: ${vlUsed}</span></div></td>
+            <td>${user.maxConsecutiveLeave || 30} days</td>
+            <td><button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button><button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button></td></tr>`;
         }
-        
         html += `</tbody></table>`;
         dirTable.innerHTML = html;
     }
     
-    // Search employees in directory
     function searchEmployees() {
         const searchTerm = document.getElementById('directorySearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#dirTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#dirTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== ATTENDANCE FUNCTIONS ====================
     function renderAttendance() {
         const payTable = document.getElementById('payTable');
         if (!payTable) return;
-        
         const month = parseInt(document.getElementById('pMonth').value);
         const shiftFilter = document.getElementById('pShift').value;
         const period = document.getElementById('pPeriod').value;
         const [periodStart, periodEnd] = period.split('-').map(Number);
-        
-        let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Emp ID</th>
-                    <th>Name</th>
-                    <th>Dept</th>
-                    <th>Shift</th>`;
-        
-        for (let day = periodStart; day <= periodEnd; day++) {
-            html += `<th>${day}</th>`;
-        }
-        
+        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
+        for (let day = periodStart; day <= periodEnd; day++) html += `<th>${day}</th>`;
         html += `<th class="total-lates-col">Total Lates (min)</th></tr></thead><tbody>`;
-        
         for (const [empId, user] of Object.entries(appState.users)) {
             const timeSlot = user['out_' + month] || '';
             const shiftType = detectShiftType(timeSlot);
-            
-            if (shiftFilter !== 'all' && shiftFilter !== shiftType) {
-                continue;
-            }
-            
-            html += `<tr>
-                <td>${empId}</td>
-                <td>${escapeHtml(user.fullName)}</td>
-                <td>${user.dept}</td>
-                <td class="${getShiftClass(shiftType)}">${shiftType}</td>`;
-            
+            if (shiftFilter !== 'all' && shiftFilter !== shiftType) continue;
+            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td class="${getShiftClass(shiftType)}">${shiftType}</td>`;
             let totalLates = 0;
-            
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
                 const status = appState.attendance[empId]?.[dateKey] || '';
                 const lateMins = appState.attendance[empId]?.[dateKey + "_late"] || 0;
-                
                 if (lateMins) totalLates += parseInt(lateMins);
-                
-                html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${empId}', '${dateKey}')">
-                    ${status || ''}
-                    ${lateMins ? `<span class="late-badge">${lateMins}m</span>` : ''}
-                </td>`;
+                html += `<td class="attendance-cell status-${status}" onclick="changeAttendanceStatus('${empId}', '${dateKey}')">${status || ''}${lateMins ? `<span class="late-badge">${lateMins}m</span>` : ''}</td>`;
             }
-            
             html += `<td class="total-lates-col">${totalLates}</td></tr>`;
         }
-        
         html += `</tbody></table>`;
         payTable.innerHTML = html;
     }
     
-    // Change attendance status
     async function changeAttendanceStatus(empId, dateKey) {
-        if (!appState.currentUser || (appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR')) {
-            showError('Only Admin/HR can modify attendance');
-            return;
-        }
-        
+        if (!appState.currentUser || (appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR')) { showError('Only Admin/HR can modify attendance'); return; }
         const currentStatus = appState.attendance[empId]?.[dateKey] || '';
         const currentIndex = STATUS_CYCLE.indexOf(currentStatus);
-        const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length;
-        const nextStatus = STATUS_CYCLE[nextIndex];
-        
+        const nextStatus = STATUS_CYCLE[(currentIndex + 1) % STATUS_CYCLE.length];
         try {
-            await update(ref(db, `attendance/${empId}`), {
-                [dateKey]: nextStatus
-            });
-            
-            await push(ref(db, 'audit_logs'), {
-                name: appState.currentUser.fullName,
-                action: `Changed attendance for ${empId} on ${dateKey} to ${nextStatus}`,
-                timestamp: new Date().toISOString(),
-                empID: empId
-            });
-        } catch (error) {
-            console.error('Error updating attendance:', error);
-            showError('Failed to update attendance');
-        }
+            await update(ref(db, `attendance/${empId}`), { [dateKey]: nextStatus });
+            await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: `Changed attendance for ${empId} on ${dateKey} to ${nextStatus}`, timestamp: new Date().toISOString(), empID: empId });
+        } catch (error) { showError('Failed to update attendance'); }
     }
     
-    // Search attendance
     function searchAttendance() {
         const searchTerm = document.getElementById('attendanceSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#payTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#payTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== SCHEDULE FUNCTIONS ====================
+    // ==================== SCHEDULE FUNCTIONS — FIXED ====================
+    // renderSchedules:
+    //   • Sorted by dept then name
+    //   • Reads from pending scheduleChanges first so unsaved edits survive a
+    //     Firebase re-render (listener fires while supervisor is mid-edit)
+    //   • Rest-day inputs are <select> with day names to prevent typos
+    //   • Time slot input live-updates the Shift badge on every keystroke
+    //   • Working-days input has a <datalist> with common presets
     function renderSchedules() {
         const schedTable = document.getElementById('schedTable');
         if (!schedTable) return;
-        
         const month = parseInt(document.getElementById('sMonth').value);
+        const monthName = MONTHS[month];
+
+        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => {
+            if (a.dept !== b.dept) return a.dept.localeCompare(b.dept);
+            return (a.fullName || '').localeCompare(b.fullName || '');
+        });
+
+        const dayOptions = (selected) => ['', ...DAYS_OF_WEEK].map(d =>
+            `<option value="${d}" ${d === selected ? 'selected' : ''}>${d || '— none —'}</option>`).join('');
+
         let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Emp ID</th>
-                    <th>Name</th>
-                    <th>Dept</th>
-                    <th>Working Days</th>
-                    <th>Time Slot</th>
-                    <th>Shift</th>
-                    <th>Rest Day 1</th>
-                    <th>Rest Day 2</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
-        for (const [empId, user] of Object.entries(appState.users)) {
-            const workingDays = user['in_' + month] || '';
-            const timeSlot = user['out_' + month] || '';
-            const off1 = user['off1_' + month] || '';
-            const off2 = user['off2_' + month] || '';
-            const shiftType = detectShiftType(timeSlot);
-            
+        <div class="sched-hint">
+            Editing schedule for <strong>${monthName}</strong>.
+            Shift type is auto-detected from the time slot (night = starts 18:00 or later).
+            Rest days use full day names. Click <strong>Save</strong> on each row, or use <strong>Publish All Changes</strong> below.
+        </div>
+        <table style="min-width:1100px;">
+            <thead><tr>
+                <th>Emp ID</th><th style="text-align:left;padding-left:8px;">Name</th><th>Dept</th>
+                <th>Working Days</th><th>Time Slot</th><th>Shift (auto)</th>
+                <th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
+            </tr></thead><tbody>`;
+
+        for (const [empId, user] of sorted) {
+            // Always prefer the pending (typed-but-unsaved) value over the Firebase value
+            const pending = (appState.scheduleChanges || {})[empId] || {};
+            const workingDays = ('in_'  + month) in pending ? pending['in_'  + month] : (user['in_'  + month] || '');
+            const timeSlot    = ('out_' + month) in pending ? pending['out_' + month] : (user['out_' + month] || '');
+            const off1        = ('off1_'+ month) in pending ? pending['off1_'+ month] : (user['off1_'+ month] || '');
+            const off2        = ('off2_'+ month) in pending ? pending['off2_'+ month] : (user['off2_'+ month] || '');
+            const shiftType   = detectShiftType(timeSlot);
+            const shiftClass  = getShiftClass(shiftType);
+            const safeId      = empId.replace(/'/g, "\\'");
+
             html += `
-            <tr>
+            <tr id="sched-row-${empId}">
                 <td>${empId}</td>
-                <td>${escapeHtml(user.fullName)}</td>
+                <td style="text-align:left;padding-left:8px;">${escapeHtml(user.fullName)}</td>
                 <td>${user.dept}</td>
-                <td><input type="text" value="${workingDays}" onchange="updateScheduleField('${empId}', 'in_${month}', this.value)" style="width:100px;"></td>
-                <td><input type="text" value="${timeSlot}" onchange="updateScheduleField('${empId}', 'out_${month}', this.value)" style="width:100px;"></td>
-                <td class="${getShiftClass(shiftType)}">${shiftType}</td>
-                <td><input type="text" value="${off1}" onchange="updateScheduleField('${empId}', 'off1_${month}', this.value)" style="width:80px;"></td>
-                <td><input type="text" value="${off2}" onchange="updateScheduleField('${empId}', 'off2_${month}', this.value)" style="width:80px;"></td>
                 <td>
-                    <button class="row-save-btn" onclick="saveSchedule('${empId}', ${month})">Save</button>
+                    <input type="text" value="${escapeHtml(workingDays)}"
+                        list="wd-presets-${month}"
+                        placeholder="e.g. Mon-Fri"
+                        oninput="updateScheduleField('${safeId}', 'in_${month}', this.value)"
+                        style="width:120px;">
+                </td>
+                <td>
+                    <input type="text" value="${escapeHtml(timeSlot)}"
+                        placeholder="e.g. 8 AM - 5 PM"
+                        oninput="updateScheduleField('${safeId}', 'out_${month}', this.value, '${safeId}', ${month})"
+                        style="width:140px;">
+                </td>
+                <td>
+                    <span id="shift-badge-${empId}" class="${shiftClass}"
+                        style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;">
+                        ${shiftType}
+                    </span>
+                </td>
+                <td>
+                    <select oninput="updateScheduleField('${safeId}', 'off1_${month}', this.value)"
+                            style="width:110px;">${dayOptions(off1)}</select>
+                </td>
+                <td>
+                    <select oninput="updateScheduleField('${safeId}', 'off2_${month}', this.value)"
+                            style="width:110px;">${dayOptions(off2)}</select>
+                </td>
+                <td>
+                    <button class="row-save-btn" onclick="saveSchedule('${safeId}', ${month})">Save</button>
                 </td>
             </tr>`;
         }
-        
-        html += `</tbody></table>`;
+
+        html += `</tbody></table>
+        <datalist id="wd-presets-${month}">
+            ${WORKING_DAYS_PRESETS.map(p => `<option value="${p}">`).join('')}
+        </datalist>`;
         schedTable.innerHTML = html;
     }
-    
-    // Update schedule field
-    function updateScheduleField(empId, field, value) {
+
+    // updateScheduleField — stores typed value in scheduleChanges AND live-updates
+    // the shift badge when the time slot column is edited.
+    function updateScheduleField(empId, field, value, shiftEmpId, month) {
         document.getElementById('saveSchedulesBtn').classList.remove('hidden');
         if (!appState.scheduleChanges) appState.scheduleChanges = {};
         if (!appState.scheduleChanges[empId]) appState.scheduleChanges[empId] = {};
         appState.scheduleChanges[empId][field] = value;
-    }
-    
-    // Save schedule for individual employee
-    async function saveSchedule(empId, month) {
-        try {
-            const updates = {};
-            const user = appState.users[empId];
-            
-            if (user['in_' + month]) updates['in_' + month] = user['in_' + month];
-            if (user['out_' + month]) updates['out_' + month] = user['out_' + month];
-            if (user['off1_' + month]) updates['off1_' + month] = user['off1_' + month];
-            if (user['off2_' + month]) updates['off2_' + month] = user['off2_' + month];
-            
-            await update(ref(db, `users/${empId}`), updates);
-            showSuccess('Schedule updated!', null, 3000);
-        } catch (error) {
-            console.error('Error saving schedule:', error);
-            showError('Failed to save schedule');
+
+        // Live-update the shift type badge when the time slot changes
+        if (shiftEmpId !== undefined && field === ('out_' + month)) {
+            const badge = document.getElementById('shift-badge-' + shiftEmpId);
+            if (badge) {
+                const shiftType = detectShiftType(value);
+                badge.textContent = shiftType;
+                badge.className = getShiftClass(shiftType);
+                badge.style.cssText = 'padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;';
+            }
         }
     }
+
+    // saveSchedule — FIXED: reads from scheduleChanges (what was typed) first,
+    // then falls back to the stored Firebase value. Never saves stale data.
+    async function saveSchedule(empId, month) {
+        try {
+            const pending = (appState.scheduleChanges || {})[empId] || {};
+            const user    = appState.users[empId] || {};
+            const updates = {};
+            const fields  = ['in_' + month, 'out_' + month, 'off1_' + month, 'off2_' + month];
+            fields.forEach(field => {
+                updates[field] = field in pending ? pending[field] : (user[field] || '');
+            });
+            await update(ref(db, `users/${empId}`), updates);
+            // Clear only this employee's pending changes for this month
+            if (appState.scheduleChanges && appState.scheduleChanges[empId]) {
+                fields.forEach(f => delete appState.scheduleChanges[empId][f]);
+                if (Object.keys(appState.scheduleChanges[empId]).length === 0) {
+                    delete appState.scheduleChanges[empId];
+                }
+            }
+            if (!appState.scheduleChanges || Object.keys(appState.scheduleChanges).length === 0) {
+                const btn = document.getElementById('saveSchedulesBtn');
+                if (btn) btn.classList.add('hidden');
+            }
+            showSuccess(`Schedule saved for ${user.fullName || empId}!`, null, 2500);
+        } catch (error) { showError('Failed to save schedule'); }
+    }
     
-    // Save all schedules
     async function saveAllSchedules() {
         if (!appState.scheduleChanges) return;
-        
         try {
             for (const [empId, changes] of Object.entries(appState.scheduleChanges)) {
                 await update(ref(db, `users/${empId}`), changes);
             }
-            
             appState.scheduleChanges = {};
             document.getElementById('saveSchedulesBtn').classList.add('hidden');
-            showSuccess('All schedules updated!', null, 3000);
-        } catch (error) {
-            console.error('Error saving all schedules:', error);
-            showError('Failed to save schedules');
-        }
+            showSuccess('All schedules published!', null, 3000);
+        } catch (error) { showError('Failed to publish schedules'); }
     }
     
-    // Search schedules
     function searchSchedules() {
         const searchTerm = document.getElementById('scheduleSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#schedTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#schedTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== ACTIVE NOW FUNCTIONS ====================
     function renderActiveNow() {
         const activeTable = document.getElementById('activeTable');
         if (!activeTable) return;
-        
         const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentDay = now.getDate();
+        const currentMonth = now.getMonth(), currentDay = now.getDate();
         const todayKey = `${currentMonth}_${currentDay}`;
-        
-        let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Emp ID</th>
-                    <th>Name</th>
-                    <th>Dept</th>
-                    <th>Time In</th>
-                    <th>Status</th>
-                    <th>Shift</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
+        let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Time In</th><th>Status</th><th>Shift</th></tr></thead><tbody>`;
         let activeCount = 0;
-        
         for (const [empId, user] of Object.entries(appState.users)) {
             const status = appState.attendance[empId]?.[todayKey];
             const clockOutTime = appState.attendance[empId]?.[`${todayKey}_out`];
-            
-            // User is active if status is 'P' AND no clock-out time
             if (status === 'P' && !clockOutTime) {
                 activeCount++;
                 const timeIn = appState.attendance[empId]?.[todayKey + '_time'];
-                const timeSlot = user['out_' + currentMonth] || '';
-                const shiftType = detectShiftType(timeSlot);
-                
-                let displayTime = 'Unknown';
-                if (timeIn) {
-                    const timeDate = new Date(timeIn);
-                    displayTime = timeDate.toLocaleTimeString();
-                }
-                
-                html += `
-                <tr>
-                    <td>${empId}</td>
-                    <td>${escapeHtml(user.fullName)}</td>
-                    <td>${user.dept}</td>
-                    <td>${displayTime}</td>
-                    <td class="status-P">PRESENT</td>
-                    <td class="${getShiftClass(shiftType)}">${shiftType}</td>
-                </tr>`;
+                const shiftType = detectShiftType(user['out_' + currentMonth] || '');
+                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td class="${getShiftClass(shiftType)}">${shiftType}</td></tr>`;
             }
         }
-        
-        if (activeCount === 0) {
-            html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-light);">No active employees</td></tr>`;
-        }
-        
+        if (activeCount === 0) html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-light);">No active employees</td></tr>`;
         html += `</tbody></table>`;
         activeTable.innerHTML = html;
     }
     
-    // Search active employees
     function searchActive() {
         const searchTerm = document.getElementById('activeSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#activeTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#activeTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== AUDIT LOGS FUNCTIONS ====================
     function renderAudit(auditLogs) {
         const auditTable = document.getElementById('auditTable');
         if (!auditTable || !auditLogs) return;
-        
-        let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Emp ID</th>
-                    <th>Department</th>
-                    <th>Time</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
-        const logsArray = Object.values(auditLogs).sort((a, b) => 
-            new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        
-        logsArray.forEach(log => {
-            const timeDate = new Date(log.timestamp);
-            const timeStr = timeDate.toLocaleString();
-            
-            html += `
-            <tr>
-                <td>${timeStr}</td>
-                <td>${log.name || 'System'}</td>
-                <td>${log.action}</td>
-                <td>${log.empID || ''}</td>
-                <td>${log.department || ''}</td>
-                <td>${log.time || ''}</td>
-            </tr>`;
+        let html = `<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Emp ID</th><th>Department</th><th>Time</th></tr></thead><tbody>`;
+        Object.values(auditLogs).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(log => {
+            html += `<tr><td>${new Date(log.timestamp).toLocaleString()}</td><td>${log.name || 'System'}</td><td>${log.action}</td><td>${log.empID || ''}</td><td>${log.department || ''}</td><td>${log.time || ''}</td></tr>`;
         });
-        
         html += `</tbody></table>`;
         auditTable.innerHTML = html;
     }
     
-    // Search audit logs
     function searchAudit() {
         const searchTerm = document.getElementById('auditSearch').value.toLowerCase();
-        const rows = document.querySelectorAll('#auditTable tbody tr');
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#auditTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== INBOX FUNCTIONS with Hierarchy ====================
     function updateInbox() {
-        if (!appState.currentUser || (appState.currentUser.role !== 'Admin' && appState.currentUser.role !== 'HR' && appState.currentUser.role !== 'OPS')) {
-            return;
-        }
-        
+        if (!appState.currentUser || !['Admin','HR','OPS'].includes(appState.currentUser.role)) return;
         const inboxContent = document.getElementById('inboxContent');
         const inboxCount = document.getElementById('inboxCount');
         const mailBadge = document.getElementById('mailBadge');
-        
         if (!appState.leaveRequests) return;
-        
-        let pendingCount = 0;
-        let html = '';
-        
+        let pendingCount = 0, html = '';
         Object.entries(appState.leaveRequests).forEach(([key, request]) => {
             if (request.status === 'Pending') {
                 const canApprove = canApproveLeave(request);
                 const canCancel = canCancelLeave(request);
-                
                 pendingCount++;
-                
-                html += `
-                <div class="leave-item">
-                    <strong>${request.name}</strong> (${request.empID})<br>
-                    <small>${LEAVE_TYPES[request.type] || request.type}: ${request.startDate} ${request.endDate !== request.startDate ? `to ${request.endDate}` : ''}</small><br>
+                html += `<div class="leave-item"><strong>${request.name}</strong> (${request.empID})<br>
+                    <small>${LEAVE_TYPES[request.type] || request.type}: ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''}</small><br>
                     <small>Department: ${request.department} | Working Days: ${request.workingDays || '1'}</small><br>
                     <small>Reason: ${request.reason}</small>`;
-                
                 if (canApprove) {
-                    html += `
-                    <div class="leave-actions">
-                        <button class="action-btn btn-small" onclick="approveLeave('${key}')" style="background:var(--success);">Approve</button>
-                        <button class="action-btn btn-small" onclick="rejectLeave('${key}')" style="background:var(--danger);">Reject</button>`;
-                    
-                    if (canCancel) {
-                        html += `<button class="action-btn btn-small" onclick="cancelLeave('${key}')" style="background:var(--warning); color:black;">Cancel</button>`;
-                    }
-                    
+                    html += `<div class="leave-actions"><button class="action-btn btn-small" onclick="approveLeave('${key}')" style="background:var(--success);">Approve</button><button class="action-btn btn-small" onclick="rejectLeave('${key}')" style="background:var(--danger);">Reject</button>`;
+                    if (canCancel) html += `<button class="action-btn btn-small" onclick="cancelLeave('${key}')" style="background:var(--warning); color:black;">Cancel</button>`;
                     html += `</div>`;
-                } else {
-                    html += `<small style="color:var(--text-light);">Not authorized to approve</small>`;
-                }
-                
+                } else { html += `<small style="color:var(--text-light);">Not authorized to approve</small>`; }
                 html += `</div>`;
             }
         });
-        
-        if (pendingCount === 0) {
-            html = '<div style="text-align:center; padding:20px; color:var(--text-light);">No pending requests</div>';
-        }
-        
+        if (pendingCount === 0) html = '<div style="text-align:center; padding:20px; color:var(--text-light);">No pending requests</div>';
         if (inboxContent) inboxContent.innerHTML = html;
         if (inboxCount) inboxCount.textContent = pendingCount;
-        
-        if (mailBadge) {
-            if (pendingCount > 0) {
-                mailBadge.textContent = pendingCount > 99 ? '99+' : pendingCount;
-                mailBadge.classList.remove('hidden');
-            } else {
-                mailBadge.classList.add('hidden');
-            }
-        }
+        if (mailBadge) { mailBadge.textContent = pendingCount > 99 ? '99+' : pendingCount; mailBadge.classList.toggle('hidden', pendingCount === 0); }
     }
     
-    // Toggle inbox modal
     function toggleInbox() {
-        const inbox = document.getElementById('leaveInbox');
-        const notifications = document.getElementById('notificationsModal');
-        notifications.classList.add('hidden');
-        inbox.classList.toggle('hidden');
+        document.getElementById('notificationsModal').classList.add('hidden');
+        document.getElementById('leaveInbox').classList.toggle('hidden');
     }
     
-    // ==================== FIXED: Approve leave request with schedule update ====================
     async function approveLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
-            
-            // Check if user can approve this leave
-            if (!canApproveLeave(request)) {
-                showError('You are not authorized to approve this leave request.');
-                return;
-            }
-            
+            if (!canApproveLeave(request)) { showError('You are not authorized to approve this leave request.'); return; }
             const now = new Date();
-            
-            // Calculate all dates in the leave period
             const startDate = new Date(request.startDate);
             const endDate = request.endDate ? new Date(request.endDate) : startDate;
             const dateUpdates = {};
-            
-            // Iterate through each day in the leave period
             const currentDate = new Date(startDate);
             while (currentDate <= endDate) {
-                const month = currentDate.getMonth();
-                const day = currentDate.getDate();
-                const dateKey = `${month}_${day}`;
-                
-                // Mark attendance as leave type (SL or VL)
-                dateUpdates[dateKey] = request.type;
-                
+                dateUpdates[`${currentDate.getMonth()}_${currentDate.getDate()}`] = request.type;
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            
-            // Update leave request status
-            await update(ref(db, `leave_requests/${leaveId}`), {
-                status: 'Approved',
-                approvedBy: appState.currentUser.fullName,
-                approvedAt: now.toISOString(),
-                approvedByRole: appState.currentUser.role
-            });
-            
-            // Update attendance records for the leave period
-            if (Object.keys(dateUpdates).length > 0) {
-                await update(ref(db, `attendance/${request.empID}`), dateUpdates);
-            }
-            
-            // Send notification
-            await push(ref(db, 'notifications'), {
-                userId: request.empID,
-                title: 'Leave Approved',
-                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''} has been approved by ${appState.currentUser.fullName} (${appState.currentUser.role}).`,
-                type: 'success',
-                timestamp: now.toISOString(),
-                read: false
-            });
-            
-            // Log to audit
-            await push(ref(db, 'audit_logs'), {
-                name: appState.currentUser.fullName,
-                action: `Approved leave request for ${request.name} (${request.type}: ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''})`,
-                timestamp: now.toISOString(),
-                empID: request.empID,
-                department: request.department,
-                approverRole: appState.currentUser.role,
-                attendanceUpdated: true
-            });
-            
-            showSuccess('Leave request approved and schedule updated!', null, 3000);
-        } catch (error) {
-            console.error('Error approving leave:', error);
-            showError('Failed to approve leave');
-        }
+            await update(ref(db, `leave_requests/${leaveId}`), { status: 'Approved', approvedBy: appState.currentUser.fullName, approvedAt: now.toISOString(), approvedByRole: appState.currentUser.role });
+            if (Object.keys(dateUpdates).length > 0) await update(ref(db, `attendance/${request.empID}`), dateUpdates);
+            await push(ref(db, 'notifications'), { userId: request.empID, title: 'Leave Approved', message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate}${request.endDate !== request.startDate ? ` to ${request.endDate}` : ''} has been approved by ${appState.currentUser.fullName} (${appState.currentUser.role}).`, type: 'success', timestamp: now.toISOString(), read: false });
+            await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: `Approved leave for ${request.name} (${request.type}: ${request.startDate} to ${request.endDate})`, timestamp: now.toISOString(), empID: request.empID, department: request.department, approverRole: appState.currentUser.role });
+            showSuccess('Leave request approved and attendance updated!', null, 3000);
+        } catch (error) { showError('Failed to approve leave'); }
     }
     
-    // ==================== FIXED: Reject leave request ====================
     async function rejectLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
-            
-            // Check if user can approve this leave (same rules as approve)
-            if (!canApproveLeave(request)) {
-                showError('You are not authorized to reject this leave request.');
-                return;
-            }
-            
+            if (!canApproveLeave(request)) { showError('You are not authorized to reject this leave request.'); return; }
             const now = new Date();
-            
-            await update(ref(db, `leave_requests/${leaveId}`), {
-                status: 'Rejected',
-                rejectedBy: appState.currentUser.fullName,
-                rejectedAt: now.toISOString(),
-                rejectedByRole: appState.currentUser.role
-            });
-            
-            await push(ref(db, 'notifications'), {
-                userId: request.empID,
-                title: 'Leave Rejected',
-                message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate} has been rejected by ${appState.currentUser.fullName} (${appState.currentUser.role}).`,
-                type: 'error',
-                timestamp: now.toISOString(),
-                read: false
-            });
-            
-            // Log to audit
-            await push(ref(db, 'audit_logs'), {
-                name: appState.currentUser.fullName,
-                action: `Rejected leave request for ${request.name} (${request.type}: ${request.startDate} to ${request.endDate})`,
-                timestamp: now.toISOString(),
-                empID: request.empID,
-                department: request.department,
-                rejecterRole: appState.currentUser.role
-            });
-            
+            await update(ref(db, `leave_requests/${leaveId}`), { status: 'Rejected', rejectedBy: appState.currentUser.fullName, rejectedAt: now.toISOString(), rejectedByRole: appState.currentUser.role });
+            await push(ref(db, 'notifications'), { userId: request.empID, title: 'Leave Rejected', message: `Your ${LEAVE_TYPES[request.type] || request.type} request for ${request.startDate} has been rejected by ${appState.currentUser.fullName} (${appState.currentUser.role}).`, type: 'error', timestamp: now.toISOString(), read: false });
+            await push(ref(db, 'audit_logs'), { name: appState.currentUser.fullName, action: `Rejected leave for ${request.name} (${request.type}: ${request.startDate} to ${request.endDate})`, timestamp: now.toISOString(), empID: request.empID, department: request.department, rejecterRole: appState.currentUser.role });
             showSuccess('Leave request rejected!', null, 3000);
-        } catch (error) {
-            console.error('Error rejecting leave:', error);
-            showError('Failed to reject leave');
-        }
+        } catch (error) { showError('Failed to reject leave'); }
     }
     
-    // ==================== NOTIFICATIONS FUNCTIONS ====================
     function updateNotifications() {
         if (!appState.currentUser) return;
-        
         const notificationsContent = document.getElementById('notificationsContent');
         const notificationCount = document.getElementById('notificationCount');
         const notificationBadge = document.getElementById('notificationBadge');
-        
         if (!appState.notifications) return;
-        
-        let unreadCount = 0;
-        let html = '';
-        
+        let unreadCount = 0, html = '';
         const userNotifications = Object.entries(appState.notifications)
-            .filter(([key, notification]) => notification.userId === appState.currentUser.id)
-            .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
-        
+            .filter(([, n]) => n.userId === appState.currentUser.id)
+            .sort(([, a], [, b]) => new Date(b.timestamp) - new Date(a.timestamp));
         userNotifications.forEach(([key, notification]) => {
             if (!notification.read) unreadCount++;
-            
-            const timeDate = new Date(notification.timestamp);
-            const timeStr = timeDate.toLocaleString();
-            
-            html += `
-            <div class="leave-item" onclick="markNotificationRead('${key}')" style="cursor:pointer; ${notification.read ? 'opacity:0.7;' : ''}">
-                <strong>${notification.title}</strong><br>
-                <small>${notification.message}</small><br>
-                <small style="color:var(--text-light);">${timeStr}</small>
-                ${!notification.read ? '<span style="float:right; color:var(--accent); font-size:8px;">NEW</span>' : ''}
-            </div>`;
+            html += `<div class="leave-item" onclick="markNotificationRead('${key}')" style="cursor:pointer;${notification.read ? 'opacity:0.7;' : ''}"><strong>${notification.title}</strong><br><small>${notification.message}</small><br><small style="color:var(--text-light);">${new Date(notification.timestamp).toLocaleString()}</small>${!notification.read ? '<span style="float:right;color:var(--accent);font-size:8px;">NEW</span>' : ''}</div>`;
         });
-        
-        if (userNotifications.length === 0) {
-            html = '<div style="text-align:center; padding:20px; color:var(--text-light);">No notifications</div>';
-        }
-        
+        if (userNotifications.length === 0) html = '<div style="text-align:center; padding:20px; color:var(--text-light);">No notifications</div>';
         if (notificationsContent) notificationsContent.innerHTML = html;
         if (notificationCount) notificationCount.textContent = userNotifications.length;
-        
-        if (notificationBadge) {
-            if (unreadCount > 0) {
-                notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                notificationBadge.classList.remove('hidden');
-            } else {
-                notificationBadge.classList.add('hidden');
-            }
-        }
+        if (notificationBadge) { notificationBadge.textContent = unreadCount > 99 ? '99+' : unreadCount; notificationBadge.classList.toggle('hidden', unreadCount === 0); }
     }
     
-    // Mark notification as read
     async function markNotificationRead(notificationId) {
-        try {
-            await update(ref(db, `notifications/${notificationId}`), {
-                read: true
-            });
-        } catch (error) {
-            console.error('Error marking notification as read:', error);
-        }
+        try { await update(ref(db, `notifications/${notificationId}`), { read: true }); } catch (e) {}
     }
     
-    // Toggle notifications modal
     function toggleNotifications() {
-        const notifications = document.getElementById('notificationsModal');
-        const inbox = document.getElementById('leaveInbox');
-        inbox.classList.add('hidden');
-        notifications.classList.toggle('hidden');
+        document.getElementById('leaveInbox').classList.add('hidden');
+        document.getElementById('notificationsModal').classList.toggle('hidden');
     }
     
-    // ==================== MY LEAVES FUNCTIONS ====================
+    // ── My Leaves — FIXED: iterate entries() so leaveId is available in the
+    //   Cancel button onclick without reference-equality lookup.
     function updateMyLeaves() {
         if (!appState.currentUser) return;
-        
         const container = document.getElementById('myLeavesContainer');
-        const totalLeaves = document.getElementById('totalLeaves');
-        const approvedLeaves = document.getElementById('approvedLeaves');
-        const pendingLeaves = document.getElementById('pendingLeaves');
-        const rejectedLeaves = document.getElementById('rejectedLeaves');
-        
         if (!appState.leaveRequests) return;
-        
-        let total = 0;
-        let approved = 0;
-        let pending = 0;
-        let rejected = 0;
-        let html = '';
-        
-        const userLeaves = Object.values(appState.leaveRequests)
-            .filter(leave => leave.empID === appState.currentUser.id)
-            .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-        
-        userLeaves.forEach(leave => {
+        let total = 0, approved = 0, pending = 0, rejected = 0, html = '';
+
+        // Use entries() so leaveId (Firebase key) is available directly
+        const userLeaves = Object.entries(appState.leaveRequests)
+            .filter(([, leave]) => leave.empID === appState.currentUser.id)
+            .sort(([, a], [, b]) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+        userLeaves.forEach(([leaveId, leave]) => {
             total++;
-            
             if (leave.status === 'Approved') approved++;
             else if (leave.status === 'Pending') pending++;
             else if (leave.status === 'Rejected') rejected++;
-            
             const startDate = new Date(leave.startDate);
             const endDate = leave.endDate ? new Date(leave.endDate) : startDate;
-            const diffTime = Math.abs(endDate - startDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            
-            const submittedDate = new Date(leave.submittedAt);
-            const submittedStr = submittedDate.toLocaleDateString();
-            
+            const diffDays = Math.ceil((Math.abs(endDate - startDate)) / 86400000) + 1;
+            const submittedStr = new Date(leave.submittedAt).toLocaleDateString();
             html += `
             <div class="leave-card ${leave.status.toLowerCase()}">
                 <strong>${LEAVE_TYPES[leave.type] || leave.type}</strong>
                 <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                    <span>${leave.startDate} ${endDate !== startDate ? `to ${leave.endDate}` : ''}</span>
-                    <span>(${leave.workingDays || diffDays} working day${leave.workingDays !== 1 ? 's' : ''})</span>
+                    <span>${leave.startDate}${endDate > startDate ? ` to ${leave.endDate}` : ''}</span>
+                    <span>(${leave.workingDays || diffDays} working day${(leave.workingDays || diffDays) !== 1 ? 's' : ''})</span>
                 </div>
                 <div style="margin-top:8px;">
                     <span class="status-indicator status-${leave.status.toLowerCase()}"></span>
                     <strong>${leave.status}</strong>
                 </div>
-                <div style="margin-top:8px; font-size:10px; color:var(--text-light);">
-                    ${leave.reason}
-                </div>
+                <div style="margin-top:8px; font-size:10px; color:var(--text-light);">${leave.reason}</div>
                 <div style="margin-top:8px; font-size:9px; color:var(--text-light);">
                     Submitted: ${submittedStr}
                     ${leave.approvedBy ? `<br>Approved by: ${leave.approvedBy} (${leave.approvedByRole || 'Unknown'})` : ''}
                     ${leave.rejectedBy ? `<br>Rejected by: ${leave.rejectedBy} (${leave.rejectedByRole || 'Unknown'})` : ''}
                     ${leave.cancelledBy ? `<br>Cancelled by: ${leave.cancelledBy}` : ''}
                 </div>
+                ${leave.status === 'Pending' ? `
                 <div class="leave-actions" style="margin-top:10px;">
-                    ${leave.status === 'Pending' ? `
-                    <button class="action-btn btn-small" onclick="cancelLeave('${Object.keys(appState.leaveRequests).find(key => appState.leaveRequests[key] === leave)}')" style="background:var(--warning); color:black;">Cancel</button>
-                    ` : ''}
-                </div>
+                    <button class="action-btn btn-small" onclick="cancelLeave('${leaveId}')" style="background:var(--warning); color:black;">Cancel</button>
+                </div>` : ''}
             </div>`;
         });
-        
-        if (userLeaves.length === 0) {
-            html = '<div style="text-align:center; padding:40px; color:var(--text-light); grid-column:1/-1;">No leave requests yet</div>';
-        }
-        
+
+        if (userLeaves.length === 0) html = '<div style="text-align:center; padding:40px; color:var(--text-light); grid-column:1/-1;">No leave requests yet</div>';
         if (container) container.innerHTML = html;
-        if (totalLeaves) totalLeaves.textContent = total;
-        if (approvedLeaves) approvedLeaves.textContent = approved;
-        if (pendingLeaves) pendingLeaves.textContent = pending;
-        if (rejectedLeaves) rejectedLeaves.textContent = rejected;
+        document.getElementById('totalLeaves').textContent = total;
+        document.getElementById('approvedLeaves').textContent = approved;
+        document.getElementById('pendingLeaves').textContent = pending;
+        document.getElementById('rejectedLeaves').textContent = rejected;
     }
     
-    // Search my leaves
     function searchMyLeaves() {
         const searchTerm = document.getElementById('leaveSearch').value.toLowerCase();
-        const cards = document.querySelectorAll('#myLeavesContainer .leave-card');
-        
-        cards.forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        document.querySelectorAll('#myLeavesContainer .leave-card').forEach(card => { card.style.display = card.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== CALENDAR FUNCTIONS - FIXED ====================
     function initializeCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
-        
-        // Destroy existing calendar instance if it exists
-        if (appState.calendarInstance) {
-            appState.calendarInstance.destroy();
-        }
-        
+        if (appState.calendarInstance) appState.calendarInstance.destroy();
         appState.calendarInstance = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-            },
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' },
             events: getFilteredCalendarEvents(),
             height: 'auto',
             eventDisplay: 'block',
-            eventColor: '#3788d8',
-            eventTextColor: '#ffffff'
         });
-        
         appState.calendarInstance.render();
         appState.calendarInitialized = true;
     }
     
     function getFilteredCalendarEvents() {
         const events = [];
-        
         if (!appState.leaveRequests) return events;
-        
+        const filterValue = document.getElementById('calendarFilter')?.value || 'all';
         Object.values(appState.leaveRequests).forEach(leave => {
             const employee = appState.users[leave.empID];
             if (!employee) return;
-            
             let shouldShow = false;
-            const filterValue = document.getElementById('calendarFilter')?.value || 'all';
-            
             switch(filterValue) {
-                case 'all':
-                    shouldShow = true;
-                    break;
-                case 'my':
-                    shouldShow = leave.empID === appState.currentUser.id;
-                    break;
-                case 'dept':
-                    shouldShow = employee.dept === appState.currentUser.dept;
-                    break;
-                case 'SL':
-                    shouldShow = leave.type === 'SL';
-                    break;
-                case 'VL':
-                    shouldShow = leave.type === 'VL';
-                    break;
-                case 'approved':
-                    shouldShow = leave.status === 'Approved';
-                    break;
-                case 'pending':
-                    shouldShow = leave.status === 'Pending';
-                    break;
-                default:
-                    shouldShow = true;
+                case 'all': shouldShow = true; break;
+                case 'my': shouldShow = leave.empID === appState.currentUser.id; break;
+                case 'dept': shouldShow = employee.dept === appState.currentUser.dept; break;
+                case 'SL': shouldShow = leave.type === 'SL'; break;
+                case 'VL': shouldShow = leave.type === 'VL'; break;
+                case 'approved': shouldShow = leave.status === 'Approved'; break;
+                case 'pending': shouldShow = leave.status === 'Pending'; break;
+                default: shouldShow = true;
             }
-            
             if (!shouldShow) return;
-            
-            const start = leave.startDate;
-            const end = leave.endDate ? leave.endDate : start;
-            
-            let backgroundColor = '';
-            if (leave.type === 'SL') {
-                backgroundColor = leave.status === 'Approved' ? '#10b981' : 
-                                leave.status === 'Pending' ? '#fbbf24' : '#ef4444';
-            } else {
-                backgroundColor = leave.status === 'Approved' ? '#6366f1' : 
-                                leave.status === 'Pending' ? '#f59e0b' : '#dc2626';
-            }
-            
+            const bgColor = leave.type === 'SL'
+                ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
+                : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
             events.push({
                 title: `${employee.fullName} - ${LEAVE_TYPES[leave.type] || leave.type} (${leave.status})`,
-                start: start,
-                end: new Date(new Date(end).setDate(new Date(end).getDate() + 1)),
-                backgroundColor: backgroundColor,
-                borderColor: backgroundColor,
-                extendedProps: {
-                    status: leave.status,
-                    reason: leave.reason,
-                    employeeName: employee.fullName,
-                    leaveType: leave.type
-                }
+                start: leave.startDate,
+                end: new Date(new Date(leave.endDate || leave.startDate).setDate(new Date(leave.endDate || leave.startDate).getDate() + 1)),
+                backgroundColor: bgColor, borderColor: bgColor,
             });
         });
-        
         return events;
     }
     
     function refreshCalendarEvents() {
-        if (!appState.calendarInstance) {
-            initializeCalendar();
-            return;
-        }
-        
-        const events = getFilteredCalendarEvents();
+        if (!appState.calendarInstance) { initializeCalendar(); return; }
         appState.calendarInstance.removeAllEvents();
-        appState.calendarInstance.addEventSource(events);
+        appState.calendarInstance.addEventSource(getFilteredCalendarEvents());
     }
     
     function changeCalendarView() {
         if (!appState.calendarInstance) return;
-        
-        const viewType = document.getElementById('calendarView').value;
-        appState.calendarInstance.changeView(viewType);
+        appState.calendarInstance.changeView(document.getElementById('calendarView').value);
     }
     
-    // ==================== UTILITY FUNCTIONS ====================
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -3789,168 +2568,133 @@ text-align: center;
         return div.innerHTML;
     }
     
+    // ── Toast notifications ──────────────────────────────────────────────────
+    // A small queue so multiple toasts don't stack on top of each other.
+    const _toastQueue = [];
+    let _toastActive = false;
+    function _showToast(message, bg) {
+        _toastQueue.push({ message, bg });
+        if (!_toastActive) _flushToast();
+    }
+    function _flushToast() {
+        if (_toastQueue.length === 0) { _toastActive = false; return; }
+        _toastActive = true;
+        const { message, bg } = _toastQueue.shift();
+        const n = document.createElement('div');
+        n.style.cssText = `position:fixed;top:20px;right:20px;background:${bg};color:white;padding:10px 15px;border-radius:8px;z-index:9999;font-size:11px;max-width:280px;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+        n.textContent = message;
+        document.body.appendChild(n);
+        setTimeout(() => { n.remove(); _flushToast(); }, 3500);
+    }
     function showError(message, elementId = null, autoHide = true) {
         if (elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.textContent = message;
-                element.classList.remove('hidden');
-                if (autoHide) {
-                    setTimeout(() => {
-                        element.classList.add('hidden');
-                    }, 5000);
-                }
-            }
-        } else {
-            const notification = document.createElement('div');
-            notification.style.cssText = 'position:fixed; top:20px; right:20px; background:#ef4444; color:white; padding:10px 15px; border-radius:8px; z-index:9999; font-size:11px;';
-            notification.textContent = `❌ ${message}`;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 5000);
-        }
+            const el = document.getElementById(elementId);
+            if (el) { el.textContent = message; el.classList.remove('hidden'); if (autoHide) setTimeout(() => el.classList.add('hidden'), 5000); }
+        } else { _showToast('❌ ' + message, '#ef4444'); }
     }
-    
     function showSuccess(message, elementId = null, duration = 3000) {
         if (elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.textContent = message;
-                element.classList.remove('hidden');
-                setTimeout(() => {
-                    element.classList.add('hidden');
-                }, duration);
-            }
-        } else {
-            const notification = document.createElement('div');
-            notification.style.cssText = 'position:fixed; top:20px; right:20px; background:#10b981; color:white; padding:10px 15px; border-radius:8px; z-index:9999; font-size:11px;';
-            notification.textContent = `✅ ${message}`;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), duration);
-        }
+            const el = document.getElementById(elementId);
+            if (el) { el.textContent = message; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), duration); }
+        } else { _showToast('✅ ' + message, '#10b981'); }
     }
-    
     function showInfo(message, elementId = null, duration = 3000) {
-        const notification = document.createElement('div');
-        notification.style.cssText = 'position:fixed; top:20px; right:20px; background:#f59e0b; color:white; padding:10px 15px; border-radius:8px; z-index:9999; font-size:11px;';
-        notification.textContent = `ℹ️ ${message}`;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), duration);
+        if (elementId) {
+            const el = document.getElementById(elementId);
+            if (el) { el.textContent = message; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), duration); }
+        } else { _showToast('ℹ️ ' + message, '#f59e0b'); }
     }
     
-    // Export to Excel
     function exportToExcel() {
         const month = parseInt(document.getElementById('pMonth').value);
         const period = document.getElementById('pPeriod').value;
         const [periodStart, periodEnd] = period.split('-').map(Number);
-        
         const data = [];
-        
         const headers = ['Emp ID', 'Name', 'Dept', 'Shift'];
-        for (let day = periodStart; day <= periodEnd; day++) {
-            headers.push(`Day ${day}`);
-        }
+        for (let day = periodStart; day <= periodEnd; day++) headers.push(`Day ${day}`);
         headers.push('Total Lates (min)');
         data.push(headers);
-        
         for (const [empId, user] of Object.entries(appState.users)) {
-            const timeSlot = user['out_' + month] || '';
-            const shiftType = detectShiftType(timeSlot);
-            
+            const shiftType = detectShiftType(user['out_' + month] || '');
             const row = [empId, user.fullName, user.dept, shiftType];
             let totalLates = 0;
-            
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
                 const status = appState.attendance[empId]?.[dateKey] || '';
                 const lateMins = appState.attendance[empId]?.[dateKey + "_late"] || 0;
-                
                 if (lateMins) totalLates += parseInt(lateMins);
-                
-                let cellValue = status;
-                if (lateMins) cellValue += ` (${lateMins}m late)`;
-                row.push(cellValue);
+                row.push(lateMins ? `${status} (${lateMins}m late)` : status);
             }
-            
             row.push(totalLates);
             data.push(row);
         }
-        
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-        
-        const monthName = MONTHS[month];
-        const fileName = `Attendance_${monthName}_${period}.xlsx`;
-        
-        XLSX.writeFile(wb, fileName);
+        XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}.xlsx`);
     }
     
-    // Delete employee
     async function deleteEmployee(empId) {
-        if (!confirm(`Are you sure you want to delete employee ${empId}? This action cannot be undone.`)) {
-            return;
-        }
-        
+        if (!confirm(`Are you sure you want to delete employee ${empId}? This cannot be undone.`)) return;
         try {
             await remove(ref(db, `users/${empId}`));
-            
             await remove(ref(db, `attendance/${empId}`));
-            
             showSuccess('Employee deleted successfully!', null, 3000);
-        } catch (error) {
-            console.error('Error deleting employee:', error);
-            showError('Failed to delete employee');
-        }
+        } catch (error) { showError('Failed to delete employee'); }
     }
     
-    // Setup Realtime Listeners
+    // ── Debounced render coalescer ───────────────────────────────────────────
+    // All five Firebase onValue listeners fire nearly simultaneously when any
+    // data changes. This collects what needs to be re-rendered over an 80 ms
+    // window and flushes once, eliminating redundant DOM rebuilds.
+    const _renderQueue = new Set();
+    let _renderTimer = null;
+    function queueRender(...tasks) {
+        tasks.forEach(t => _renderQueue.add(t));
+        if (_renderTimer) clearTimeout(_renderTimer);
+        _renderTimer = setTimeout(() => {
+            _renderTimer = null;
+            const jobs = [..._renderQueue];
+            _renderQueue.clear();
+            updateDashboard();                                              // always refresh dashboard
+            if (jobs.includes('tab'))           renderCurrentTabOnly(true);
+            if (jobs.includes('inbox'))         updateInbox();
+            if (jobs.includes('myLeaves'))      updateMyLeaves();
+            if (jobs.includes('notifications')) updateNotifications();
+            if (jobs.includes('calendar') && appState.calendarInstance) refreshCalendarEvents();
+        }, 80);
+    }
+
+    // Setup Realtime Listeners — each stores data then queues only what changed
     function setupRealtimeListeners() {
-        console.log('Setting up realtime listeners...');
-        
-        // Clean up existing listeners
-        Object.values(appState.listeners).forEach(unsubscribe => {
-            if (unsubscribe && typeof unsubscribe === 'function') {
-                unsubscribe();
-            }
-        });
-        
-        // Set up new listeners
+        Object.values(appState.listeners).forEach(u => { if (typeof u === 'function') u(); });
+
         appState.listeners.users = onValue(ref(db, 'users'), snapshot => {
             appState.users = snapshot.val() || {};
-            console.log('Users updated:', Object.keys(appState.users).length, 'users');
-            renderCurrentTabOnly();
-            updateDashboard();
+            queueRender('tab');
         });
-        
+
         appState.listeners.attendance = onValue(ref(db, 'attendance'), snapshot => {
             appState.attendance = snapshot.val() || {};
-            console.log('Attendance updated');
-            renderCurrentTabOnly();
-            updateDashboard();
+            queueRender('tab');
         });
-        
+
         appState.listeners.leaveRequests = onValue(ref(db, 'leave_requests'), snapshot => {
             appState.leaveRequests = snapshot.val() || {};
-            updateInbox();
-            updateMyLeaves();
-            updateDashboard();
-            if (appState.calendarInstance) {
-                refreshCalendarEvents();
-            }
+            queueRender('inbox', 'myLeaves', 'calendar');
         });
-        
+
         appState.listeners.notifications = onValue(ref(db, 'notifications'), snapshot => {
             appState.notifications = snapshot.val() || {};
-            updateNotifications();
+            queueRender('notifications');
         });
-        
+
         appState.listeners.auditLogs = onValue(ref(db, 'audit_logs'), snapshot => {
+            // Audit logs render directly — not gated on tab focus
             renderAudit(snapshot.val());
         });
     }
     
-    // Export functions to window for HTML event handlers.
-    // Also populate the __hr_* slots so the early proxy stubs resolve correctly.
     function exportFn(name, fn) { window[name] = fn; window['__hr_' + name] = fn; }
 
     exportFn('handleLogin', handleLogin);
@@ -3963,23 +2707,16 @@ text-align: center;
     exportFn('cancelEdit', cancelEdit);
     exportFn('manualClockOutNow', manualClockOutNow);
     exportFn('switchTab', function(tabName, buttonElement) {
-        document.querySelectorAll('.tab-content').forEach(section => {
-            section.classList.add('hidden');
-        });
-        document.querySelectorAll('.nav-btn').forEach(button => {
-            button.classList.remove('active');
-        });
+        document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const tabElement = document.getElementById('sec-' + tabName);
         if (tabElement) {
             tabElement.classList.remove('hidden');
             buttonElement.classList.add('active');
-            if (tabName === 'calendar' && !appState.calendarInitialized) {
-                setTimeout(() => { initializeCalendar(); }, 100);
-            }
+            if (tabName === 'calendar' && !appState.calendarInitialized) setTimeout(() => initializeCalendar(), 100);
             renderCurrentTabOnly();
         }
     });
-
     exportFn('toggleLeaveForm', function() {
         const leaveForm = document.getElementById('leaveFormSection');
         leaveForm.classList.toggle('hidden');
@@ -3997,7 +2734,6 @@ text-align: center;
             checkDateRange();
         }
     });
-
     exportFn('renderAttendance', renderAttendance);
     exportFn('renderSchedules', renderSchedules);
     exportFn('updateLeaveBalance', updateLeaveBalance);
