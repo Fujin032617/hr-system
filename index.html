@@ -254,7 +254,7 @@
         .bal-box { 
             padding: 20px; 
             border-radius: 12px; 
-text-align: center;
+            text-align: center;
             position: relative;
             min-height: 120px;
             display: flex;
@@ -657,6 +657,27 @@ text-align: center;
             font-size: 11px;
             padding: 5px 7px;
         }
+
+        /* ── FIX 1: Shift search box in Attendance toolbar ── */
+        .shift-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        #pShiftSearch {
+            width: 130px;
+            padding: 6px 28px 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+        }
+        .shift-search-icon {
+            position: absolute;
+            right: 8px;
+            font-size: 12px;
+            color: var(--text-light);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -862,6 +883,8 @@ text-align: center;
                 <input type="tel" id="addEmergency" placeholder="Emergency #">
                 <input type="text" id="addBackend" placeholder="Back End ID">
                 <input type="text" id="addAssets" placeholder="Assets">
+                <!-- FIX 2: Added default shift label field so new/edited employees always have a shift -->
+                <input type="text" id="addDefaultShift" placeholder="Default Shift Label (e.g. Morning)">
                 <div class="slvl-inputs">
                     <input type="number" id="addSL" placeholder="SL" min="0" value="10" style="width: 70px;">
                     <span>/</span>
@@ -876,6 +899,10 @@ text-align: center;
                 <input type="number" id="addMaxConsecutive" placeholder="Max Consecutive Leave" min="1" value="30" style="width: 150px;">
                 <button onclick="addEmployee()" class="action-btn" id="addEmployeeBtn">ADD EMPLOYEE</button>
                 <button onclick="cancelEdit()" class="action-btn" id="cancelEditBtn" style="background: var(--danger); display: none;">CANCEL EDIT</button>
+            </div>
+            <!-- FIX 2: hint about the shift field -->
+            <div style="font-size:10px; color:var(--text-light); margin: -10px 0 15px 0; padding: 0 4px;">
+                💡 <strong>Default Shift Label</strong> is applied to all months that don't yet have a schedule set. Use the <em>Schedules</em> tab to set per-month shifts after adding the employee.
             </div>
             <div class="table-wrap" id="dirTable"></div>
         </div>
@@ -915,11 +942,11 @@ text-align: center;
             <div class="flex-between" style="margin-bottom:15px;">
                 <h3>Attendance Tracker & Lates Summary</h3>
                 <div class="flex-center">
-                    <select id="pShift" onchange="renderAttendance()" style="width:100px;">
-                        <option value="all">All Shifts</option>
-                        <option value="Day">Day Shift</option>
-                        <option value="Night">Night Shift</option>
-                    </select>
+                    <!-- FIX 1: replaced broken Day/Night dropdown with a free-text shift search -->
+                    <div class="shift-search-wrap">
+                        <input type="text" id="pShiftSearch" placeholder="Filter shift…" oninput="renderAttendance()" title="Type any part of a shift label to filter (e.g. Morning, Night, Graveyard)">
+                        <span class="shift-search-icon">🔍</span>
+                    </div>
                     <select id="pMonth" onchange="renderAttendance()" style="width:100px;"></select>
                     <select id="pPeriod" onchange="renderAttendance()" style="width:120px; font-weight:700;">
                         <option value="1-15">Period: 1 - 15</option>
@@ -1049,12 +1076,10 @@ text-align: center;
     const db = getDatabase(app);
 
     // ── Helper: per-user offline queue key ──────────────────────────────────
-    // FIX #2: scope localStorage key to the logged-in user so two staff on
-    // the same shared device never mix each other's queued actions.
     function offlineQueueKey() {
         return appState.currentUser
             ? `hr_offline_queue_${appState.currentUser.id}`
-            : 'hr_offline_queue';
+            : null; // FIX 4: return null when no user is known — never write to the generic key
     }
     
     const appState = {
@@ -1070,8 +1095,9 @@ text-align: center;
         autoClockOutInterval: null,
         calendarInstance: null,
         forgotLogoutTimer: null,
-        // FIX #2: load queue using generic fallback key on first boot (before user is known)
-        offlineQueue: JSON.parse(localStorage.getItem('hr_offline_queue') || '[]'),
+        // FIX 4: do NOT pre-load from the generic key on startup; start with empty
+        // queue and only load the user-scoped queue after login/session restore.
+        offlineQueue: [],
         editingEmployeeId: null,
         scheduleChanges: null,
         lastRenderTime: 0,
@@ -1215,10 +1241,11 @@ text-align: center;
             try {
                 const parsedUser = JSON.parse(savedUser);
                 appState.currentUser = parsedUser;
-                // FIX #2: reload queue scoped to this user after restoring session
-                appState.offlineQueue = JSON.parse(
-                    localStorage.getItem(offlineQueueKey()) || '[]'
-                );
+                // FIX 4: load user-scoped queue immediately after session restore
+                const qKey = offlineQueueKey();
+                if (qKey) {
+                    appState.offlineQueue = JSON.parse(localStorage.getItem(qKey) || '[]');
+                }
                 showAdminPanel();
                 setupRealtimeListeners();
             } catch (e) {
@@ -1295,8 +1322,9 @@ text-align: center;
             }
         }
         appState.offlineQueue = failedActions;
-        // FIX #2: save under user-scoped key
-        localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
+        // FIX 4: only persist if we have a valid user-scoped key
+        const qKey = offlineQueueKey();
+        if (qKey) localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
         if (successfulActions.length > 0) showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
         if (failedActions.length > 0) showError(`${failedActions.length} actions failed to sync. Will retry later.`, null, 3000);
         const queueDisplay = document.getElementById('offlineQueueDisplay');
@@ -1345,8 +1373,9 @@ text-align: center;
     function addToOfflineQueue(type, data) {
         const action = { type, data, timestamp: new Date().toISOString() };
         appState.offlineQueue.push(action);
-        // FIX #2: save under user-scoped key
-        localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
+        // FIX 4: only save when user is known
+        const qKey = offlineQueueKey();
+        if (qKey) localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
         const queueDisplay = document.getElementById('offlineQueueDisplay');
         if (queueDisplay) {
             queueDisplay.classList.remove('hidden');
@@ -1639,9 +1668,9 @@ text-align: center;
                 localStorage.setItem('hr_last_login', new Date().toISOString());
                 appState.currentUser = userData;
 
-                // FIX #2: load this user's scoped offline queue after login
-                const userQueueKey = offlineQueueKey();
-                const savedQueue = localStorage.getItem(userQueueKey);
+                // FIX 4: load user-scoped queue; clean up any legacy generic key
+                const qKey = offlineQueueKey();
+                const savedQueue = localStorage.getItem(qKey);
                 if (savedQueue) {
                     try {
                         const restoredQueue = JSON.parse(savedQueue);
@@ -1649,11 +1678,12 @@ text-align: center;
                             appState.offlineQueue = restoredQueue;
                             showInfo(`${restoredQueue.length} queued action(s) from your last session will sync shortly.`, null, 4000);
                         }
-                    } catch (e) { localStorage.removeItem(userQueueKey); }
+                    } catch (e) { localStorage.removeItem(qKey); }
                 } else {
-                    // fresh queue for this user
                     appState.offlineQueue = [];
                 }
+                // Remove the old generic key so it doesn't survive across users
+                localStorage.removeItem('hr_offline_queue');
 
                 showAdminPanel();
                 setupRealtimeListeners();
@@ -1705,11 +1735,12 @@ text-align: center;
                 appState.calendarInstance = null;
                 appState.calendarInitialized = false;
             }
-            // FIX #2: save remaining queue under user-scoped key before clearing
-            if (appState.currentUser && appState.offlineQueue.length > 0) {
-                localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
+            // FIX 4: save remaining queue under user-scoped key before clearing state
+            const qKey = offlineQueueKey();
+            if (qKey && appState.offlineQueue.length > 0) {
+                localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
             }
-            // Remove the legacy generic key so it doesn't bleed into the next user
+            // Ensure the legacy generic key is gone
             localStorage.removeItem('hr_offline_queue');
             localStorage.removeItem('hr_currentUser');
             appState.currentUser = null;
@@ -1805,10 +1836,9 @@ text-align: center;
         if (vlProgress) vlProgress.style.width = vlMax > 0 ? `${(vlUsed / vlMax) * 100}%` : '0%';
         const workingDays = user['in_' + currentMonth] || "TBA";
         const timeSlot = user['out_' + currentMonth] || "TBA";
-        const shiftLabel = user['shift_' + currentMonth] || "TBA";
+        const shiftLabel = user['shift_' + currentMonth] || user.defaultShift || "TBA";
         const off1 = user['off1_' + currentMonth] || '';
         const off2 = user['off2_' + currentMonth] || '';
-        // FIX #3: show stored shift label directly — no auto-detection
         document.getElementById('myShift').textContent = shiftLabel;
         document.getElementById('myDays').textContent = workingDays;
         document.getElementById('myTime').textContent = timeSlot;
@@ -2000,6 +2030,8 @@ text-align: center;
         document.getElementById('addEmergency').value = user.emergency || '';
         document.getElementById('addBackend').value = user.backendID || '';
         document.getElementById('addAssets').value = user.assets || '';
+        // FIX 2: populate default shift label on edit
+        document.getElementById('addDefaultShift').value = user.defaultShift || '';
         document.getElementById('addSL').value = user.slMax || 10;
         document.getElementById('addVL').value = user.vlMax || 10;
         document.getElementById('addRole').value = user.role || 'Employee';
@@ -2012,7 +2044,10 @@ text-align: center;
     
     function cancelEdit() {
         appState.editingEmployeeId = null;
-        ['addEmpNum','addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets'].forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = false; } });
+        ['addEmpNum','addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.value = ''; el.disabled = false; }
+        });
         document.getElementById('addDept').value = 'RC';
         document.getElementById('addSL').value = '10';
         document.getElementById('addVL').value = '10';
@@ -2038,6 +2073,7 @@ text-align: center;
             if (appState.users[empId]) { showError('Employee ID already exists', 'directoryMessage'); appState.isProcessing = false; return; }
         }
         try {
+            // FIX 2: include defaultShift in saved employee data
             const employeeData = {
                 empID: empId, fullName, username, password,
                 dept: document.getElementById('addDept').value,
@@ -2046,6 +2082,7 @@ text-align: center;
                 emergency: document.getElementById('addEmergency').value.trim(),
                 backendID: document.getElementById('addBackend').value.trim(),
                 assets: document.getElementById('addAssets').value.trim(),
+                defaultShift: document.getElementById('addDefaultShift').value.trim(),
                 slMax: Math.max(0, parseInt(document.getElementById('addSL').value) || 10),
                 vlMax: Math.max(0, parseInt(document.getElementById('addVL').value) || 10),
                 role: document.getElementById('addRole').value,
@@ -2078,12 +2115,13 @@ text-align: center;
     function renderDirectory() {
         const dirTable = document.getElementById('dirTable');
         if (!dirTable) return;
-        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
+        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>Default Shift</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
         for (const [empId, user] of Object.entries(appState.users)) {
             const slUsed = calculateUsedLeaves(empId, 'SL');
             const vlUsed = calculateUsedLeaves(empId, 'VL');
             const slMax = user.slMax || 0, vlMax = user.vlMax || 0;
             html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td><td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td><td>${user.contact || ''}</td><td>${user.emergency || ''}</td><td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
+            <td>${escapeHtml(user.defaultShift || '—')}</td>
             <td><div class="balance-display"><span class="balance-remaining">SL: ${Math.max(0, slMax-slUsed)}/${slMax}</span><br><span class="balance-used">Used: ${slUsed}</span></div><div class="balance-display"><span class="balance-remaining">VL: ${Math.max(0, vlMax-vlUsed)}/${vlMax}</span><br><span class="balance-used">Used: ${vlUsed}</span></div></td>
             <td>${user.maxConsecutiveLeave || 30} days</td>
             <td><button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button><button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button></td></tr>`;
@@ -2097,33 +2135,35 @@ text-align: center;
         document.querySelectorAll('#dirTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX #1: renderAttendance — use actual days in month, not hardcoded 31 ─
+    // ── FIX 1 + FIX 3: renderAttendance ─────────────────────────────────────
+    // • Replaced broken Day/Night dropdown filter with a case-insensitive
+    //   substring search against the stored shift_<month> label.
+    // • Uses actual days-in-month (not hardcoded 31) for correct column count.
+    // • Reads stored shift label directly — no auto-detection.
     function renderAttendance() {
         const payTable = document.getElementById('payTable');
         if (!payTable) return;
         const month = parseInt(document.getElementById('pMonth').value);
-        const shiftFilter = document.getElementById('pShift').value;
+        // FIX 1: read text from the search box instead of a dropdown value
+        const shiftFilter = (document.getElementById('pShiftSearch')?.value || '').trim().toLowerCase();
         const period = document.getElementById('pPeriod').value;
         const [periodStart, _periodEnd] = period.split('-').map(Number);
 
-        // Compute the real last day of the selected month so February (28/29
-        // days) and 30-day months never show ghost columns beyond the month end.
+        // Correct last day for the selected month (fixes Feb/30-day months)
         const selectedYear = new Date().getFullYear();
         const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
-        // For "16-31" period use actual month end; for "1-15" keep 15 as-is.
         const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
 
-        // FIX #3: read stored shift label instead of auto-detecting Day/Night
         let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
         for (let day = periodStart; day <= periodEnd; day++) html += `<th>${day}</th>`;
         html += `<th class="total-lates-col">Total Lates (min)</th></tr></thead><tbody>`;
 
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX #3: use stored shift label; fall back to empty string (no auto Day/Night)
-            const shiftLabel = user['shift_' + month] || '';
+            // FIX 3: use stored shift label; fall back to defaultShift then empty
+            const shiftLabel = user['shift_' + month] || user.defaultShift || '';
 
-            // Filter still works if admin enters "Day" or "Night" in the shift field
-            if (shiftFilter !== 'all' && shiftFilter !== shiftLabel) continue;
+            // FIX 1: case-insensitive substring match; empty filter = show all
+            if (shiftFilter && !shiftLabel.toLowerCase().includes(shiftFilter)) continue;
 
             html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td>`;
             let totalLates = 0;
@@ -2156,10 +2196,7 @@ text-align: center;
         document.querySelectorAll('#payTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX #3: renderSchedules — Shift is a free-text editable field ────────
-    // Removed all detectShiftType / getShiftClass / shift-badge logic.
-    // Admins type whatever shift label they want (e.g. "Morning", "Graveyard").
-    // The value is stored as shift_<month> on the user record.
+    // ── FIX 3: renderSchedules — Shift is a free-text editable field ─────────
     function renderSchedules() {
         const schedTable = document.getElementById('schedTable');
         if (!schedTable) return;
@@ -2192,8 +2229,8 @@ text-align: center;
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const workingDays = ('in_'  + month) in pending ? pending['in_'  + month] : (user['in_'  + month] || '');
             const timeSlot    = ('out_' + month) in pending ? pending['out_' + month] : (user['out_' + month] || '');
-            // FIX #3: read stored shift label; no auto-detection fallback
-            const shiftLabel  = ('shift_' + month) in pending ? pending['shift_' + month] : (user['shift_' + month] || '');
+            // FIX 3: stored shift label; fall back to defaultShift for new employees
+            const shiftLabel  = ('shift_' + month) in pending ? pending['shift_' + month] : (user['shift_' + month] || user.defaultShift || '');
             const off1        = ('off1_'+ month) in pending ? pending['off1_'+ month] : (user['off1_'+ month] || '');
             const off2        = ('off2_'+ month) in pending ? pending['off2_'+ month] : (user['off2_'+ month] || '');
             const safeId      = empId.replace(/'/g, "\\'");
@@ -2243,7 +2280,6 @@ text-align: center;
         schedTable.innerHTML = html;
     }
 
-    // FIX #3: updateScheduleField — removed live shift-badge update block entirely
     function updateScheduleField(empId, field, value) {
         document.getElementById('saveSchedulesBtn').classList.remove('hidden');
         if (!appState.scheduleChanges) appState.scheduleChanges = {};
@@ -2251,7 +2287,6 @@ text-align: center;
         appState.scheduleChanges[empId][field] = value;
     }
 
-    // FIX #3: saveSchedule — includes shift_<month> in saved fields
     async function saveSchedule(empId, month) {
         try {
             const pending = (appState.scheduleChanges || {})[empId] || {};
@@ -2307,8 +2342,8 @@ text-align: center;
             if (status === 'P' && !clockOutTime) {
                 activeCount++;
                 const timeIn = appState.attendance[empId]?.[todayKey + '_time'];
-                // FIX #3: use stored shift label, not auto-detected
-                const shiftLabel = user['shift_' + currentMonth] || '';
+                // FIX 3: stored shift label with defaultShift fallback
+                const shiftLabel = user['shift_' + currentMonth] || user.defaultShift || '';
                 html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td>${escapeHtml(shiftLabel)}</td></tr>`;
             }
         }
@@ -2526,14 +2561,17 @@ text-align: center;
             const bgColor = leave.type === 'SL'
                 ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
                 : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
-            // Safer end-date calculation respecting timezone
+
+            // FIX 5: compute end date using local-date arithmetic to avoid UTC/DST off-by-one
             const endStr = leave.endDate || leave.startDate;
-            const endDate = new Date(endStr + 'T00:00:00');
-            endDate.setDate(endDate.getDate() + 1);
+            const [ey, em, ed] = endStr.split('-').map(Number);
+            const endLocal = new Date(ey, em - 1, ed + 1); // add 1 day, stays in local time
+            const endISO = `${endLocal.getFullYear()}-${String(endLocal.getMonth()+1).padStart(2,'0')}-${String(endLocal.getDate()).padStart(2,'0')}`;
+
             events.push({
                 title: `${employee.fullName} - ${LEAVE_TYPES[leave.type] || leave.type} (${leave.status})`,
                 start: leave.startDate,
-                end: endDate.toISOString().split('T')[0],
+                end: endISO,
                 backgroundColor: bgColor, borderColor: bgColor,
             });
         });
@@ -2607,8 +2645,8 @@ text-align: center;
         headers.push('Total Lates (min)');
         data.push(headers);
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX #3: use stored shift label in export too
-            const shiftLabel = user['shift_' + month] || '';
+            // FIX 3: stored shift label with defaultShift fallback in export
+            const shiftLabel = user['shift_' + month] || user.defaultShift || '';
             const row = [empId, user.fullName, user.dept, shiftLabel];
             let totalLates = 0;
             for (let day = periodStart; day <= periodEnd; day++) {
