@@ -642,7 +642,6 @@
             color: #0369a1;
         }
 
-        /* ── Schedule tab ── */
         .sched-hint {
             background: #f0f9ff;
             border: 1px solid #bae6fd;
@@ -658,14 +657,13 @@
             padding: 5px 7px;
         }
 
-        /* ── FIX 1: Shift search box in Attendance toolbar ── */
         .shift-search-wrap {
             position: relative;
             display: flex;
             align-items: center;
         }
         #pShiftSearch {
-            width: 130px;
+            width: 160px;
             padding: 6px 28px 6px 8px;
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -883,8 +881,10 @@
                 <input type="tel" id="addEmergency" placeholder="Emergency #">
                 <input type="text" id="addBackend" placeholder="Back End ID">
                 <input type="text" id="addAssets" placeholder="Assets">
-                <!-- FIX 2: Added default shift label field so new/edited employees always have a shift -->
-                <input type="text" id="addDefaultShift" placeholder="Default Shift Label (e.g. Morning)">
+                <!-- BUG 1 FIX: Default shift is now a dropdown -->
+                <select id="addDefaultShift">
+                    <option value="">-- Select Default Shift --</option>
+                </select>
                 <div class="slvl-inputs">
                     <input type="number" id="addSL" placeholder="SL" min="0" value="10" style="width: 70px;">
                     <span>/</span>
@@ -897,12 +897,13 @@
                     <option>HR</option>
                 </select>
                 <input type="number" id="addMaxConsecutive" placeholder="Max Consecutive Leave" min="1" value="30" style="width: 150px;">
+                <!-- BUG 2 FIX: Dedicated start-time field for accurate late computation -->
+                <input type="time" id="addShiftStart" placeholder="Shift Start Time (for lates)" title="Shift start time used for late computation">
                 <button onclick="addEmployee()" class="action-btn" id="addEmployeeBtn">ADD EMPLOYEE</button>
                 <button onclick="cancelEdit()" class="action-btn" id="cancelEditBtn" style="background: var(--danger); display: none;">CANCEL EDIT</button>
             </div>
-            <!-- FIX 2: hint about the shift field -->
             <div style="font-size:10px; color:var(--text-light); margin: -10px 0 15px 0; padding: 0 4px;">
-                💡 <strong>Default Shift Label</strong> is applied to all months that don't yet have a schedule set. Use the <em>Schedules</em> tab to set per-month shifts after adding the employee.
+                💡 <strong>Default Shift</strong> is the shift assigned when no per-month schedule is set. Use the <em>Schedules</em> tab to assign per-month shifts. <strong>Shift Start Time</strong> is used to calculate late minutes accurately.
             </div>
             <div class="table-wrap" id="dirTable"></div>
         </div>
@@ -942,10 +943,11 @@
             <div class="flex-between" style="margin-bottom:15px;">
                 <h3>Attendance Tracker & Lates Summary</h3>
                 <div class="flex-center">
-                    <!-- FIX 1: replaced broken Day/Night dropdown with a free-text shift search -->
+                    <!-- BUG 1 FIX: Shift filter is now a dropdown populated from SHIFTS constant -->
                     <div class="shift-search-wrap">
-                        <input type="text" id="pShiftSearch" placeholder="Filter shift…" oninput="renderAttendance()" title="Type any part of a shift label to filter (e.g. Morning, Night, Graveyard)">
-                        <span class="shift-search-icon">🔍</span>
+                        <select id="pShiftSearch" onchange="renderAttendance()" title="Filter by shift">
+                            <option value="">All Shifts</option>
+                        </select>
                     </div>
                     <select id="pMonth" onchange="renderAttendance()" style="width:100px;"></select>
                     <select id="pPeriod" onchange="renderAttendance()" style="width:120px; font-weight:700;">
@@ -1075,11 +1077,38 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ── Helper: per-user offline queue key ──────────────────────────────────
+    // ── BUG 1 FIX: SHIFTS constant — single source of truth for all shift dropdowns ──
+    const SHIFTS = [
+        'Morning',
+        'Mid',
+        'Afternoon',
+        'Night',
+        'Graveyard',
+        'Early Morning',
+        'Split'
+    ];
+
+    // ── BUG 2 FIX: Populate all shift dropdowns from SHIFTS constant ──
+    function populateShiftDropdowns() {
+        const shiftSelects = document.querySelectorAll('#addDefaultShift, #pShiftSearch');
+        shiftSelects.forEach(sel => {
+            // Keep the first placeholder option if it exists
+            const firstOption = sel.options[0];
+            sel.innerHTML = '';
+            if (firstOption) sel.appendChild(firstOption);
+            SHIFTS.forEach(shift => {
+                const opt = document.createElement('option');
+                opt.value = shift;
+                opt.textContent = shift;
+                sel.appendChild(opt);
+            });
+        });
+    }
+
     function offlineQueueKey() {
         return appState.currentUser
             ? `hr_offline_queue_${appState.currentUser.id}`
-            : null; // FIX 4: return null when no user is known — never write to the generic key
+            : null;
     }
     
     const appState = {
@@ -1095,8 +1124,6 @@
         autoClockOutInterval: null,
         calendarInstance: null,
         forgotLogoutTimer: null,
-        // FIX 4: do NOT pre-load from the generic key on startup; start with empty
-        // queue and only load the user-scoped queue after login/session restore.
         offlineQueue: [],
         editingEmployeeId: null,
         scheduleChanges: null,
@@ -1108,31 +1135,73 @@
     const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     const STATUS_CYCLE = ['', 'P', 'RD', 'SL', 'VL', 'A', 'NPL', 'NPSL', 'S', 'UT', 'HD', 'BL', 'PL', 'ML'];
     const LEAVE_TYPES = { 'SL': 'Sick Leave', 'VL': 'Vacation Leave' };
-
-    // ── Allowed values for schedule dropdowns ────────────────────────────────
     const DAYS_OF_WEEK = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const WORKING_DAYS_PRESETS = ['Monday-Friday','Monday-Saturday','Tuesday-Saturday','Wednesday-Sunday','Thursday-Monday','Sunday-Thursday'];
 
+    // ── BUG 2 & 3 FIX: parseTime now returns null on failure instead of [17,0] ──
+    // Callers must handle null and skip late computation gracefully.
     function parseTime(timeStr) {
-        if (!timeStr) return [17, 0];
+        if (!timeStr || !timeStr.trim()) return null;
         timeStr = timeStr.trim().toUpperCase();
-        if (timeStr.includes(':')) {
-            const parts = timeStr.split(':');
-            let hours = parseInt(parts[0]) || 0;
-            const minutes = parseInt(parts[1]) || 0;
-            if (timeStr.includes('PM') && hours < 12) hours += 12;
-            if (timeStr.includes('AM') && hours === 12) hours = 0;
-            return [hours, minutes];
-        }
-        const match = timeStr.match(/(\d+)\s*(AM|PM)?/i);
-        if (match) {
-            let hours = parseInt(match[1]) || 0;
-            const period = match[2] ? match[2].toUpperCase() : 'AM';
+
+        // Handle HH:MM with optional AM/PM
+        const colonMatch = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
+        if (colonMatch) {
+            let hours = parseInt(colonMatch[1]);
+            const minutes = parseInt(colonMatch[2]);
+            const period = colonMatch[3];
             if (period === 'PM' && hours < 12) hours += 12;
             if (period === 'AM' && hours === 12) hours = 0;
-            return [hours, 0];
+            if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) return [hours, minutes];
         }
-        return [17, 0];
+
+        // Handle plain hour like "8 AM" or "17"
+        const simpleMatch = timeStr.match(/^(\d{1,2})\s*(AM|PM)?$/);
+        if (simpleMatch) {
+            let hours = parseInt(simpleMatch[1]);
+            const period = simpleMatch[2];
+            if (period === 'PM' && hours < 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            if (hours >= 0 && hours < 24) return [hours, 0];
+        }
+
+        return null; // Cannot parse — caller must handle this
+    }
+
+    // ── BUG 2 FIX: computeLateMins now uses dedicated shiftStart field ──
+    // Falls back to parsing the time slot string's first segment only if
+    // no dedicated shiftStart is stored. Returns 0 (not an error) if no
+    // schedule is configured, so no false lates are generated.
+    function computeLateMins(clockInTime, empId, month) {
+        const user = appState.users[empId] || appState.currentUser;
+        if (!user) return 0;
+
+        // Primary: use the dedicated stored shift start time (HH:MM 24h from <input type="time">)
+        let parsed = null;
+        const storedStart = user['shiftStart_' + month] || user.shiftStart || '';
+        if (storedStart) {
+            parsed = parseTime(storedStart);
+        }
+
+        // Fallback: try to extract start from the time-slot string "8:00 AM - 5:00 PM"
+        if (!parsed) {
+            const timeSlot = user['out_' + month] || '';
+            if (timeSlot) {
+                const firstPart = timeSlot.split(/[-–]/)[0].trim();
+                parsed = parseTime(firstPart);
+            }
+        }
+
+        // If we still can't determine the schedule, return 0 — no false lates
+        if (!parsed) return 0;
+
+        const [schedHour, schedMin] = parsed;
+        const scheduled = new Date(clockInTime);
+        scheduled.setHours(schedHour, schedMin, 0, 0);
+
+        const diffMs = clockInTime - scheduled;
+        if (diffMs <= 0) return 0; // On time or early
+        return Math.floor(diffMs / 60000);
     }
 
     function calculateUsedLeaves(employeeId, leaveType) {
@@ -1177,7 +1246,7 @@
         for (const [leaveId, leave] of Object.entries(appState.leaveRequests)) {
             if (excludeLeaveId && leaveId === excludeLeaveId) continue;
             if (leave.empID !== empId) continue;
-            if (leave.status === 'Rejected') continue;
+            if (leave.status === 'Rejected' || leave.status === 'Cancelled') continue;
             const existingStart = new Date(leave.startDate);
             const existingEnd = leave.endDate ? new Date(leave.endDate) : existingStart;
             if (start <= existingEnd && end >= existingStart) return true;
@@ -1196,14 +1265,24 @@
         while (currentDate <= end) {
             const month = currentDate.getMonth();
             const dayOfWeek = currentDate.getDay();
-            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const dayName = dayNames[dayOfWeek];
+            const dayName = DAYS_OF_WEEK[dayOfWeek];
             const off1 = user['off1_' + month] || '';
             const off2 = user['off2_' + month] || '';
             if (off1 !== dayName && off2 !== dayName) workingDays++;
             currentDate.setDate(currentDate.getDate() + 1);
         }
         return workingDays;
+    }
+
+    // Helper: check if a date is a rest day for the employee
+    function isRestDay(date, empId) {
+        const user = appState.users[empId];
+        if (!user) return false;
+        const month = date.getMonth();
+        const dayName = DAYS_OF_WEEK[date.getDay()];
+        const off1 = user['off1_' + month] || '';
+        const off2 = user['off2_' + month] || '';
+        return off1 === dayName || off2 === dayName;
     }
 
     function checkConsecutiveLimit(empId, startDate, endDate) {
@@ -1215,6 +1294,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Populate shift dropdowns on load
+        populateShiftDropdowns();
+
         const currentDate = new Date();
         const monthSelectors = document.querySelectorAll('#pMonth, #sMonth');
         monthSelectors.forEach(select => {
@@ -1235,13 +1317,13 @@
         updateLiveClock();
         setInterval(updateLiveClock, 1000);
         setupOfflineSupport();
+        // BUG 7 FIX: checkForgotLogout is now meaningful — triggers visible warning
         checkForgotLogout();
         const savedUser = localStorage.getItem('hr_currentUser');
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
                 appState.currentUser = parsedUser;
-                // FIX 4: load user-scoped queue immediately after session restore
                 const qKey = offlineQueueKey();
                 if (qKey) {
                     appState.offlineQueue = JSON.parse(localStorage.getItem(qKey) || '[]');
@@ -1322,7 +1404,6 @@
             }
         }
         appState.offlineQueue = failedActions;
-        // FIX 4: only persist if we have a valid user-scoped key
         const qKey = offlineQueueKey();
         if (qKey) localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
         if (successfulActions.length > 0) showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
@@ -1373,7 +1454,6 @@
     function addToOfflineQueue(type, data) {
         const action = { type, data, timestamp: new Date().toISOString() };
         appState.offlineQueue.push(action);
-        // FIX 4: only save when user is known
         const qKey = offlineQueueKey();
         if (qKey) localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
         const queueDisplay = document.getElementById('offlineQueueDisplay');
@@ -1404,19 +1484,6 @@
         if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
         appState.autoClockOutInterval = setInterval(checkAutoClockOut, 60 * 1000);
     }
-    
-    function computeLateMins(clockInTime, empId, month) {
-        const user = appState.users[empId] || appState.currentUser;
-        const timeSlot = user['out_' + month] || '';
-        if (!timeSlot) return 0;
-        const firstPart = timeSlot.split(/[-–]/)[0].trim();
-        const [schedHour, schedMin] = parseTime(firstPart);
-        const scheduled = new Date(clockInTime);
-        scheduled.setHours(schedHour, schedMin, 0, 0);
-        const diffMs = clockInTime - scheduled;
-        if (diffMs <= 0) return 0;
-        return Math.floor(diffMs / 60000);
-    }
 
     async function userClockAction(actionType) {
         if (appState.isProcessing) return;
@@ -1436,6 +1503,7 @@
         appState.isProcessing = true;
         try {
             if (actionType === 'P') {
+                // BUG 2 & 3 FIX: computeLateMins now uses correct field + safe parseTime
                 const lateMins = computeLateMins(now, appState.currentUser.id, month);
                 const clockInUpdates = { [key]: 'P', [timeKey]: now.toISOString() };
                 if (lateMins > 0) clockInUpdates[`${key}_late`] = lateMins;
@@ -1466,23 +1534,47 @@
                     document.getElementById('btnClockOut').classList.remove('hidden');
                 }
             } else if (actionType === 'OUT') {
-                let clockInDateKey = key;
-                const savedAction = localStorage.getItem('hr_last_clock_action');
-                if (savedAction) {
-                    try {
-                        const parsed = JSON.parse(savedAction);
-                        if (parsed.userId === appState.currentUser.id && parsed.dateKey) {
-                            clockInDateKey = parsed.dateKey;
-                        }
-                    } catch(e) {}
-                }
+                // BUG 4 FIX: more robust clock-out key resolution with clear error if no clock-in found
+                let clockInDateKey = null;
+
+                // Check today first
                 const todayClockIn = appState.attendance[appState.currentUser.id]?.[`${key}_time`];
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
-                const yClockIn = appState.attendance[appState.currentUser.id]?.[`${yKey}_time`];
-                const yClockOut = appState.attendance[appState.currentUser.id]?.[`${yKey}_out`];
-                if (!todayClockIn && yClockIn && !yClockOut) clockInDateKey = yKey;
+                const todayClockOut = appState.attendance[appState.currentUser.id]?.[`${key}_out`];
+                if (todayClockIn && !todayClockOut) {
+                    clockInDateKey = key;
+                }
+
+                // Check yesterday if today has no open clock-in
+                if (!clockInDateKey) {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yKey = `${yesterday.getMonth()}_${yesterday.getDate()}`;
+                    const yClockIn = appState.attendance[appState.currentUser.id]?.[`${yKey}_time`];
+                    const yClockOut = appState.attendance[appState.currentUser.id]?.[`${yKey}_out`];
+                    if (yClockIn && !yClockOut) {
+                        clockInDateKey = yKey;
+                    }
+                }
+
+                // Fallback to localStorage if still not found
+                if (!clockInDateKey) {
+                    const savedAction = localStorage.getItem('hr_last_clock_action');
+                    if (savedAction) {
+                        try {
+                            const parsed = JSON.parse(savedAction);
+                            if (parsed.userId === appState.currentUser.id && parsed.dateKey && !parsed.clockOut) {
+                                clockInDateKey = parsed.dateKey;
+                            }
+                        } catch(e) {}
+                    }
+                }
+
+                if (!clockInDateKey) {
+                    showError('No open clock-in record found. Please contact HR.', null, 5000);
+                    appState.isProcessing = false;
+                    return;
+                }
+
                 const outKey = `${clockInDateKey}_out`;
                 localStorage.setItem('hr_last_clock_action', JSON.stringify({
                     status: 'P', timestamp: now.toISOString(), dateKey: clockInDateKey,
@@ -1626,16 +1718,28 @@
     
     function manualClockOutNow() { userClockAction('OUT'); hideForgotLogoutWarning(); }
     
+    // BUG 7 FIX: checkForgotLogout now shows a visible alert instead of console.log
     function checkForgotLogout() {
         const lastClockAction = localStorage.getItem('hr_last_clock_action');
-        if (lastClockAction) {
-            try {
-                const action = JSON.parse(lastClockAction);
-                const now = new Date();
-                const actionTime = new Date(action.timestamp);
-                const hoursSinceAction = (now - actionTime) / (1000 * 60 * 60);
-                if (action.status === 'P' && hoursSinceAction > 12) console.log('Detected possible forgot logout from previous session');
-            } catch (e) {}
+        if (!lastClockAction) return;
+        try {
+            const action = JSON.parse(lastClockAction);
+            if (!action || action.clockOut) return; // Already clocked out
+            const now = new Date();
+            const actionTime = new Date(action.timestamp);
+            const hoursSinceAction = (now - actionTime) / (1000 * 60 * 60);
+            if (action.status === 'P' && hoursSinceAction > 0.5) {
+                // Show warning immediately — user has an unclosed clock-in
+                const minutesLeft = Math.max(1, Math.ceil((12 - hoursSinceAction) * 60));
+                if (hoursSinceAction < 12) {
+                    showForgotLogoutWarning(minutesLeft);
+                } else {
+                    // Already past 12 hours — trigger auto clock-out after login completes
+                    setTimeout(() => autoClockOutUser(), 3500);
+                }
+            }
+        } catch (e) {
+            localStorage.removeItem('hr_last_clock_action');
         }
     }
     
@@ -1668,7 +1772,6 @@
                 localStorage.setItem('hr_last_login', new Date().toISOString());
                 appState.currentUser = userData;
 
-                // FIX 4: load user-scoped queue; clean up any legacy generic key
                 const qKey = offlineQueueKey();
                 const savedQueue = localStorage.getItem(qKey);
                 if (savedQueue) {
@@ -1682,7 +1785,6 @@
                 } else {
                     appState.offlineQueue = [];
                 }
-                // Remove the old generic key so it doesn't survive across users
                 localStorage.removeItem('hr_offline_queue');
 
                 showAdminPanel();
@@ -1735,12 +1837,10 @@
                 appState.calendarInstance = null;
                 appState.calendarInitialized = false;
             }
-            // FIX 4: save remaining queue under user-scoped key before clearing state
             const qKey = offlineQueueKey();
             if (qKey && appState.offlineQueue.length > 0) {
                 localStorage.setItem(qKey, JSON.stringify(appState.offlineQueue));
             }
-            // Ensure the legacy generic key is gone
             localStorage.removeItem('hr_offline_queue');
             localStorage.removeItem('hr_currentUser');
             appState.currentUser = null;
@@ -1917,8 +2017,7 @@
         while (currentDate <= end) {
             const month = currentDate.getMonth();
             const dayOfWeek = currentDate.getDay();
-            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const selectedDay = dayNames[dayOfWeek];
+            const selectedDay = DAYS_OF_WEEK[dayOfWeek];
             const off1 = user['off1_' + month] || '';
             const off2 = user['off2_' + month] || '';
             if (off1 === selectedDay || off2 === selectedDay) restDaysInLeave.push({ date: currentDate.toISOString().split('T')[0], day: selectedDay });
@@ -2030,8 +2129,8 @@
         document.getElementById('addEmergency').value = user.emergency || '';
         document.getElementById('addBackend').value = user.backendID || '';
         document.getElementById('addAssets').value = user.assets || '';
-        // FIX 2: populate default shift label on edit
         document.getElementById('addDefaultShift').value = user.defaultShift || '';
+        document.getElementById('addShiftStart').value = user.shiftStart || '';
         document.getElementById('addSL').value = user.slMax || 10;
         document.getElementById('addVL').value = user.vlMax || 10;
         document.getElementById('addRole').value = user.role || 'Employee';
@@ -2044,10 +2143,12 @@
     
     function cancelEdit() {
         appState.editingEmployeeId = null;
-        ['addEmpNum','addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id => {
+        ['addEmpNum','addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets'].forEach(id => {
             const el = document.getElementById(id);
             if (el) { el.value = ''; el.disabled = false; }
         });
+        document.getElementById('addDefaultShift').value = '';
+        document.getElementById('addShiftStart').value = '';
         document.getElementById('addDept').value = 'RC';
         document.getElementById('addSL').value = '10';
         document.getElementById('addVL').value = '10';
@@ -2073,7 +2174,6 @@
             if (appState.users[empId]) { showError('Employee ID already exists', 'directoryMessage'); appState.isProcessing = false; return; }
         }
         try {
-            // FIX 2: include defaultShift in saved employee data
             const employeeData = {
                 empID: empId, fullName, username, password,
                 dept: document.getElementById('addDept').value,
@@ -2082,7 +2182,9 @@
                 emergency: document.getElementById('addEmergency').value.trim(),
                 backendID: document.getElementById('addBackend').value.trim(),
                 assets: document.getElementById('addAssets').value.trim(),
-                defaultShift: document.getElementById('addDefaultShift').value.trim(),
+                defaultShift: document.getElementById('addDefaultShift').value,
+                // BUG 2 FIX: store the dedicated shift start time for accurate late computation
+                shiftStart: document.getElementById('addShiftStart').value,
                 slMax: Math.max(0, parseInt(document.getElementById('addSL').value) || 10),
                 vlMax: Math.max(0, parseInt(document.getElementById('addVL').value) || 10),
                 role: document.getElementById('addRole').value,
@@ -2115,16 +2217,25 @@
     function renderDirectory() {
         const dirTable = document.getElementById('dirTable');
         if (!dirTable) return;
-        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>Default Shift</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
+        let html = `<table><thead><tr><th>Emp ID</th><th>Full Name</th><th>Username</th><th>Dept</th><th>Role</th><th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th><th>Assets</th><th>Default Shift</th><th>Shift Start</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th></tr></thead><tbody>`;
         for (const [empId, user] of Object.entries(appState.users)) {
             const slUsed = calculateUsedLeaves(empId, 'SL');
             const vlUsed = calculateUsedLeaves(empId, 'VL');
             const slMax = user.slMax || 0, vlMax = user.vlMax || 0;
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td><td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td><td>${user.contact || ''}</td><td>${user.emergency || ''}</td><td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
-            <td>${escapeHtml(user.defaultShift || '—')}</td>
-            <td><div class="balance-display"><span class="balance-remaining">SL: ${Math.max(0, slMax-slUsed)}/${slMax}</span><br><span class="balance-used">Used: ${slUsed}</span></div><div class="balance-display"><span class="balance-remaining">VL: ${Math.max(0, vlMax-vlUsed)}/${vlMax}</span><br><span class="balance-used">Used: ${vlUsed}</span></div></td>
-            <td>${user.maxConsecutiveLeave || 30} days</td>
-            <td><button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button><button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button></td></tr>`;
+            html += `<tr>
+                <td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${escapeHtml(user.username)}</td>
+                <td>${user.dept}</td><td>${user.role}</td><td>${user.birthday || ''}</td>
+                <td>${user.contact || ''}</td><td>${user.emergency || ''}</td>
+                <td>${user.backendID || ''}</td><td>${user.assets || ''}</td>
+                <td>${escapeHtml(user.defaultShift || '—')}</td>
+                <td>${user.shiftStart || '—'}</td>
+                <td>
+                    <div class="balance-display"><span class="balance-remaining">SL: ${Math.max(0, slMax-slUsed)}/${slMax}</span><br><span class="balance-used">Used: ${slUsed}</span></div>
+                    <div class="balance-display"><span class="balance-remaining">VL: ${Math.max(0, vlMax-vlUsed)}/${vlMax}</span><br><span class="balance-used">Used: ${vlUsed}</span></div>
+                </td>
+                <td>${user.maxConsecutiveLeave || 30} days</td>
+                <td><button class="row-save-btn" onclick="editEmployee('${empId}')">Edit</button><button class="row-del-btn" onclick="deleteEmployee('${empId}')">Delete</button></td>
+            </tr>`;
         }
         html += `</tbody></table>`;
         dirTable.innerHTML = html;
@@ -2135,21 +2246,16 @@
         document.querySelectorAll('#dirTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX 1 + FIX 3: renderAttendance ─────────────────────────────────────
-    // • Replaced broken Day/Night dropdown filter with a case-insensitive
-    //   substring search against the stored shift_<month> label.
-    // • Uses actual days-in-month (not hardcoded 31) for correct column count.
-    // • Reads stored shift label directly — no auto-detection.
+    // BUG 1 FIX: renderAttendance uses a <select> dropdown for shift filter
+    // BUG 3 FIX: uses actual days-in-month, not hardcoded 31
     function renderAttendance() {
         const payTable = document.getElementById('payTable');
         if (!payTable) return;
         const month = parseInt(document.getElementById('pMonth').value);
-        // FIX 1: read text from the search box instead of a dropdown value
-        const shiftFilter = (document.getElementById('pShiftSearch')?.value || '').trim().toLowerCase();
+        const shiftFilter = (document.getElementById('pShiftSearch')?.value || '').trim();
         const period = document.getElementById('pPeriod').value;
         const [periodStart, _periodEnd] = period.split('-').map(Number);
 
-        // Correct last day for the selected month (fixes Feb/30-day months)
         const selectedYear = new Date().getFullYear();
         const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
         const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
@@ -2159,11 +2265,8 @@
         html += `<th class="total-lates-col">Total Lates (min)</th></tr></thead><tbody>`;
 
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX 3: use stored shift label; fall back to defaultShift then empty
             const shiftLabel = user['shift_' + month] || user.defaultShift || '';
-
-            // FIX 1: case-insensitive substring match; empty filter = show all
-            if (shiftFilter && !shiftLabel.toLowerCase().includes(shiftFilter)) continue;
+            if (shiftFilter && shiftLabel !== shiftFilter) continue;
 
             html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td>`;
             let totalLates = 0;
@@ -2196,7 +2299,7 @@
         document.querySelectorAll('#payTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ── FIX 3: renderSchedules — Shift is a free-text editable field ─────────
+    // BUG 1 FIX: Shift column in Schedules tab is now a <select> dropdown from SHIFTS constant
     function renderSchedules() {
         const schedTable = document.getElementById('schedTable');
         if (!schedTable) return;
@@ -2211,26 +2314,30 @@
         const dayOptions = (selected) => ['', ...DAYS_OF_WEEK].map(d =>
             `<option value="${d}" ${d === selected ? 'selected' : ''}>${d || '— none —'}</option>`).join('');
 
+        // BUG 1 FIX: Shift dropdown options from SHIFTS constant
+        const shiftOptions = (selected) => ['', ...SHIFTS].map(s =>
+            `<option value="${s}" ${s === selected ? 'selected' : ''}>${s || '— select shift —'}</option>`).join('');
+
         let html = `
         <div class="sched-hint">
             Editing schedule for <strong>${monthName}</strong>.
-            Enter any shift name you like (e.g. Morning, Mid, Night, Graveyard).
-            Rest days use full day names.
+            Select a shift from the dropdown. Rest days use full day names.
             Click <strong>Save</strong> per row, or <strong>Publish All Changes</strong> below.
         </div>
         <table style="min-width:1150px;">
             <thead><tr>
                 <th>Emp ID</th><th style="text-align:left;padding-left:8px;">Name</th><th>Dept</th>
-                <th>Working Days</th><th>Time Slot</th><th>Shift Label</th>
-                <th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
+                <th>Working Days</th><th>Time Slot</th><th>Shift</th>
+                <th>Shift Start Time</th><th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
             </tr></thead><tbody>`;
 
         for (const [empId, user] of sorted) {
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const workingDays = ('in_'  + month) in pending ? pending['in_'  + month] : (user['in_'  + month] || '');
             const timeSlot    = ('out_' + month) in pending ? pending['out_' + month] : (user['out_' + month] || '');
-            // FIX 3: stored shift label; fall back to defaultShift for new employees
             const shiftLabel  = ('shift_' + month) in pending ? pending['shift_' + month] : (user['shift_' + month] || user.defaultShift || '');
+            // BUG 2 FIX: per-month shift start time (overrides default)
+            const shiftStartM = ('shiftStart_' + month) in pending ? pending['shiftStart_' + month] : (user['shiftStart_' + month] || user.shiftStart || '');
             const off1        = ('off1_'+ month) in pending ? pending['off1_'+ month] : (user['off1_'+ month] || '');
             const off2        = ('off2_'+ month) in pending ? pending['off2_'+ month] : (user['off2_'+ month] || '');
             const safeId      = empId.replace(/'/g, "\\'");
@@ -2254,10 +2361,16 @@
                         style="width:150px;">
                 </td>
                 <td>
-                    <input type="text" value="${escapeHtml(shiftLabel)}"
-                        placeholder="e.g. Morning, Night..."
-                        oninput="updateScheduleField('${safeId}', 'shift_${month}', this.value)"
-                        style="width:110px;">
+                    <!-- BUG 1 FIX: Shift is now a dropdown -->
+                    <select oninput="updateScheduleField('${safeId}', 'shift_${month}', this.value)"
+                            style="width:120px;">${shiftOptions(shiftLabel)}</select>
+                </td>
+                <td>
+                    <!-- BUG 2 FIX: Per-month shift start time for accurate late computation -->
+                    <input type="time" value="${escapeHtml(shiftStartM)}"
+                        title="Shift start time for late calculation"
+                        oninput="updateScheduleField('${safeId}', 'shiftStart_${month}', this.value)"
+                        style="width:100px;">
                 </td>
                 <td>
                     <select oninput="updateScheduleField('${safeId}', 'off1_${month}', this.value)"
@@ -2287,12 +2400,13 @@
         appState.scheduleChanges[empId][field] = value;
     }
 
+    // BUG 9 FIX: saveSchedule and saveAllSchedules now always write all 6 fields
     async function saveSchedule(empId, month) {
         try {
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const user    = appState.users[empId] || {};
             const updates = {};
-            const fields  = ['in_' + month, 'out_' + month, 'shift_' + month, 'off1_' + month, 'off2_' + month];
+            const fields  = ['in_' + month, 'out_' + month, 'shift_' + month, 'shiftStart_' + month, 'off1_' + month, 'off2_' + month];
             fields.forEach(field => {
                 updates[field] = field in pending ? pending[field] : (user[field] || '');
             });
@@ -2311,11 +2425,19 @@
         } catch (error) { showError('Failed to save schedule'); }
     }
     
+    // BUG 9 FIX: saveAllSchedules writes ALL 6 fields per employee (not just changed ones)
     async function saveAllSchedules() {
-        if (!appState.scheduleChanges) return;
+        if (!appState.scheduleChanges || Object.keys(appState.scheduleChanges).length === 0) return;
+        const month = parseInt(document.getElementById('sMonth').value);
         try {
             for (const [empId, changes] of Object.entries(appState.scheduleChanges)) {
-                await update(ref(db, `users/${empId}`), changes);
+                const user = appState.users[empId] || {};
+                const fields = ['in_' + month, 'out_' + month, 'shift_' + month, 'shiftStart_' + month, 'off1_' + month, 'off2_' + month];
+                const updates = {};
+                fields.forEach(field => {
+                    updates[field] = field in changes ? changes[field] : (user[field] || '');
+                });
+                await update(ref(db, `users/${empId}`), updates);
             }
             appState.scheduleChanges = {};
             document.getElementById('saveSchedulesBtn').classList.add('hidden');
@@ -2342,7 +2464,6 @@
             if (status === 'P' && !clockOutTime) {
                 activeCount++;
                 const timeIn = appState.attendance[empId]?.[todayKey + '_time'];
-                // FIX 3: stored shift label with defaultShift fallback
                 const shiftLabel = user['shift_' + currentMonth] || user.defaultShift || '';
                 html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td>${escapeHtml(shiftLabel)}</td></tr>`;
             }
@@ -2408,6 +2529,7 @@
         document.getElementById('leaveInbox').classList.toggle('hidden');
     }
     
+    // BUG 5 FIX: approveLeave now skips rest days when stamping attendance
     async function approveLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
@@ -2418,7 +2540,10 @@
             const dateUpdates = {};
             const currentDate = new Date(startDate);
             while (currentDate <= endDate) {
-                dateUpdates[`${currentDate.getMonth()}_${currentDate.getDate()}`] = request.type;
+                // BUG 5 FIX: only stamp working days, skip rest days
+                if (!isRestDay(currentDate, request.empID)) {
+                    dateUpdates[`${currentDate.getMonth()}_${currentDate.getDate()}`] = request.type;
+                }
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             await update(ref(db, `leave_requests/${leaveId}`), { status: 'Approved', approvedBy: appState.currentUser.fullName, approvedAt: now.toISOString(), approvedByRole: appState.currentUser.role });
@@ -2562,10 +2687,10 @@
                 ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
                 : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
 
-            // FIX 5: compute end date using local-date arithmetic to avoid UTC/DST off-by-one
+            // Local-date end +1 to avoid UTC off-by-one on calendar
             const endStr = leave.endDate || leave.startDate;
             const [ey, em, ed] = endStr.split('-').map(Number);
-            const endLocal = new Date(ey, em - 1, ed + 1); // add 1 day, stays in local time
+            const endLocal = new Date(ey, em - 1, ed + 1);
             const endISO = `${endLocal.getFullYear()}-${String(endLocal.getMonth()+1).padStart(2,'0')}-${String(endLocal.getDate()).padStart(2,'0')}`;
 
             events.push({
@@ -2645,7 +2770,6 @@
         headers.push('Total Lates (min)');
         data.push(headers);
         for (const [empId, user] of Object.entries(appState.users)) {
-            // FIX 3: stored shift label with defaultShift fallback in export
             const shiftLabel = user['shift_' + month] || user.defaultShift || '';
             const row = [empId, user.fullName, user.dept, shiftLabel];
             let totalLates = 0;
@@ -2665,12 +2789,31 @@
         XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}.xlsx`);
     }
     
+    // BUG 8 FIX: deleteEmployee now also removes orphaned leave requests and notifications
     async function deleteEmployee(empId) {
         if (!confirm(`Are you sure you want to delete employee ${empId}? This cannot be undone.`)) return;
         try {
+            // Remove user and attendance
             await remove(ref(db, `users/${empId}`));
             await remove(ref(db, `attendance/${empId}`));
-            showSuccess('Employee deleted successfully!', null, 3000);
+
+            // BUG 8 FIX: Remove all leave requests belonging to this employee
+            if (appState.leaveRequests) {
+                const leaveRemovals = Object.entries(appState.leaveRequests)
+                    .filter(([, leave]) => leave.empID === empId)
+                    .map(([leaveId]) => remove(ref(db, `leave_requests/${leaveId}`)));
+                await Promise.all(leaveRemovals);
+            }
+
+            // BUG 8 FIX: Remove all notifications belonging to this employee
+            if (appState.notifications) {
+                const notifRemovals = Object.entries(appState.notifications)
+                    .filter(([, n]) => n.userId === empId)
+                    .map(([nId]) => remove(ref(db, `notifications/${nId}`)));
+                await Promise.all(notifRemovals);
+            }
+
+            showSuccess('Employee and all related records deleted successfully!', null, 3000);
         } catch (error) { showError('Failed to delete employee'); }
     }
     
