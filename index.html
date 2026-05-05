@@ -499,9 +499,6 @@ text-align: center;
             padding: 10px 5px;
         }
         
-        .shift-day { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .shift-night { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
-        
         .search-container {
             position: relative;
             margin-bottom: 15px;
@@ -645,7 +642,7 @@ text-align: center;
             color: #0369a1;
         }
 
-        /* ── Schedule tab improvements ── */
+        /* ── Schedule tab ── */
         .sched-hint {
             background: #f0f9ff;
             border: 1px solid #bae6fd;
@@ -774,8 +771,8 @@ text-align: center;
                 <h3>My Current Schedule</h3>
                 <div id="schedDisplay" style="display:grid; gap:10px;">
                     <div style="display:flex; justify-content:space-between;">
-                        <span>Shift Type:</span>
-                        <b id="myShift" class="shift-day">---</b>
+                        <span>Shift:</span>
+                        <b id="myShift" style="color:var(--accent);">---</b>
                     </div>
                     <div style="display:flex; justify-content:space-between;">
                         <span>Working Days:</span>
@@ -1050,6 +1047,15 @@ text-align: center;
     
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // ── Helper: per-user offline queue key ──────────────────────────────────
+    // FIX #2: scope localStorage key to the logged-in user so two staff on
+    // the same shared device never mix each other's queued actions.
+    function offlineQueueKey() {
+        return appState.currentUser
+            ? `hr_offline_queue_${appState.currentUser.id}`
+            : 'hr_offline_queue';
+    }
     
     const appState = {
         users: {},
@@ -1064,6 +1070,7 @@ text-align: center;
         autoClockOutInterval: null,
         calendarInstance: null,
         forgotLogoutTimer: null,
+        // FIX #2: load queue using generic fallback key on first boot (before user is known)
         offlineQueue: JSON.parse(localStorage.getItem('hr_offline_queue') || '[]'),
         editingEmployeeId: null,
         scheduleChanges: null,
@@ -1100,29 +1107,6 @@ text-align: center;
             return [hours, 0];
         }
         return [17, 0];
-    }
-
-    function detectShiftType(timeSlot) {
-        if (!timeSlot) return 'Day';
-        timeSlot = timeSlot.toLowerCase();
-        if (timeSlot.includes('night') || 
-            timeSlot.includes('20:00') || timeSlot.includes('21:00') || 
-            timeSlot.includes('22:00') || timeSlot.includes('23:00') || 
-            timeSlot.includes('00:00') || timeSlot.includes('01:00') || 
-            timeSlot.includes('02:00') || timeSlot.includes('03:00') ||
-            timeSlot.includes('04:00') || timeSlot.includes('05:00') || 
-            timeSlot.includes('06:00') || timeSlot.includes('18:00') ||
-            timeSlot.includes('19:00') || timeSlot.includes('7 pm') ||
-            timeSlot.includes('8 pm') || timeSlot.includes('9 pm') ||
-            timeSlot.includes('10 pm') || timeSlot.includes('11 pm') ||
-            timeSlot.includes('12 am')) {
-            return 'Night';
-        }
-        return 'Day';
-    }
-
-    function getShiftClass(shiftType) {
-        return shiftType.toLowerCase() === 'night' ? 'shift-night' : 'shift-day';
     }
 
     function calculateUsedLeaves(employeeId, leaveType) {
@@ -1231,6 +1215,10 @@ text-align: center;
             try {
                 const parsedUser = JSON.parse(savedUser);
                 appState.currentUser = parsedUser;
+                // FIX #2: reload queue scoped to this user after restoring session
+                appState.offlineQueue = JSON.parse(
+                    localStorage.getItem(offlineQueueKey()) || '[]'
+                );
                 showAdminPanel();
                 setupRealtimeListeners();
             } catch (e) {
@@ -1307,7 +1295,8 @@ text-align: center;
             }
         }
         appState.offlineQueue = failedActions;
-        localStorage.setItem('hr_offline_queue', JSON.stringify(appState.offlineQueue));
+        // FIX #2: save under user-scoped key
+        localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
         if (successfulActions.length > 0) showSuccess(`${successfulActions.length} actions synced successfully!`, null, 3000);
         if (failedActions.length > 0) showError(`${failedActions.length} actions failed to sync. Will retry later.`, null, 3000);
         const queueDisplay = document.getElementById('offlineQueueDisplay');
@@ -1356,7 +1345,8 @@ text-align: center;
     function addToOfflineQueue(type, data) {
         const action = { type, data, timestamp: new Date().toISOString() };
         appState.offlineQueue.push(action);
-        localStorage.setItem('hr_offline_queue', JSON.stringify(appState.offlineQueue));
+        // FIX #2: save under user-scoped key
+        localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
         const queueDisplay = document.getElementById('offlineQueueDisplay');
         if (queueDisplay) {
             queueDisplay.classList.remove('hidden');
@@ -1648,22 +1638,25 @@ text-align: center;
                 localStorage.setItem('hr_currentUser', JSON.stringify(userData));
                 localStorage.setItem('hr_last_login', new Date().toISOString());
                 appState.currentUser = userData;
-                const userQueueKey = `hr_offline_queue_${userData.id}`;
+
+                // FIX #2: load this user's scoped offline queue after login
+                const userQueueKey = offlineQueueKey();
                 const savedQueue = localStorage.getItem(userQueueKey);
                 if (savedQueue) {
                     try {
                         const restoredQueue = JSON.parse(savedQueue);
                         if (restoredQueue.length > 0) {
                             appState.offlineQueue = restoredQueue;
-                            localStorage.setItem('hr_offline_queue', JSON.stringify(restoredQueue));
-                            localStorage.removeItem(userQueueKey);
                             showInfo(`${restoredQueue.length} queued action(s) from your last session will sync shortly.`, null, 4000);
                         }
                     } catch (e) { localStorage.removeItem(userQueueKey); }
+                } else {
+                    // fresh queue for this user
+                    appState.offlineQueue = [];
                 }
+
                 showAdminPanel();
                 setupRealtimeListeners();
-                // Delay previous-day clock-out check so the attendance listener has time to hydrate
                 setTimeout(() => checkPreviousDayClockOut(), 3000);
             } else {
                 showError('Invalid username or password', 'loginError');
@@ -1712,9 +1705,11 @@ text-align: center;
                 appState.calendarInstance = null;
                 appState.calendarInitialized = false;
             }
+            // FIX #2: save remaining queue under user-scoped key before clearing
             if (appState.currentUser && appState.offlineQueue.length > 0) {
-                localStorage.setItem(`hr_offline_queue_${appState.currentUser.id}`, JSON.stringify(appState.offlineQueue));
+                localStorage.setItem(offlineQueueKey(), JSON.stringify(appState.offlineQueue));
             }
+            // Remove the legacy generic key so it doesn't bleed into the next user
             localStorage.removeItem('hr_offline_queue');
             localStorage.removeItem('hr_currentUser');
             appState.currentUser = null;
@@ -1810,11 +1805,11 @@ text-align: center;
         if (vlProgress) vlProgress.style.width = vlMax > 0 ? `${(vlUsed / vlMax) * 100}%` : '0%';
         const workingDays = user['in_' + currentMonth] || "TBA";
         const timeSlot = user['out_' + currentMonth] || "TBA";
+        const shiftLabel = user['shift_' + currentMonth] || "TBA";
         const off1 = user['off1_' + currentMonth] || '';
         const off2 = user['off2_' + currentMonth] || '';
-        const shiftType = detectShiftType(timeSlot);
-        document.getElementById('myShift').textContent = shiftType;
-        document.getElementById('myShift').className = getShiftClass(shiftType);
+        // FIX #3: show stored shift label directly — no auto-detection
+        document.getElementById('myShift').textContent = shiftLabel;
         document.getElementById('myDays').textContent = workingDays;
         document.getElementById('myTime').textContent = timeSlot;
         document.getElementById('myOff').textContent = `${off1} ${off2}`.trim() || "TBA";
@@ -2102,21 +2097,35 @@ text-align: center;
         document.querySelectorAll('#dirTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
+    // ── FIX #1: renderAttendance — use actual days in month, not hardcoded 31 ─
     function renderAttendance() {
         const payTable = document.getElementById('payTable');
         if (!payTable) return;
         const month = parseInt(document.getElementById('pMonth').value);
         const shiftFilter = document.getElementById('pShift').value;
         const period = document.getElementById('pPeriod').value;
-        const [periodStart, periodEnd] = period.split('-').map(Number);
+        const [periodStart, _periodEnd] = period.split('-').map(Number);
+
+        // Compute the real last day of the selected month so February (28/29
+        // days) and 30-day months never show ghost columns beyond the month end.
+        const selectedYear = new Date().getFullYear();
+        const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
+        // For "16-31" period use actual month end; for "1-15" keep 15 as-is.
+        const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
+
+        // FIX #3: read stored shift label instead of auto-detecting Day/Night
         let html = `<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
         for (let day = periodStart; day <= periodEnd; day++) html += `<th>${day}</th>`;
         html += `<th class="total-lates-col">Total Lates (min)</th></tr></thead><tbody>`;
+
         for (const [empId, user] of Object.entries(appState.users)) {
-            const timeSlot = user['out_' + month] || '';
-            const shiftType = detectShiftType(timeSlot);
-            if (shiftFilter !== 'all' && shiftFilter !== shiftType) continue;
-            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td class="${getShiftClass(shiftType)}">${shiftType}</td>`;
+            // FIX #3: use stored shift label; fall back to empty string (no auto Day/Night)
+            const shiftLabel = user['shift_' + month] || '';
+
+            // Filter still works if admin enters "Day" or "Night" in the shift field
+            if (shiftFilter !== 'all' && shiftFilter !== shiftLabel) continue;
+
+            html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${escapeHtml(shiftLabel)}</td>`;
             let totalLates = 0;
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
@@ -2147,14 +2156,10 @@ text-align: center;
         document.querySelectorAll('#payTable tbody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
     }
     
-    // ==================== SCHEDULE FUNCTIONS — FIXED ====================
-    // renderSchedules:
-    //   • Sorted by dept then name
-    //   • Reads from pending scheduleChanges first so unsaved edits survive a
-    //     Firebase re-render (listener fires while supervisor is mid-edit)
-    //   • Rest-day inputs are <select> with day names to prevent typos
-    //   • Time slot input live-updates the Shift badge on every keystroke
-    //   • Working-days input has a <datalist> with common presets
+    // ── FIX #3: renderSchedules — Shift is a free-text editable field ────────
+    // Removed all detectShiftType / getShiftClass / shift-badge logic.
+    // Admins type whatever shift label they want (e.g. "Morning", "Graveyard").
+    // The value is stored as shift_<month> on the user record.
     function renderSchedules() {
         const schedTable = document.getElementById('schedTable');
         if (!schedTable) return;
@@ -2172,25 +2177,25 @@ text-align: center;
         let html = `
         <div class="sched-hint">
             Editing schedule for <strong>${monthName}</strong>.
-            Shift type is auto-detected from the time slot (night = starts 18:00 or later).
-            Rest days use full day names. Click <strong>Save</strong> on each row, or use <strong>Publish All Changes</strong> below.
+            Enter any shift name you like (e.g. Morning, Mid, Night, Graveyard).
+            Rest days use full day names.
+            Click <strong>Save</strong> per row, or <strong>Publish All Changes</strong> below.
         </div>
-        <table style="min-width:1100px;">
+        <table style="min-width:1150px;">
             <thead><tr>
                 <th>Emp ID</th><th style="text-align:left;padding-left:8px;">Name</th><th>Dept</th>
-                <th>Working Days</th><th>Time Slot</th><th>Shift (auto)</th>
+                <th>Working Days</th><th>Time Slot</th><th>Shift Label</th>
                 <th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
             </tr></thead><tbody>`;
 
         for (const [empId, user] of sorted) {
-            // Always prefer the pending (typed-but-unsaved) value over the Firebase value
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const workingDays = ('in_'  + month) in pending ? pending['in_'  + month] : (user['in_'  + month] || '');
             const timeSlot    = ('out_' + month) in pending ? pending['out_' + month] : (user['out_' + month] || '');
+            // FIX #3: read stored shift label; no auto-detection fallback
+            const shiftLabel  = ('shift_' + month) in pending ? pending['shift_' + month] : (user['shift_' + month] || '');
             const off1        = ('off1_'+ month) in pending ? pending['off1_'+ month] : (user['off1_'+ month] || '');
             const off2        = ('off2_'+ month) in pending ? pending['off2_'+ month] : (user['off2_'+ month] || '');
-            const shiftType   = detectShiftType(timeSlot);
-            const shiftClass  = getShiftClass(shiftType);
             const safeId      = empId.replace(/'/g, "\\'");
 
             html += `
@@ -2207,15 +2212,15 @@ text-align: center;
                 </td>
                 <td>
                     <input type="text" value="${escapeHtml(timeSlot)}"
-                        placeholder="e.g. 8 AM - 5 PM"
-                        oninput="updateScheduleField('${safeId}', 'out_${month}', this.value, '${safeId}', ${month})"
-                        style="width:140px;">
+                        placeholder="e.g. 8:00 AM - 5:00 PM"
+                        oninput="updateScheduleField('${safeId}', 'out_${month}', this.value)"
+                        style="width:150px;">
                 </td>
                 <td>
-                    <span id="shift-badge-${empId}" class="${shiftClass}"
-                        style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;">
-                        ${shiftType}
-                    </span>
+                    <input type="text" value="${escapeHtml(shiftLabel)}"
+                        placeholder="e.g. Morning, Night..."
+                        oninput="updateScheduleField('${safeId}', 'shift_${month}', this.value)"
+                        style="width:110px;">
                 </td>
                 <td>
                     <select oninput="updateScheduleField('${safeId}', 'off1_${month}', this.value)"
@@ -2238,39 +2243,25 @@ text-align: center;
         schedTable.innerHTML = html;
     }
 
-    // updateScheduleField — stores typed value in scheduleChanges AND live-updates
-    // the shift badge when the time slot column is edited.
-    function updateScheduleField(empId, field, value, shiftEmpId, month) {
+    // FIX #3: updateScheduleField — removed live shift-badge update block entirely
+    function updateScheduleField(empId, field, value) {
         document.getElementById('saveSchedulesBtn').classList.remove('hidden');
         if (!appState.scheduleChanges) appState.scheduleChanges = {};
         if (!appState.scheduleChanges[empId]) appState.scheduleChanges[empId] = {};
         appState.scheduleChanges[empId][field] = value;
-
-        // Live-update the shift type badge when the time slot changes
-        if (shiftEmpId !== undefined && field === ('out_' + month)) {
-            const badge = document.getElementById('shift-badge-' + shiftEmpId);
-            if (badge) {
-                const shiftType = detectShiftType(value);
-                badge.textContent = shiftType;
-                badge.className = getShiftClass(shiftType);
-                badge.style.cssText = 'padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;';
-            }
-        }
     }
 
-    // saveSchedule — FIXED: reads from scheduleChanges (what was typed) first,
-    // then falls back to the stored Firebase value. Never saves stale data.
+    // FIX #3: saveSchedule — includes shift_<month> in saved fields
     async function saveSchedule(empId, month) {
         try {
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const user    = appState.users[empId] || {};
             const updates = {};
-            const fields  = ['in_' + month, 'out_' + month, 'off1_' + month, 'off2_' + month];
+            const fields  = ['in_' + month, 'out_' + month, 'shift_' + month, 'off1_' + month, 'off2_' + month];
             fields.forEach(field => {
                 updates[field] = field in pending ? pending[field] : (user[field] || '');
             });
             await update(ref(db, `users/${empId}`), updates);
-            // Clear only this employee's pending changes for this month
             if (appState.scheduleChanges && appState.scheduleChanges[empId]) {
                 fields.forEach(f => delete appState.scheduleChanges[empId][f]);
                 if (Object.keys(appState.scheduleChanges[empId]).length === 0) {
@@ -2316,8 +2307,9 @@ text-align: center;
             if (status === 'P' && !clockOutTime) {
                 activeCount++;
                 const timeIn = appState.attendance[empId]?.[todayKey + '_time'];
-                const shiftType = detectShiftType(user['out_' + currentMonth] || '');
-                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td class="${getShiftClass(shiftType)}">${shiftType}</td></tr>`;
+                // FIX #3: use stored shift label, not auto-detected
+                const shiftLabel = user['shift_' + currentMonth] || '';
+                html += `<tr><td>${empId}</td><td>${escapeHtml(user.fullName)}</td><td>${user.dept}</td><td>${timeIn ? new Date(timeIn).toLocaleTimeString() : 'Unknown'}</td><td class="status-P">PRESENT</td><td>${escapeHtml(shiftLabel)}</td></tr>`;
             }
         }
         if (activeCount === 0) html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-light);">No active employees</td></tr>`;
@@ -2443,19 +2435,14 @@ text-align: center;
         document.getElementById('notificationsModal').classList.toggle('hidden');
     }
     
-    // ── My Leaves — FIXED: iterate entries() so leaveId is available in the
-    //   Cancel button onclick without reference-equality lookup.
     function updateMyLeaves() {
         if (!appState.currentUser) return;
         const container = document.getElementById('myLeavesContainer');
         if (!appState.leaveRequests) return;
         let total = 0, approved = 0, pending = 0, rejected = 0, html = '';
-
-        // Use entries() so leaveId (Firebase key) is available directly
         const userLeaves = Object.entries(appState.leaveRequests)
             .filter(([, leave]) => leave.empID === appState.currentUser.id)
             .sort(([, a], [, b]) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
         userLeaves.forEach(([leaveId, leave]) => {
             total++;
             if (leave.status === 'Approved') approved++;
@@ -2489,7 +2476,6 @@ text-align: center;
                 </div>` : ''}
             </div>`;
         });
-
         if (userLeaves.length === 0) html = '<div style="text-align:center; padding:40px; color:var(--text-light); grid-column:1/-1;">No leave requests yet</div>';
         if (container) container.innerHTML = html;
         document.getElementById('totalLeaves').textContent = total;
@@ -2540,10 +2526,14 @@ text-align: center;
             const bgColor = leave.type === 'SL'
                 ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
                 : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
+            // Safer end-date calculation respecting timezone
+            const endStr = leave.endDate || leave.startDate;
+            const endDate = new Date(endStr + 'T00:00:00');
+            endDate.setDate(endDate.getDate() + 1);
             events.push({
                 title: `${employee.fullName} - ${LEAVE_TYPES[leave.type] || leave.type} (${leave.status})`,
                 start: leave.startDate,
-                end: new Date(new Date(leave.endDate || leave.startDate).setDate(new Date(leave.endDate || leave.startDate).getDate() + 1)),
+                end: endDate.toISOString().split('T')[0],
                 backgroundColor: bgColor, borderColor: bgColor,
             });
         });
@@ -2568,8 +2558,6 @@ text-align: center;
         return div.innerHTML;
     }
     
-    // ── Toast notifications ──────────────────────────────────────────────────
-    // A small queue so multiple toasts don't stack on top of each other.
     const _toastQueue = [];
     let _toastActive = false;
     function _showToast(message, bg) {
@@ -2608,15 +2596,20 @@ text-align: center;
     function exportToExcel() {
         const month = parseInt(document.getElementById('pMonth').value);
         const period = document.getElementById('pPeriod').value;
-        const [periodStart, periodEnd] = period.split('-').map(Number);
+        const [periodStart, _periodEnd] = period.split('-').map(Number);
+        const selectedYear = new Date().getFullYear();
+        const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
+        const periodEnd = _periodEnd >= 28 ? daysInMonth : _periodEnd;
+
         const data = [];
         const headers = ['Emp ID', 'Name', 'Dept', 'Shift'];
         for (let day = periodStart; day <= periodEnd; day++) headers.push(`Day ${day}`);
         headers.push('Total Lates (min)');
         data.push(headers);
         for (const [empId, user] of Object.entries(appState.users)) {
-            const shiftType = detectShiftType(user['out_' + month] || '');
-            const row = [empId, user.fullName, user.dept, shiftType];
+            // FIX #3: use stored shift label in export too
+            const shiftLabel = user['shift_' + month] || '';
+            const row = [empId, user.fullName, user.dept, shiftLabel];
             let totalLates = 0;
             for (let day = periodStart; day <= periodEnd; day++) {
                 const dateKey = `${month}_${day}`;
@@ -2643,10 +2636,6 @@ text-align: center;
         } catch (error) { showError('Failed to delete employee'); }
     }
     
-    // ── Debounced render coalescer ───────────────────────────────────────────
-    // All five Firebase onValue listeners fire nearly simultaneously when any
-    // data changes. This collects what needs to be re-rendered over an 80 ms
-    // window and flushes once, eliminating redundant DOM rebuilds.
     const _renderQueue = new Set();
     let _renderTimer = null;
     function queueRender(...tasks) {
@@ -2656,7 +2645,7 @@ text-align: center;
             _renderTimer = null;
             const jobs = [..._renderQueue];
             _renderQueue.clear();
-            updateDashboard();                                              // always refresh dashboard
+            updateDashboard();
             if (jobs.includes('tab'))           renderCurrentTabOnly(true);
             if (jobs.includes('inbox'))         updateInbox();
             if (jobs.includes('myLeaves'))      updateMyLeaves();
@@ -2665,7 +2654,6 @@ text-align: center;
         }, 80);
     }
 
-    // Setup Realtime Listeners — each stores data then queues only what changed
     function setupRealtimeListeners() {
         Object.values(appState.listeners).forEach(u => { if (typeof u === 'function') u(); });
 
@@ -2690,7 +2678,6 @@ text-align: center;
         });
 
         appState.listeners.auditLogs = onValue(ref(db, 'audit_logs'), snapshot => {
-            // Audit logs render directly — not gated on tab focus
             renderAudit(snapshot.val());
         });
     }
