@@ -1080,12 +1080,7 @@
     // ── BUG 1 FIX: SHIFTS constant — single source of truth for all shift dropdowns ──
     const SHIFTS = [
         'Morning',
-        'Mid',
-        'Afternoon',
-        'Night',
-        'Graveyard',
-        'Early Morning',
-        'Split'
+        'Night'
     ];
 
     // ── BUG 2 FIX: Populate all shift dropdowns from SHIFTS constant ──
@@ -1875,23 +1870,23 @@
             else roleBadge.style.background = 'rgba(255, 255, 255, 0.15)';
         }
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('hidden'));
-        document.querySelectorAll('[onclick*="profile"]')[0].classList.remove('hidden');
-        document.querySelectorAll('[onclick*="pay"]')[0].classList.remove('hidden');
-        document.querySelectorAll('[onclick*="calendar"]')[0].classList.remove('hidden');
-        document.querySelectorAll('[onclick*="leaves"]')[0].classList.remove('hidden');
+        const profileBtn = document.querySelector('[onclick*="profile"]'); if (profileBtn) profileBtn.classList.remove('hidden');
+        const payBtn = document.querySelector('[onclick*="pay"]'); if (payBtn) payBtn.classList.remove('hidden');
+        const calendarBtn = document.querySelector('[onclick*="calendar"]'); if (calendarBtn) calendarBtn.classList.remove('hidden');
+        const leavesBtn = document.querySelector('[onclick*="leaves"]'); if (leavesBtn) leavesBtn.classList.remove('hidden');
         if (appState.currentUser.role === 'Admin' || appState.currentUser.role === 'HR') {
-            document.querySelectorAll('[onclick*="dir"]')[0].classList.remove('hidden');
-            document.querySelectorAll('[onclick*="active"]')[0].classList.remove('hidden');
-            document.querySelectorAll('[onclick*="sched"]')[0].classList.remove('hidden');
-            document.querySelectorAll('[onclick*="audit"]')[0].classList.remove('hidden');
-            document.getElementById('mailIcon').classList.remove('hidden');
-            document.getElementById('notificationBell').classList.remove('hidden');
+            const dirBtn = document.querySelector('[onclick*="dir"]'); if (dirBtn) dirBtn.classList.remove('hidden');
+            const activeBtn = document.querySelector('[onclick*="active"]'); if (activeBtn) activeBtn.classList.remove('hidden');
+            const schedBtn = document.querySelector('[onclick*="sched"]'); if (schedBtn) schedBtn.classList.remove('hidden');
+            const auditBtn = document.querySelector('[onclick*="audit"]'); if (auditBtn) auditBtn.classList.remove('hidden');
+            const mailIcon = document.getElementById('mailIcon'); if (mailIcon) mailIcon.classList.remove('hidden');
+            const notificationBell = document.getElementById('notificationBell'); if (notificationBell) notificationBell.classList.remove('hidden');
         } else if (appState.currentUser.role === 'OPS') {
-            document.querySelectorAll('[onclick*="active"]')[0].classList.remove('hidden');
-            document.querySelectorAll('[onclick*="sched"]')[0].classList.remove('hidden');
-            document.querySelectorAll('[onclick*="audit"]')[0].classList.remove('hidden');
-            document.getElementById('mailIcon').classList.remove('hidden');
-            document.getElementById('notificationBell').classList.remove('hidden');
+            const activeBtn = document.querySelector('[onclick*="active"]'); if (activeBtn) activeBtn.classList.remove('hidden');
+            const schedBtn = document.querySelector('[onclick*="sched"]'); if (schedBtn) schedBtn.classList.remove('hidden');
+            const auditBtn = document.querySelector('[onclick*="audit"]'); if (auditBtn) auditBtn.classList.remove('hidden');
+            const mailIcon = document.getElementById('mailIcon'); if (mailIcon) mailIcon.classList.remove('hidden');
+            const notificationBell = document.getElementById('notificationBell'); if (notificationBell) notificationBell.classList.remove('hidden');
         }
         switchTab('profile', document.querySelector('.nav-btn:not(.hidden)'));
         renderCurrentTabOnly();
@@ -2165,13 +2160,16 @@
         const empId = document.getElementById('addEmpNum').value.trim();
         const fullName = document.getElementById('addFullName').value.trim();
         const username = document.getElementById('addUser').value.trim();
-        const password = document.getElementById('addPass').value;
-        if (!empId || !fullName || !username || !password) { showError('Please fill in all required fields (marked with *)', 'directoryMessage'); appState.isProcessing = false; return; }
+        let password = document.getElementById('addPass').value;
+        if (!empId || !fullName || !username || (!password && !appState.editingEmployeeId)) { showError('Please fill in all required fields (marked with *)', 'directoryMessage'); appState.isProcessing = false; return; }
         if (!appState.editingEmployeeId && password.length < 6) { showError('Password must be at least 6 characters long', 'directoryMessage'); appState.isProcessing = false; return; }
         if (!appState.editingEmployeeId) {
             const existingUser = Object.values(appState.users).find(u => u.username === username);
             if (existingUser) { showError('Username already exists', 'directoryMessage'); appState.isProcessing = false; return; }
             if (appState.users[empId]) { showError('Employee ID already exists', 'directoryMessage'); appState.isProcessing = false; return; }
+        }
+        if (appState.editingEmployeeId && !password) {
+            password = appState.users[appState.editingEmployeeId]?.password || '';
         }
         try {
             const employeeData = {
@@ -2533,6 +2531,7 @@
     async function approveLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
+            if (!request) { showError('Leave request not found.'); return; }
             if (!canApproveLeave(request)) { showError('You are not authorized to approve this leave request.'); return; }
             const now = new Date();
             const startDate = new Date(request.startDate);
@@ -2557,6 +2556,7 @@
     async function rejectLeave(leaveId) {
         try {
             const request = appState.leaveRequests[leaveId];
+            if (!request) { showError('Leave request not found.'); return; }
             if (!canApproveLeave(request)) { showError('You are not authorized to reject this leave request.'); return; }
             const now = new Date();
             await update(ref(db, `leave_requests/${leaveId}`), { status: 'Rejected', rejectedBy: appState.currentUser.fullName, rejectedAt: now.toISOString(), rejectedByRole: appState.currentUser.role });
