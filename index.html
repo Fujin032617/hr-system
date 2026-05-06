@@ -259,6 +259,11 @@
         #schedTable table { min-width: 1100px; }
         #schedTable input[type=text], #schedTable select { font-size: 11px; padding: 5px 7px; }
 
+        #timestampTable table { border-collapse: collapse; }
+        #timestampTable th, #timestampTable td { border: 1px solid var(--border); padding: 5px 6px; text-align: center; white-space: nowrap; }
+        #timestampTable thead th { position: sticky; top: 0; z-index: 5; background: #f8fafc; font-size: 10px; }
+        #timestampTable tbody tr:hover td { background-color: rgba(59,130,246,0.05) !important; }
+
         .shift-search-wrap { position: relative; display: flex; align-items: center; }
         #pShiftSearch { width: 130px; padding: 6px 28px 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
         .shift-search-icon { position: absolute; right: 8px; font-size: 12px; color: var(--text-light); pointer-events: none; }
@@ -277,12 +282,12 @@
     </div>
     <div class="flex-center">
         <div id="notificationBell" class="notification-bell hidden" style="position:relative;" onclick="toggleNotifications()">
-            <span style="font-size:22px;">🔔</span><span id="notificationBadge" class="badge hidden">0</span>
+            <span style="font-size:22px;">🔔</span><span id="notificationBadge" class="badge hidden" style="display:none!important;">0</span>
         </div>
         <div id="mailIcon" class="hidden" style="position:relative; cursor:pointer;" onclick="toggleInbox()">
-            <span style="font-size:22px;">✉</span><span id="mailBadge" class="badge hidden">0</span>
+            <span style="font-size:22px;">✉</span><span id="mailBadge" class="badge hidden" style="display:none!important;">0</span>
         </div>
-        <button class="action-btn logout-btn" style="padding:8px 15px;" onclick="handleLogout()">LOGOUT</button>
+        <button class="action-btn logout-btn" id="logoutBtn" style="padding:8px 15px; display:none;" onclick="handleLogout()">LOGOUT</button>
     </div>
 </header>
 
@@ -304,7 +309,7 @@
     <div id="inboxContent" style="max-height:350px; overflow-y:auto; padding:15px;"></div>
 </div>
 
-<div id="notificationsModal" class="inbox-modal hidden" style="right:350px;">
+<div id="notificationsModal" class="inbox-modal hidden" style="right:20px; top:70px;">
     <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:700; background:#f8fafc;">
         Notifications
         <span id="notificationCount" style="float:right; font-size:10px; background:var(--accent); color:white; padding:2px 6px; border-radius:10px;">0</span>
@@ -326,14 +331,15 @@
 <!-- Admin Panel -->
 <div id="adminPanel" class="hidden">
     <nav class="nav-bar">
-        <button class="nav-btn active"             onclick="switchTab('profile', this)">Dashboard</button>
-        <button class="nav-btn adm-only hidden"    onclick="switchTab('dir', this)">Directory</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('active', this)">Active Now</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('sched', this)">Schedules</button>
-        <button class="nav-btn"                    onclick="switchTab('pay', this)">Payroll & Attendance</button>
-        <button class="nav-btn"                    onclick="switchTab('calendar', this)">Calendar</button>
-        <button class="nav-btn adm-ops-hr-only hidden" onclick="switchTab('audit', this)">Audit Logs</button>
-        <button class="nav-btn"                    onclick="switchTab('leaves', this)">My Leaves</button>
+        <button class="nav-btn active"             data-tab="profile"   onclick="switchTab('profile', this)">Dashboard</button>
+        <button class="nav-btn adm-only hidden"    data-tab="dir"       onclick="switchTab('dir', this)">Directory</button>
+        <button class="nav-btn adm-ops-hr-only hidden" data-tab="active"   onclick="switchTab('active', this)">Active Now</button>
+        <button class="nav-btn adm-ops-hr-only hidden" data-tab="sched"    onclick="switchTab('sched', this)">Schedules</button>
+        <button class="nav-btn"                    data-tab="pay"       onclick="switchTab('pay', this)">Payroll & Attendance</button>
+        <button class="nav-btn"                    data-tab="calendar"  onclick="switchTab('calendar', this)">Calendar</button>
+        <button class="nav-btn adm-ops-hr-only hidden" data-tab="audit"    onclick="switchTab('audit', this)">Audit Logs</button>
+        <button class="nav-btn"                    data-tab="leaves"    onclick="switchTab('leaves', this)">My Leaves</button>
+        <button class="nav-btn adm-ops-hr-only hidden" data-tab="timestamps" onclick="switchTab('timestamps', this)">⏱ Timestamp Sheet</button>
     </nav>
 
     <!-- Dashboard -->
@@ -429,6 +435,24 @@
             <!-- FIX #1 notice -->
             <div class="secondary-auth-notice">
                 ℹ️ When adding a new employee, the system uses a separate auth instance so you <strong>will not be logged out</strong>.
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:10px;">
+                <button class="action-btn btn-small" onclick="toggleBulkRegister()" style="background:var(--purple);">📋 BULK REGISTER</button>
+            </div>
+            <!-- Bulk Register Panel -->
+            <div id="bulkRegisterPanel" class="hidden" style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+                <h3 style="margin-top:0;">Bulk Employee Registration</h3>
+                <p style="font-size:10px;color:var(--text-light);margin:0 0 10px 0;">
+                    Paste or type one employee per line in the format:<br>
+                    <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">FullName, Email, Password, Dept(RC/CSR), Role(Employee/Admin/OPS/HR), SL, VL</code><br>
+                    Example: <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">Juan Dela Cruz, juan@company.com, pass123, RC, Employee, 10, 10</code>
+                </p>
+                <textarea id="bulkRegisterData" style="width:100%;height:140px;font-size:10px;font-family:monospace;box-sizing:border-box;" placeholder="Juan Dela Cruz, juan@company.com, pass123, RC, Employee, 10, 10&#10;Maria Santos, maria@company.com, pass456, CSR, Employee, 10, 10"></textarea>
+                <div id="bulkRegisterProgress" class="hidden" style="margin:10px 0;font-size:10px;"></div>
+                <div style="display:flex;gap:10px;margin-top:10px;">
+                    <button class="action-btn" onclick="runBulkRegister()" style="background:var(--purple);">▶ RUN BULK REGISTER</button>
+                    <button class="action-btn" onclick="document.getElementById('bulkRegisterPanel').classList.add('hidden')" style="background:var(--danger);">✕ CLOSE</button>
+                </div>
             </div>
             <div class="grid-inputs" style="margin-bottom:20px; background:#f8fafc; padding:20px; border-radius:12px;">
                 <input type="text"     id="addEmpNum"          placeholder="Emp ID*" required>
@@ -573,6 +597,23 @@
             <div class="my-leaves-container" id="myLeavesContainer"></div>
         </div>
     </section>
+
+    <!-- Timestamp Sheet -->
+    <section id="sec-timestamps" class="tab-content hidden">
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:15px;">
+                <h3>Employee Timestamp Sheet</h3>
+                <div class="flex-center">
+                    <select id="tsMonth" onchange="renderTimestamps()" style="width:120px;"></select>
+                    <button class="action-btn" style="background:#15803d;padding:8px 15px;" onclick="exportTimestampsToExcel()">⬇ EXPORT EXCEL</button>
+                </div>
+            </div>
+            <p style="font-size:10px;color:var(--text-light);margin:0 0 12px 0;">
+                Each employee spans 3 rows: <strong>Name/Status</strong> · <strong>Clock In</strong> · <strong>Clock Out</strong>. Columns = days of the month.
+            </p>
+            <div class="table-wrap" id="timestampTable"></div>
+        </div>
+    </section>
 </div>
 
 <!-- Stub shims so onclick attributes resolve before the module loads -->
@@ -587,13 +628,17 @@
             'searchSchedules','searchAttendance','searchAudit','searchMyLeaves',
             'changeAttendanceStatus','updateScheduleField','saveSchedule','saveAllSchedules',
             'toggleInbox','toggleNotifications','approveLeave','rejectLeave',
-            'markNotificationRead','deleteEmployee'
+            'markNotificationRead','deleteEmployee',
+            'toggleBulkRegister','runBulkRegister','renderTimestamps','exportTimestampsToExcel'
         ];
         names.forEach(function(name) {
             window[name] = function() {
                 var args = arguments;
+                var attempts = 0;
                 var interval = setInterval(function() {
+                    attempts++;
                     if (window['__hr_' + name]) { clearInterval(interval); window['__hr_' + name].apply(null, args); }
+                    else if (attempts > 100) { clearInterval(interval); console.error('HR module failed to load: ' + name); }
                 }, 50);
             };
         });
@@ -754,8 +799,12 @@
     // ── FIX #4 (computeLateMins): null-safe parseTime, improved night/graveyard detection ──
     function computeLateMins(clockInTime, empId, month) {
         const user     = appState.users[empId] || appState.currentUser;
+        // out_ stores the time slot string e.g. "8:00 AM - 5:00 PM"
         const timeSlot = user ? (user['out_' + month] || '') : '';
         if (!timeSlot) return 0;
+
+        // validate it looks like a time before parsing (avoid parsing shift labels)
+        if (!/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(timeSlot)) return 0;
 
         const firstPart = timeSlot.split(/[-–]/)[0].trim();
         const parsed    = parseTime(firstPart);
@@ -804,7 +853,7 @@
     // ── DOMContentLoaded ─────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
         const currentDate = new Date();
-        document.querySelectorAll('#pMonth, #sMonth').forEach(select => {
+        document.querySelectorAll('#pMonth, #sMonth, #tsMonth').forEach(select => {
             select.innerHTML = MONTHS.map((m, i) =>
                 `<option value="${i}" ${currentDate.getMonth() === i ? 'selected' : ''}>${m}</option>`).join('');
         });
@@ -864,7 +913,7 @@
         const failed = [];
         for (const action of appState.offlineQueue) {
             try   { await executeQueuedAction(action.type, action.data); await new Promise(r => setTimeout(r, 300)); }
-            catch { failed.push(action); }
+            catch(e) { console.error('Queued action failed:', action.type, e); failed.push(action); }
         }
         appState.offlineQueue = failed;
         const qKey = offlineQueueKey();
@@ -903,7 +952,7 @@
     async function safeFirebaseOperation(operation, data, actionType) {
         if (!appState.isOnline) { addToOfflineQueue(actionType, data); return { success: false, queued: true }; }
         try   { const result = await operation(data); return { success: true, data: result }; }
-        catch { if (!navigator.onLine) { addToOfflineQueue(actionType, data); return { success: false, queued: true }; } throw new Error('Firebase operation failed'); }
+        catch(error) { if (!navigator.onLine) { addToOfflineQueue(actionType, data); return { success: false, queued: true }; } throw error; }
     }
 
     // ── Auto clock-out ────────────────────────────────────────────────────────────────
@@ -1134,6 +1183,7 @@
 
         ['adminPanel','leaveInbox','notificationsModal','forgotLogoutAlert'].forEach(id => document.getElementById(id).classList.add('hidden'));
         document.getElementById('connectionStatus').classList.add('hidden');
+        document.getElementById('logoutBtn').style.display = 'none';
         document.getElementById('loginSection').classList.remove('hidden');
         document.getElementById('lUser').value = '';
         document.getElementById('lPass').value = '';
@@ -1145,6 +1195,7 @@
     function showAdminPanel() {
         document.getElementById('adminPanel').classList.remove('hidden');
         document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('logoutBtn').style.display = 'inline-flex';
         document.getElementById('profName').textContent = appState.currentUser.fullName;
 
         const roleBadge = document.getElementById('roleBadge');
@@ -1156,16 +1207,16 @@
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('hidden'));
         ['profile','pay','calendar','leaves'].forEach(tab => {
-            document.querySelector(`[onclick*="'${tab}'"]`)?.classList.remove('hidden');
+            document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden');
         });
 
         const role = appState.currentUser.role;
         if (role === 'Admin' || role === 'HR') {
-            ['dir','active','sched','audit'].forEach(tab => document.querySelector(`[onclick*="'${tab}'"]`)?.classList.remove('hidden'));
+            ['dir','active','sched','audit','timestamps'].forEach(tab => document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden'));
             document.getElementById('mailIcon').classList.remove('hidden');
             document.getElementById('notificationBell').classList.remove('hidden');
         } else if (role === 'OPS') {
-            ['active','sched','audit'].forEach(tab => document.querySelector(`[onclick*="'${tab}'"]`)?.classList.remove('hidden'));
+            ['active','sched','audit','timestamps'].forEach(tab => document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden'));
             document.getElementById('mailIcon').classList.remove('hidden');
             document.getElementById('notificationBell').classList.remove('hidden');
         }
@@ -1195,14 +1246,16 @@
         appState.lastRenderTime = now;
         const activeTab = document.querySelector('.nav-btn.active');
         if (!activeTab) return;
-        const tabText = activeTab.textContent.toLowerCase();
-        if      (tabText.includes('dashboard')) updateDashboard();
-        else if (tabText.includes('directory')) renderDirectory();
-        else if (tabText.includes('active'))    renderActiveNow();
-        else if (tabText.includes('schedules')) renderSchedules();
-        else if (tabText.includes('payroll') || tabText.includes('attendance')) renderAttendance();
-        else if (tabText.includes('calendar')) initializeCalendar();
-        else if (tabText.includes('leaves'))   updateMyLeaves();
+        const tabName = activeTab.getAttribute('data-tab');
+        if      (tabName === 'profile')   updateDashboard();
+        else if (tabName === 'dir')       renderDirectory();
+        else if (tabName === 'active')    renderActiveNow();
+        else if (tabName === 'sched')     renderSchedules();
+        else if (tabName === 'pay')       renderAttendance();
+        else if (tabName === 'calendar')  initializeCalendar();
+        else if (tabName === 'audit')     { get(ref(db,'audit_logs')).then(s => renderAudit(s.val())); }
+        else if (tabName === 'leaves')    updateMyLeaves();
+        else if (tabName === 'timestamps') renderTimestamps();
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────────────────
@@ -1492,15 +1545,23 @@
         } finally { appState.isProcessing = false; }
     }
 
-    // ── FIX #2: deleteEmployee note — Auth deletion not possible client-side; documented ──
     async function deleteEmployee(empId) {
         if (!confirm(`Delete employee ${empId}? This removes their data but NOT their login account (requires server-side Admin SDK).`)) return;
         try {
             await remove(ref(db, `users/${empId}`));
             await remove(ref(db, `attendance/${empId}`));
+            // Also remove their leave requests
+            const leaveSnap = await get(ref(db, 'leave_requests'));
+            if (leaveSnap.exists()) {
+                const removes = [];
+                Object.entries(leaveSnap.val()).forEach(([key, leave]) => {
+                    if (leave.empID === empId) removes.push(remove(ref(db, `leave_requests/${key}`)));
+                });
+                await Promise.all(removes);
+            }
             showSuccess('Employee data deleted. Note: their login account still exists in Firebase Auth.', null, 5000);
             renderDirectory();
-        } catch(e) { showError('Failed to delete employee'); }
+        } catch(e) { showError('Failed to delete employee: ' + (e.message || '')); }
     }
 
     // ── FIX #15: escapeHtml used consistently everywhere ─────────────────────────────
@@ -1626,17 +1687,19 @@
         const dayOptions = (selected) => ['', ...DAYS_OF_WEEK].map(d =>
             `<option value="${d}" ${d === selected ? 'selected' : ''}>${d || '— none —'}</option>`).join('');
 
+        const shiftOptions = (selected) => ['', 'Morning', 'Night'].map(s =>
+            `<option value="${s}" ${s === selected ? 'selected' : ''}>${s || '— select —'}</option>`).join('');
+
         let html = `
-        <div class="sched-hint">Editing schedule for <strong>${monthName}</strong>. Enter any shift name (e.g. Morning, Mid, Night). Click <strong>Save</strong> per row or <strong>Publish All Changes</strong>.</div>
-        <table style="min-width:1150px;"><thead><tr>
+        <div class="sched-hint">Editing schedule for <strong>${monthName}</strong>. Select a shift and configure time/rest days. Click <strong>Save</strong> per row or <strong>Publish All Changes</strong>.</div>
+        <table style="min-width:900px;"><thead><tr>
             <th>Emp ID</th><th style="text-align:left;padding-left:8px;">Name</th><th>Dept</th>
-            <th>Working Days</th><th>Time Slot</th><th>Shift Label</th>
+            <th>Time Slot</th><th>Shift</th>
             <th>Rest Day 1</th><th>Rest Day 2</th><th>Actions</th>
         </tr></thead><tbody>`;
 
         for (const [empId, user] of sorted) {
             const pending     = (appState.scheduleChanges || {})[empId] || {};
-            const workingDays = pending['in_'  + month] !== undefined ? pending['in_'  + month] : (user['in_'  + month] || '');
             const timeSlot    = pending['out_' + month] !== undefined ? pending['out_' + month] : (user['out_' + month] || '');
             const shiftLabel  = pending['shift_' + month] !== undefined ? pending['shift_' + month] : (user['shift_' + month] || user.defaultShift || '');
             const off1        = pending['off1_' + month] !== undefined ? pending['off1_' + month] : (user['off1_' + month] || '');
@@ -1648,16 +1711,14 @@
                 <td>${escapeHtml(user.empID || empId)}</td>
                 <td style="text-align:left;padding-left:8px;">${escapeHtml(user.fullName)}</td>
                 <td>${escapeHtml(user.dept)}</td>
-                <td><input type="text" value="${escapeHtml(workingDays)}" list="wd-presets-${month}" placeholder="e.g. Mon-Fri" oninput="updateScheduleField('${safeId}','in_${month}',this.value)" style="width:120px;"></td>
-                <td><input type="text" value="${escapeHtml(timeSlot)}"    placeholder="e.g. 8:00 AM - 5:00 PM" oninput="updateScheduleField('${safeId}','out_${month}',this.value)" style="width:150px;"></td>
-                <td><input type="text" value="${escapeHtml(shiftLabel)}"  placeholder="e.g. Morning, Night…" oninput="updateScheduleField('${safeId}','shift_${month}',this.value)" style="width:110px;"></td>
-                <td><select oninput="updateScheduleField('${safeId}','off1_${month}',this.value)" style="width:110px;">${dayOptions(off1)}</select></td>
-                <td><select oninput="updateScheduleField('${safeId}','off2_${month}',this.value)" style="width:110px;">${dayOptions(off2)}</select></td>
+                <td><input type="text" value="${escapeHtml(timeSlot)}"    placeholder="e.g. 8:00 AM - 5:00 PM" oninput="updateScheduleField('${safeId}','out_${month}',this.value)" style="width:160px;"></td>
+                <td><select onchange="updateScheduleField('${safeId}','shift_${month}',this.value)" style="width:110px;">${shiftOptions(shiftLabel)}</select></td>
+                <td><select onchange="updateScheduleField('${safeId}','off1_${month}',this.value)" style="width:110px;">${dayOptions(off1)}</select></td>
+                <td><select onchange="updateScheduleField('${safeId}','off2_${month}',this.value)" style="width:110px;">${dayOptions(off2)}</select></td>
                 <td><button class="row-save-btn" onclick="saveSchedule('${safeId}',${month})">Save</button></td>
             </tr>`;
         }
-        html += `</tbody></table>
-        <datalist id="wd-presets-${month}">${WORKING_DAYS_PRESETS.map(p => `<option value="${p}">`).join('')}</datalist>`;
+        html += `</tbody></table>`;
         schedTable.innerHTML = html;
     }
 
@@ -1673,7 +1734,7 @@
             const pending = (appState.scheduleChanges || {})[empId] || {};
             const user    = appState.users[empId] || {};
             const updates = {};
-            ['in_','out_','shift_','off1_','off2_'].forEach(prefix => {
+            ['out_','shift_','off1_','off2_'].forEach(prefix => {
                 const field = prefix + month;
                 updates[field] = field in pending ? pending[field] : (user[field] || '');
             });
@@ -1786,12 +1847,10 @@
         if (pendingCount === 0) html = '<div style="text-align:center;padding:20px;color:var(--text-light);">No pending requests</div>';
         if (inboxContent) inboxContent.innerHTML = html;
         if (inboxCount)   inboxCount.textContent = pendingCount;
-        if (mailBadge)    { mailBadge.textContent = pendingCount > 99 ? '99+' : pendingCount; mailBadge.classList.toggle('hidden', pendingCount === 0); }
-    }
-
-    function toggleInbox() {
-        document.getElementById('notificationsModal').classList.add('hidden');
-        document.getElementById('leaveInbox').classList.toggle('hidden');
+        if (mailBadge) {
+            mailBadge.textContent = pendingCount > 99 ? '99+' : pendingCount;
+            mailBadge.style.display = pendingCount === 0 ? 'none' : 'flex';
+        }
     }
 
     // ── FIX #3: approveLeave — use empID (which IS the UID) for attendance writes ─────
@@ -1803,11 +1862,19 @@
             const start = new Date(request.startDate);
             const end   = request.endDate ? new Date(request.endDate) : start;
 
-            // Build attendance date updates
+            // Build attendance date updates — skip rest days
             const dateUpdates = {};
             const cur = new Date(start);
+            const employee = appState.users[request.empID];
+            const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
             while (cur <= end) {
-                dateUpdates[`${cur.getMonth()}_${cur.getDate()}`] = request.type;
+                const m   = cur.getMonth();
+                const dn  = dayNames[cur.getDay()];
+                const off1 = employee ? (employee['off1_' + m] || '') : '';
+                const off2 = employee ? (employee['off2_' + m] || '') : '';
+                if (off1 !== dn && off2 !== dn) {
+                    dateUpdates[`${m}_${cur.getDate()}`] = request.type;
+                }
                 cur.setDate(cur.getDate() + 1);
             }
 
@@ -1870,7 +1937,10 @@
         if (userNotifs.length === 0) html = '<div style="text-align:center;padding:20px;color:var(--text-light);">No notifications</div>';
         if (content) content.innerHTML = html;
         if (countEl) countEl.textContent = userNotifs.length;
-        if (badge)   { badge.textContent = unread > 99 ? '99+' : unread; badge.classList.toggle('hidden', unread === 0); }
+        if (badge)   {
+            badge.textContent = unread > 99 ? '99+' : unread;
+            badge.style.display = unread === 0 ? 'none' : 'flex';
+        }
     }
 
     async function markNotificationRead(id) {
@@ -1879,7 +1949,14 @@
 
     function toggleNotifications() {
         document.getElementById('leaveInbox').classList.add('hidden');
-        document.getElementById('notificationsModal').classList.toggle('hidden');
+        const modal = document.getElementById('notificationsModal');
+        modal.classList.toggle('hidden');
+    }
+
+    function toggleInbox() {
+        document.getElementById('notificationsModal').classList.add('hidden');
+        const modal = document.getElementById('leaveInbox');
+        modal.classList.toggle('hidden');
     }
 
     // ── My Leaves ─────────────────────────────────────────────────────────────────────
@@ -1951,6 +2028,10 @@
     function initializeCalendar() {
         const calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
+        if (appState.calendarInitialized && appState.calendarInstance) {
+            refreshCalendarEvents();
+            return;
+        }
         if (appState.calendarInstance) appState.calendarInstance.destroy();
         appState.calendarInstance = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -2008,6 +2089,165 @@
     function changeCalendarView() {
         if (!appState.calendarInstance) return;
         appState.calendarInstance.changeView(document.getElementById('calendarView').value);
+    }
+
+    // ── Bulk Register ─────────────────────────────────────────────────────────────────
+    function toggleBulkRegister() {
+        document.getElementById('bulkRegisterPanel').classList.toggle('hidden');
+    }
+
+    async function runBulkRegister() {
+        const raw = document.getElementById('bulkRegisterData').value.trim();
+        if (!raw) { showError('No data entered'); return; }
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        const progress = document.getElementById('bulkRegisterProgress');
+        progress.classList.remove('hidden');
+        let success = 0, fail = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const parts = lines[i].split(',').map(p => p.trim());
+            const [fullName, email, password, dept, role, slStr, vlStr] = parts;
+            progress.innerHTML = `Processing ${i + 1}/${lines.length}: ${escapeHtml(fullName || '?')}…`;
+            if (!fullName || !email || !password) { fail++; continue; }
+            try {
+                const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                const uid  = cred.user.uid;
+                await signOut(secondaryAuth);
+                await set(ref(db, `users/${uid}`), {
+                    fullName, email, empID: uid,
+                    dept: dept || 'RC',
+                    role: role || 'Employee',
+                    slMax: Math.max(0, parseInt(slStr) || 10),
+                    vlMax: Math.max(0, parseInt(vlStr) || 10),
+                    maxConsecutiveLeave: 30,
+                    defaultShift: ''
+                });
+                success++;
+            } catch(e) {
+                console.error('Bulk register failed for', email, e);
+                fail++;
+            }
+        }
+        progress.innerHTML = `✅ Done! ${success} created, ${fail} failed.`;
+        if (success > 0) { renderDirectory(); showSuccess(`${success} employee(s) registered!`); }
+        if (fail > 0) showError(`${fail} employee(s) failed — check console for details`);
+    }
+
+    // ── Timestamp Sheet ───────────────────────────────────────────────────────────────
+    function renderTimestamps() {
+        const table = document.getElementById('timestampTable');
+        if (!table) return;
+        const month = parseInt(document.getElementById('tsMonth').value);
+        const year  = new Date().getFullYear();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+        // Header row: Month label + day numbers
+        let html = `<table style="min-width:${200 + daysInMonth * 90}px;">
+        <thead>
+            <tr>
+                <th style="min-width:160px;text-align:left;padding-left:8px;">${MONTH_NAMES[month]} ${year}</th>
+                <th style="min-width:80px;background:#e2e8f0;color:var(--text-main);">Type</th>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj  = new Date(year, month, d);
+            const dayName  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dateObj.getDay()];
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            html += `<th style="min-width:80px;${isWeekend ? 'background:#fef9c3;' : ''}">${d}<br><span style="font-weight:400;font-size:9px;">${dayName}</span></th>`;
+        }
+        html += `</tr></thead><tbody>`;
+
+        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => (a.fullName||'').localeCompare(b.fullName||''));
+
+        for (const [uid, user] of sorted) {
+            const att = appState.attendance[uid] || {};
+            const shiftLabel = user['shift_' + month] || user.defaultShift || '—';
+
+            // Row 1: Name + status cells
+            html += `<tr style="background:#f0f7ff;">
+                <td style="font-weight:700;text-align:left;padding-left:8px;border-right:2px solid var(--border);">${escapeHtml(user.fullName)}<br><span style="font-size:9px;color:var(--text-light);">${escapeHtml(user.empID||uid)} · ${escapeHtml(user.dept)}</span></td>
+                <td style="background:#dbeafe;font-weight:700;font-size:10px;">STATUS</td>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key    = `${month}_${d}`;
+                const status = att[key] || '';
+                html += `<td class="status-${status||'EMPTY'}" style="font-size:10px;">${escapeHtml(status) || ''}</td>`;
+            }
+            html += `</tr>`;
+
+            // Row 2: Clock In
+            html += `<tr>
+                <td style="font-size:9px;color:var(--text-light);text-align:left;padding-left:8px;border-right:2px solid var(--border);">Shift: ${escapeHtml(shiftLabel)}</td>
+                <td style="background:#dcfce7;font-weight:700;font-size:10px;color:#166534;">IN</td>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key = `${month}_${d}`;
+                const tin = att[`${key}_time`];
+                const late = att[`${key}_late`] || 0;
+                let cell = tin ? new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+                if (late) cell += `<br><span style="font-size:8px;color:#dc2626;">${late}m late</span>`;
+                html += `<td style="font-size:10px;">${cell}</td>`;
+            }
+            html += `</tr>`;
+
+            // Row 3: Clock Out
+            html += `<tr style="border-bottom:3px solid var(--border);">
+                <td style="border-right:2px solid var(--border);"></td>
+                <td style="background:#fee2e2;font-weight:700;font-size:10px;color:#991b1b;">OUT</td>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key  = `${month}_${d}`;
+                const tout = att[`${key}_out`];
+                const cell = tout ? new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+                html += `<td style="font-size:10px;">${cell}</td>`;
+            }
+            html += `</tr>`;
+        }
+
+        if (sorted.length === 0) html += `<tr><td colspan="${daysInMonth + 2}" style="text-align:center;padding:30px;color:var(--text-light);">No employees found</td></tr>`;
+        html += `</tbody></table>`;
+        table.innerHTML = html;
+    }
+
+    function exportTimestampsToExcel() {
+        const month = parseInt(document.getElementById('tsMonth').value);
+        const year  = new Date().getFullYear();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+        // Build header rows
+        const headerRow1 = ['Employee', 'ID', 'Dept', 'Shift', 'Type'];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dn = dayNames[new Date(year, month, d).getDay()];
+            headerRow1.push(`${d} ${dn}`);
+        }
+
+        const data = [headerRow1];
+        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => (a.fullName||'').localeCompare(b.fullName||''));
+
+        for (const [uid, user] of sorted) {
+            const att = appState.attendance[uid] || {};
+            const shift = user['shift_' + month] || user.defaultShift || '';
+
+            const rowStatus = [user.fullName||uid, user.empID||uid, user.dept||'', shift, 'STATUS'];
+            const rowIn     = ['','','','', 'CLOCK IN'];
+            const rowOut    = ['','','','', 'CLOCK OUT'];
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const key = `${month}_${d}`;
+                rowStatus.push(att[key] || '');
+                const tin  = att[`${key}_time`];
+                const tout = att[`${key}_out`];
+                const late = att[`${key}_late`] || 0;
+                rowIn.push(tin  ? new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + (late ? ` (${late}m late)` : '') : '');
+                rowOut.push(tout ? new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '');
+            }
+            data.push(rowStatus, rowIn, rowOut);
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        // Style column widths
+        ws['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 10 },
+            ...Array(daysInMonth).fill({ wch: 14 })];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, `${MONTH_NAMES[month]} ${year}`);
+        XLSX.writeFile(wb, `Timestamps_${MONTH_NAMES[month]}_${year}.xlsx`);
     }
 
     // ── Export ────────────────────────────────────────────────────────────────────────
@@ -2170,6 +2410,10 @@
     exportFn('rejectLeave',             rejectLeave);
     exportFn('markNotificationRead',    markNotificationRead);
     exportFn('deleteEmployee',          deleteEmployee);
+    exportFn('toggleBulkRegister',      toggleBulkRegister);
+    exportFn('runBulkRegister',         runBulkRegister);
+    exportFn('renderTimestamps',        renderTimestamps);
+    exportFn('exportTimestampsToExcel', exportTimestampsToExcel);
 </script>
 </body>
 </html>
