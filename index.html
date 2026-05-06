@@ -5,7 +5,6 @@
     <title>HR Master Pro | Enterprise Edition</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.css">
     
     <style>
         :root { 
@@ -259,10 +258,11 @@
         #schedTable table { min-width: 1100px; }
         #schedTable input[type=text], #schedTable select { font-size: 11px; padding: 5px 7px; }
 
-        #timestampTable table { border-collapse: collapse; }
-        #timestampTable th, #timestampTable td { border: 1px solid var(--border); padding: 5px 6px; text-align: center; white-space: nowrap; }
-        #timestampTable thead th { position: sticky; top: 0; z-index: 5; background: #f8fafc; font-size: 10px; }
-        #timestampTable tbody tr:hover td { background-color: rgba(59,130,246,0.05) !important; }
+        #timestampTable table.dtr-table { border-collapse: collapse; font-family: 'Inter', sans-serif; }
+        #timestampTable table.dtr-table th,
+        #timestampTable table.dtr-table td { border: 1px solid #aaa; padding: 4px 5px; text-align: center; white-space: nowrap; font-size: 10px; }
+        #timestampTable table.dtr-table thead th { position: sticky; top: 0; z-index: 5; }
+        #timestampTable table.dtr-table tbody tr:hover td { filter: brightness(0.95); }
 
         .shift-search-wrap { position: relative; display: flex; align-items: center; }
         #pShiftSearch { width: 130px; padding: 6px 28px 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
@@ -336,7 +336,6 @@
         <button class="nav-btn adm-ops-hr-only hidden" data-tab="active"   onclick="switchTab('active', this)">Active Now</button>
         <button class="nav-btn adm-ops-hr-only hidden" data-tab="sched"    onclick="switchTab('sched', this)">Schedules</button>
         <button class="nav-btn"                    data-tab="pay"       onclick="switchTab('pay', this)">Payroll & Attendance</button>
-        <button class="nav-btn"                    data-tab="calendar"  onclick="switchTab('calendar', this)">Calendar</button>
         <button class="nav-btn adm-ops-hr-only hidden" data-tab="audit"    onclick="switchTab('audit', this)">Audit Logs</button>
         <button class="nav-btn"                    data-tab="leaves"    onclick="switchTab('leaves', this)">My Leaves</button>
         <button class="nav-btn adm-ops-hr-only hidden" data-tab="timestamps" onclick="switchTab('timestamps', this)">⏱ Timestamp Sheet</button>
@@ -545,29 +544,6 @@
         </div>
     </section>
 
-    <!-- Calendar -->
-    <section id="sec-calendar" class="tab-content hidden">
-        <div class="card">
-            <div class="flex-between" style="margin-bottom:15px;">
-                <h3>Company Calendar</h3>
-                <div class="flex-center">
-                    <select id="calendarView"   onchange="changeCalendarView()"    style="width:120px;"><option value="dayGridMonth">Month</option><option value="timeGridWeek">Week</option><option value="timeGridDay">Day</option><option value="listMonth">List</option></select>
-                    <select id="calendarFilter" onchange="refreshCalendarEvents()" style="width:180px;"><option value="all">All Leaves</option><option value="my">My Leaves Only</option><option value="dept">My Department</option><option value="SL">Sick Leaves Only</option><option value="VL">Vacation Leaves Only</option><option value="approved">Approved Only</option><option value="pending">Pending Only</option></select>
-                    <button class="action-btn btn-small" onclick="refreshCalendarEvents()" style="padding:6px 12px;">🔄 Refresh</button>
-                </div>
-            </div>
-            <div id="calendar"></div>
-            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:15px; padding:10px; background:#f8fafc; border-radius:8px; font-size:10px;">
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#10b981;"></div><span>Approved SL</span></div>
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#fbbf24;"></div><span>Pending SL</span></div>
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#ef4444;"></div><span>Rejected SL</span></div>
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#6366f1;"></div><span>Approved VL</span></div>
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#f59e0b;"></div><span>Pending VL</span></div>
-                <div style="display:flex;align-items:center;gap:5px;"><div style="width:12px;height:12px;border-radius:3px;background:#dc2626;"></div><span>Rejected VL</span></div>
-            </div>
-        </div>
-    </section>
-
     <!-- Audit Logs -->
     <section id="sec-audit" class="tab-content hidden">
         <div class="card">
@@ -644,8 +620,6 @@
         });
     })();
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/main.min.js"></script>
 
 <script type="module">
     import { initializeApp         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1206,7 +1180,7 @@
         }
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('hidden'));
-        ['profile','pay','calendar','leaves'].forEach(tab => {
+        ['profile','pay','leaves'].forEach(tab => {
             document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden');
         });
 
@@ -1252,7 +1226,6 @@
         else if (tabName === 'active')    renderActiveNow();
         else if (tabName === 'sched')     renderSchedules();
         else if (tabName === 'pay')       renderAttendance();
-        else if (tabName === 'calendar')  initializeCalendar();
         else if (tabName === 'audit')     { get(ref(db,'audit_logs')).then(s => renderAudit(s.val())); }
         else if (tabName === 'leaves')    updateMyLeaves();
         else if (tabName === 'timestamps') renderTimestamps();
@@ -1575,16 +1548,23 @@
     function renderDirectory() {
         const dirTable = document.getElementById('dirTable');
         if (!dirTable) return;
+        const entries = Object.entries(appState.users);
+        if (entries.length === 0) {
+            dirTable.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-light);font-size:12px;">
+                No employees found. Add one above or use Bulk Register.<br>
+                <small style="color:#94a3b8;">If employees exist in Firebase, check your database rules.</small>
+            </div>`;
+            return;
+        }
         let html = `<table><thead><tr>
             <th>Emp ID</th><th>Full Name</th><th>Email</th><th>Dept</th><th>Role</th>
             <th>Birthday</th><th>Contact #</th><th>Emergency #</th><th>Backend ID</th>
             <th>Assets</th><th>Default Shift</th><th>SL/VL Balance</th><th>Max Consecutive</th><th>Actions</th>
         </tr></thead><tbody>`;
-        for (const [empId, user] of Object.entries(appState.users)) {
+        for (const [empId, user] of entries) {
             const slUsed = calculateUsedLeaves(empId, 'SL');
             const vlUsed = calculateUsedLeaves(empId, 'VL');
             const slMax  = user.slMax || 0, vlMax = user.vlMax || 0;
-            // FIX #15: escape all user-controlled fields
             html += `<tr>
                 <td>${escapeHtml(user.empID || empId)}</td>
                 <td>${escapeHtml(user.fullName)}</td>
@@ -2024,73 +2004,6 @@
         document.getElementById('rejectedLeaves').textContent = rejected;
     }
 
-    // ── Calendar ──────────────────────────────────────────────────────────────────────
-    function initializeCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return;
-        if (appState.calendarInitialized && appState.calendarInstance) {
-            refreshCalendarEvents();
-            return;
-        }
-        if (appState.calendarInstance) appState.calendarInstance.destroy();
-        appState.calendarInstance = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth' },
-            events: getFilteredCalendarEvents(),
-            height: 'auto', eventDisplay: 'block'
-        });
-        appState.calendarInstance.render();
-        appState.calendarInitialized = true;
-    }
-
-    function getFilteredCalendarEvents() {
-        const events = [];
-        if (!appState.leaveRequests) return events;
-        const filterValue = document.getElementById('calendarFilter')?.value || 'all';
-        Object.values(appState.leaveRequests).forEach(leave => {
-            const employee = appState.users[leave.empID];
-            if (!employee) return;
-            let show = false;
-            switch(filterValue) {
-                case 'all':      show = true; break;
-                case 'my':       show = leave.empID === appState.currentUser.id; break;
-                case 'dept':     show = employee.dept === appState.currentUser.dept; break;
-                case 'SL':       show = leave.type === 'SL'; break;
-                case 'VL':       show = leave.type === 'VL'; break;
-                case 'approved': show = leave.status === 'Approved'; break;
-                case 'pending':  show = leave.status === 'Pending';  break;
-                default:         show = true;
-            }
-            if (!show) return;
-            const bgColor = leave.type === 'SL'
-                ? (leave.status === 'Approved' ? '#10b981' : leave.status === 'Pending' ? '#fbbf24' : '#ef4444')
-                : (leave.status === 'Approved' ? '#6366f1' : leave.status === 'Pending' ? '#f59e0b' : '#dc2626');
-
-            // FIX #11: robust off-by-one end date using Date object
-            const endDateObj = new Date(leave.endDate || leave.startDate);
-            endDateObj.setDate(endDateObj.getDate() + 1);
-            const endISO = endDateObj.toISOString().split('T')[0];
-
-            events.push({
-                title: `${employee.fullName} — ${LEAVE_TYPES[leave.type] || leave.type} (${leave.status})`,
-                start: leave.startDate, end: endISO,
-                backgroundColor: bgColor, borderColor: bgColor
-            });
-        });
-        return events;
-    }
-
-    function refreshCalendarEvents() {
-        if (!appState.calendarInstance) { initializeCalendar(); return; }
-        appState.calendarInstance.removeAllEvents();
-        appState.calendarInstance.addEventSource(getFilteredCalendarEvents());
-    }
-
-    function changeCalendarView() {
-        if (!appState.calendarInstance) return;
-        appState.calendarInstance.changeView(document.getElementById('calendarView').value);
-    }
-
     // ── Bulk Register ─────────────────────────────────────────────────────────────────
     function toggleBulkRegister() {
         document.getElementById('bulkRegisterPanel').classList.toggle('hidden');
@@ -2133,73 +2046,111 @@
     }
 
     // ── Timestamp Sheet ───────────────────────────────────────────────────────────────
+    // ── Timestamp Sheet (DTR style — one row per employee, IN+OUT side-by-side per day) ──
     function renderTimestamps() {
         const table = document.getElementById('timestampTable');
         if (!table) return;
         const month = parseInt(document.getElementById('tsMonth').value);
         const year  = new Date().getFullYear();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const DAY_ABBR  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
         const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-        // Header row: Month label + day numbers
-        let html = `<table style="min-width:${200 + daysInMonth * 90}px;">
+        // ── Header row 1: title + date numbers (each spans 2 cols for IN/OUT) ──────────
+        let html = `<table class="dtr-table">
         <thead>
             <tr>
-                <th style="min-width:160px;text-align:left;padding-left:8px;">${MONTH_NAMES[month]} ${year}</th>
-                <th style="min-width:80px;background:#e2e8f0;color:var(--text-main);">Type</th>`;
+                <th rowspan="3" colspan="2" style="background:#fffde7;color:#b45309;font-size:11px;font-weight:800;text-align:center;border:2px solid #888;min-width:220px;">
+                    DAILY TIME RECORD<br>
+                    <span style="font-size:10px;font-weight:600;color:#1e3a8a;">EMPLOYEES</span><br>
+                    <span style="font-size:9px;font-weight:700;color:#b45309;background:#fff9c4;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:3px;">${MONTH_NAMES[month].toUpperCase()} ${year}</span>
+                </th>
+                <th rowspan="3" style="background:#fffde7;font-weight:800;font-size:10px;border:2px solid #888;min-width:60px;">POSITION</th>`;
         for (let d = 1; d <= daysInMonth; d++) {
-            const dateObj  = new Date(year, month, d);
-            const dayName  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dateObj.getDay()];
+            const dateObj   = new Date(year, month, d);
             const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-            html += `<th style="min-width:80px;${isWeekend ? 'background:#fef9c3;' : ''}">${d}<br><span style="font-weight:400;font-size:9px;">${dayName}</span></th>`;
+            const wkStyle   = isWeekend ? 'background:#e8f5e9;' : 'background:#fffde7;';
+            html += `<th colspan="2" style="${wkStyle}font-weight:800;font-size:11px;border:1px solid #aaa;text-align:center;min-width:130px;">${d}/${month+1}</th>`;
+        }
+        html += `</tr>`;
+
+        // ── Header row 2: day names ──────────────────────────────────────────────────
+        html += `<tr>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj   = new Date(year, month, d);
+            const dayName   = DAY_ABBR[dateObj.getDay()];
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            const wkStyle   = isWeekend ? 'background:#e8f5e9;color:#166534;' : 'background:#fffde7;color:#92400e;';
+            html += `<th colspan="2" style="${wkStyle}font-weight:700;font-size:10px;border:1px solid #aaa;text-align:center;">${dayName}</th>`;
+        }
+        html += `</tr>`;
+
+        // ── Header row 3: AM/PM (IN / OUT labels per day) ────────────────────────────
+        html += `<tr>`;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj   = new Date(year, month, d);
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            const wkIn  = isWeekend ? 'background:#c8e6c9;color:#1b5e20;' : 'background:#e3f2fd;color:#0d47a1;';
+            const wkOut = isWeekend ? 'background:#c8e6c9;color:#1b5e20;' : 'background:#fce4ec;color:#880e4f;';
+            html += `<th style="${wkIn}font-weight:700;font-size:9px;border:1px solid #aaa;text-align:center;min-width:65px;">IN</th>`;
+            html += `<th style="${wkOut}font-weight:700;font-size:9px;border:1px solid #aaa;text-align:center;min-width:65px;">OUT</th>`;
         }
         html += `</tr></thead><tbody>`;
 
-        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => (a.fullName||'').localeCompare(b.fullName||''));
+        // ── Employee rows ─────────────────────────────────────────────────────────────
+        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => {
+            const la = (a.fullName||'').split(' ').pop();
+            const lb = (b.fullName||'').split(' ').pop();
+            return la.localeCompare(lb);
+        });
 
         for (const [uid, user] of sorted) {
-            const att = appState.attendance[uid] || {};
-            const shiftLabel = user['shift_' + month] || user.defaultShift || '—';
+            const att   = appState.attendance[uid] || {};
+            const shift = user['shift_' + month] || user.defaultShift || '';
+            // Split name: last word = last name, rest = first name (common PH format)
+            const nameParts  = (user.fullName || '').trim().split(' ');
+            const lastName   = nameParts.length > 1 ? nameParts[nameParts.length - 1].toUpperCase() : (user.fullName||'').toUpperCase();
+            const firstName  = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ').toUpperCase() : '';
+            const rowBg      = 'background:#ffffff;';
 
-            // Row 1: Name + status cells
-            html += `<tr style="background:#f0f7ff;">
-                <td style="font-weight:700;text-align:left;padding-left:8px;border-right:2px solid var(--border);">${escapeHtml(user.fullName)}<br><span style="font-size:9px;color:var(--text-light);">${escapeHtml(user.empID||uid)} · ${escapeHtml(user.dept)}</span></td>
-                <td style="background:#dbeafe;font-weight:700;font-size:10px;">STATUS</td>`;
+            html += `<tr style="${rowBg}">
+                <td style="font-weight:800;text-align:left;padding:4px 6px;border:1px solid #ccc;white-space:nowrap;">${escapeHtml(lastName)}</td>
+                <td style="font-weight:600;text-align:left;padding:4px 6px;border:1px solid #ccc;white-space:nowrap;">${escapeHtml(firstName)}</td>
+                <td style="font-weight:600;text-align:center;padding:4px 4px;border:1px solid #ccc;font-size:10px;">${escapeHtml(shift||user.dept||'')}</td>`;
+
             for (let d = 1; d <= daysInMonth; d++) {
                 const key    = `${month}_${d}`;
+                const tin    = att[`${key}_time`];
+                const tout   = att[`${key}_out`];
+                const late   = att[`${key}_late`] || 0;
                 const status = att[key] || '';
-                html += `<td class="status-${status||'EMPTY'}" style="font-size:10px;">${escapeHtml(status) || ''}</td>`;
-            }
-            html += `</tr>`;
+                const dateObj   = new Date(year, month, d);
+                const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                const cellBg    = isWeekend ? 'background:#f1f8e9;' : '';
 
-            // Row 2: Clock In
-            html += `<tr>
-                <td style="font-size:9px;color:var(--text-light);text-align:left;padding-left:8px;border-right:2px solid var(--border);">Shift: ${escapeHtml(shiftLabel)}</td>
-                <td style="background:#dcfce7;font-weight:700;font-size:10px;color:#166534;">IN</td>`;
-            for (let d = 1; d <= daysInMonth; d++) {
-                const key = `${month}_${d}`;
-                const tin = att[`${key}_time`];
-                const late = att[`${key}_late`] || 0;
-                let cell = tin ? new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
-                if (late) cell += `<br><span style="font-size:8px;color:#dc2626;">${late}m late</span>`;
-                html += `<td style="font-size:10px;">${cell}</td>`;
-            }
-            html += `</tr>`;
+                // Clock-in cell
+                let inText = '';
+                if (tin) {
+                    inText = new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});
+                } else if (status && status !== 'P') {
+                    inText = status; // show SL/VL/etc
+                }
+                const lateStyle = late ? 'color:#dc2626;font-weight:700;' : '';
+                const lateTag   = late ? `<br><span style="font-size:8px;color:#dc2626;">▲${late}m</span>` : '';
 
-            // Row 3: Clock Out
-            html += `<tr style="border-bottom:3px solid var(--border);">
-                <td style="border-right:2px solid var(--border);"></td>
-                <td style="background:#fee2e2;font-weight:700;font-size:10px;color:#991b1b;">OUT</td>`;
-            for (let d = 1; d <= daysInMonth; d++) {
-                const key  = `${month}_${d}`;
-                const tout = att[`${key}_out`];
-                const cell = tout ? new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
-                html += `<td style="font-size:10px;">${cell}</td>`;
+                // Clock-out cell
+                let outText = '';
+                if (tout) outText = new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});
+
+                html += `<td style="${cellBg}font-size:10px;text-align:center;padding:3px 2px;border:1px solid #ddd;${lateStyle}">${escapeHtml(inText)}${lateTag}</td>`;
+                html += `<td style="${cellBg}font-size:10px;text-align:center;padding:3px 2px;border:1px solid #ddd;">${escapeHtml(outText)}</td>`;
             }
             html += `</tr>`;
         }
 
-        if (sorted.length === 0) html += `<tr><td colspan="${daysInMonth + 2}" style="text-align:center;padding:30px;color:var(--text-light);">No employees found</td></tr>`;
+        if (sorted.length === 0) {
+            html += `<tr><td colspan="${3 + daysInMonth * 2}" style="text-align:center;padding:30px;color:var(--text-light);">No employees found</td></tr>`;
+        }
         html += `</tbody></table>`;
         table.innerHTML = html;
     }
@@ -2209,45 +2160,68 @@
         const year  = new Date().getFullYear();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const DAY_ABBR    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
-        // Build header rows
-        const headerRow1 = ['Employee', 'ID', 'Dept', 'Shift', 'Type'];
+        // Row 1: title merge placeholder + date headers (each spans 2 cols)
+        const row1 = [`DAILY TIME RECORD - ${MONTH_NAMES[month].toUpperCase()} ${year}`, '', 'POSITION'];
+        for (let d = 1; d <= daysInMonth; d++) { row1.push(`${d}/${month+1}`); row1.push(''); }
+
+        // Row 2: blank + day names
+        const row2 = ['EMPLOYEES', '', ''];
         for (let d = 1; d <= daysInMonth; d++) {
-            const dn = dayNames[new Date(year, month, d).getDay()];
-            headerRow1.push(`${d} ${dn}`);
+            row2.push(DAY_ABBR[new Date(year, month, d).getDay()]); row2.push('');
         }
 
-        const data = [headerRow1];
-        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => (a.fullName||'').localeCompare(b.fullName||''));
+        // Row 3: Last Name | First Name | Position | IN | OUT per day
+        const row3 = ['LAST NAME', 'FIRST NAME', ''];
+        for (let d = 1; d <= daysInMonth; d++) { row3.push('IN'); row3.push('OUT'); }
+
+        const data = [row1, row2, row3];
+
+        const sorted = Object.entries(appState.users).sort(([,a],[,b]) => {
+            const la = (a.fullName||'').split(' ').pop();
+            const lb = (b.fullName||'').split(' ').pop();
+            return la.localeCompare(lb);
+        });
 
         for (const [uid, user] of sorted) {
-            const att = appState.attendance[uid] || {};
-            const shift = user['shift_' + month] || user.defaultShift || '';
-
-            const rowStatus = [user.fullName||uid, user.empID||uid, user.dept||'', shift, 'STATUS'];
-            const rowIn     = ['','','','', 'CLOCK IN'];
-            const rowOut    = ['','','','', 'CLOCK OUT'];
+            const att    = appState.attendance[uid] || {};
+            const shift  = user['shift_' + month] || user.defaultShift || user.dept || '';
+            const nameParts = (user.fullName || '').trim().split(' ');
+            const lastName  = nameParts.length > 1 ? nameParts[nameParts.length - 1].toUpperCase() : (user.fullName||'').toUpperCase();
+            const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ').toUpperCase() : '';
+            const row = [lastName, firstName, shift];
 
             for (let d = 1; d <= daysInMonth; d++) {
-                const key = `${month}_${d}`;
-                rowStatus.push(att[key] || '');
-                const tin  = att[`${key}_time`];
-                const tout = att[`${key}_out`];
-                const late = att[`${key}_late`] || 0;
-                rowIn.push(tin  ? new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + (late ? ` (${late}m late)` : '') : '');
-                rowOut.push(tout ? new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '');
+                const key    = `${month}_${d}`;
+                const tin    = att[`${key}_time`];
+                const tout   = att[`${key}_out`];
+                const late   = att[`${key}_late`] || 0;
+                const status = att[key] || '';
+                let inText = '';
+                if (tin) {
+                    inText = new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});
+                    if (late) inText += ` (+${late}m)`;
+                } else if (status && status !== 'P') inText = status;
+                const outText = tout ? new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}) : '';
+                row.push(inText, outText);
             }
-            data.push(rowStatus, rowIn, rowOut);
+            data.push(row);
         }
 
         const ws = XLSX.utils.aoa_to_sheet(data);
-        // Style column widths
-        ws['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 10 },
-            ...Array(daysInMonth).fill({ wch: 14 })];
+        // Column widths: Last Name, First Name, Position, then IN+OUT pairs
+        ws['!cols'] = [{ wch: 18 }, { wch: 18 }, { wch: 12 },
+            ...Array(daysInMonth * 2).fill({ wch: 10 })];
+        // Merge date header cells (row 0, pairs starting at col 3)
+        ws['!merges'] = [];
+        for (let d = 0; d < daysInMonth; d++) {
+            ws['!merges'].push({ s: { r: 0, c: 3 + d*2 }, e: { r: 0, c: 4 + d*2 } });
+            ws['!merges'].push({ s: { r: 1, c: 3 + d*2 }, e: { r: 1, c: 4 + d*2 } });
+        }
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, `${MONTH_NAMES[month]} ${year}`);
-        XLSX.writeFile(wb, `Timestamps_${MONTH_NAMES[month]}_${year}.xlsx`);
+        XLSX.writeFile(wb, `DTR_${MONTH_NAMES[month]}_${year}.xlsx`);
     }
 
     // ── Export ────────────────────────────────────────────────────────────────────────
@@ -2341,6 +2315,7 @@
         Object.values(appState.listeners).forEach(u => { if (typeof u === 'function') u(); });
         appState.listeners.users = onValue(ref(db, 'users'), snapshot => {
             appState.users = snapshot.val() || {};
+            appState.lastRenderTime = 0; // reset throttle so next render always fires
             queueRender('tab', 'dashboard');
         });
         appState.listeners.attendance = onValue(ref(db, 'attendance'), snapshot => {
