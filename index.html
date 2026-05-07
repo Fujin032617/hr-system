@@ -465,6 +465,7 @@ td.att-cell:hover { transform: scale(1.08); }
 #toastContainer {
   position: fixed; bottom: 24px; right: 24px;
   z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+  max-height: 320px; overflow: hidden;
 }
 .toast {
   display: flex; align-items: center; gap: 10px;
@@ -1063,6 +1064,25 @@ function esc(text){
   const d=document.createElement('div');d.textContent=String(text);return d.innerHTML;
 }
 
+// FIX #1: Parse date strings as LOCAL time (not UTC) to avoid off-by-one in PH (UTC+8)
+function parseLocalDate(str){
+  if(!str)return null;
+  // "2026-05-10" → treat as local midnight, not UTC midnight
+  const[y,m,d]=str.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+
+function todayLocal(){
+  const n=new Date();
+  return new Date(n.getFullYear(),n.getMonth(),n.getDate());
+}
+
+function tomorrowLocalStr(){
+  const t=new Date();
+  t.setDate(t.getDate()+1);
+  return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+}
+
 function employeeNumberKey(uid,user){
   const raw=String(user?.empID||uid||'').trim();
   const n=raw.match(/\d+/);
@@ -1094,6 +1114,8 @@ function finishLogin(profile){
 function parseTime(s){
   if(!s||!s.trim())return null;
   s=s.trim().toUpperCase();
+  // FIX #8: handle formats like "8:00AM" (no space before AM/PM)
+  s=s.replace(/(\d)(AM|PM)/i,'$1 $2');
   if(s.includes(':')){
     const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;
     if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;return[h,m];
@@ -1105,7 +1127,8 @@ function parseTime(s){
 }
 
 function computeLateMins(clockInTime,empId,month){
-  const user=appState.users[empId]||appState.currentUser;
+  // FIX #2: fall back to appState.currentUser when user not yet in appState.users
+  const user=appState.users[empId]||(appState.currentUser?.id===empId?appState.currentUser:null);
   const slot=user?(user['out_'+month]||''):'';
   if(!slot)return 0;
   if(!/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot))return 0;
@@ -1129,10 +1152,16 @@ function calculateUsedLeaves(empId,type){
   return used;
 }
 
+// FIX #2: getUserForCalc — always find the best available user object
+function getUserForCalc(empId){
+  return appState.users[empId]||(appState.currentUser?.id===empId?appState.currentUser:null);
+}
+
 function calculateWorkingDays(startDate,endDate,empId){
   if(!startDate)return 0;
-  const start=new Date(startDate),end=endDate?new Date(endDate):start;
-  const user=appState.users[empId];if(!user)return 0;
+  // FIX #1: use local date parsing so PH timezone doesn't shift dates back
+  const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);
+  const user=getUserForCalc(empId);if(!user)return 0;
   let days=0;const cur=new Date(start);
   while(cur<=end){
     const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
@@ -1143,7 +1172,7 @@ function calculateWorkingDays(startDate,endDate,empId){
 }
 
 function checkConsecutiveLimit(empId,startDate,endDate){
-  const user=appState.users[empId];
+  const user=getUserForCalc(empId);
   const days=calculateWorkingDays(startDate,endDate||startDate,empId);
   const max=(user&&user.maxConsecutiveLeave)?user.maxConsecutiveLeave:30;
   return{valid:days<=max,days,max};
@@ -1151,12 +1180,13 @@ function checkConsecutiveLimit(empId,startDate,endDate){
 
 function hasOverlappingLeave(empId,start,end,exclude=null){
   if(!appState.leaveRequests)return false;
-  const s=new Date(start),e=end?new Date(end):s;
+  // FIX #1: parse as local dates
+  const s=parseLocalDate(start),e=end?parseLocalDate(end):new Date(s);
   for(const[id,l]of Object.entries(appState.leaveRequests)){
     if(exclude&&id===exclude)continue;
     if(l.empID!==empId)continue;
     if(l.status==='Rejected'||l.status==='Cancelled')continue;
-    const es=new Date(l.startDate),ee=l.endDate?new Date(l.endDate):es;
+    const es=parseLocalDate(l.startDate),ee=l.endDate?parseLocalDate(l.endDate):new Date(es);
     if(s<=ee&&e>=es)return true;
   }
   return false;
@@ -1247,6 +1277,7 @@ async function safeOp(operation,data,actionType){
 }
 
 // ── AUTO CLOCK-OUT ─────────────────────────────────────────────
+// FIX #3: Determine the active key FIRST, then build the payload from it
 async function checkAutoClockOut(){
   if(!appState.currentUser)return;
   const now=new Date();const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
@@ -1262,8 +1293,9 @@ async function checkAutoClockOut(){
   const clockInTime=new Date(clockInTimeStr);
   const autoTime=new Date(clockInTime.getTime()+12*60*60*1000);
   const warnTime=new Date(autoTime.getTime()-30*60*1000);
+  // FIX #3: pass the resolved activeKey into buildAutoPayload
   if(now>=autoTime){
-    try{await autoClockOutUser();hideBanner();showToast('Auto clocked out after 12-hour shift','info');}
+    try{await autoClockOutUserWithKey(activeKey);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}
     catch{addToOfflineQueue('auto_clock_out',buildAutoPayload(activeKey));}
   }else if(now>=warnTime){
     showAutoClockoutBanner(Math.ceil((autoTime-now)/60000));
@@ -1280,6 +1312,21 @@ function buildAutoPayload(key){
   };
 }
 
+// FIX #3: dedicated function that uses the pre-resolved key
+async function autoClockOutUserWithKey(key){
+  const now=new Date();
+  const uid=appState.currentUser.id;
+  const payload=buildAutoPayload(key);
+  await update(ref(db,`attendance/${uid}`),payload.updates);
+  await push(ref(db,'audit_logs'),payload.auditLog);
+  await push(ref(db,'notifications'),payload.notification);
+  localStorage.removeItem('hr_last_clock');
+  hideBanner();
+  document.getElementById('btnClockIn').classList.remove('hidden');
+  document.getElementById('btnClockOut').classList.add('hidden');
+}
+
+// Keep old name for offline queue replay
 async function autoClockOutUser(){
   const now=new Date();const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
   let key=`${now.getMonth()}_${now.getDate()}`;
@@ -1290,14 +1337,7 @@ async function autoClockOutUser(){
     const yk=`${yesterday.getMonth()}_${yesterday.getDate()}`;
     if(appState.attendance[uid]?.[yk]==='P'&&!appState.attendance[uid]?.[`${yk}_out`])key=yk;
   }
-  const payload=buildAutoPayload(key);
-  await update(ref(db,`attendance/${uid}`),payload.updates);
-  await push(ref(db,'audit_logs'),payload.auditLog);
-  await push(ref(db,'notifications'),payload.notification);
-  localStorage.removeItem('hr_last_clock');
-  hideBanner();
-  document.getElementById('btnClockIn').classList.remove('hidden');
-  document.getElementById('btnClockOut').classList.add('hidden');
+  await autoClockOutUserWithKey(key);
 }
 
 function showAutoClockoutBanner(mins){
@@ -1382,7 +1422,6 @@ onAuthStateChanged(auth,async(user)=>{
       try{
         const profile=await findUserProfile(user);
         if(profile){
-          // FIX: check disabled flag
           const data=profile.data;
           if(data.disabled){await signOut(auth);showFieldError('loginError','Account disabled. Contact admin.');showToast('Account disabled. Contact admin.','error');return;}
           finishLogin({id:profile.id,data:{authUid:user.uid,...data}});
@@ -1407,7 +1446,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');
   });
   const pp=document.getElementById('pPeriod');if(pp)pp.value=now.getDate()<=15?'1-15':'16-31';
-  const tom=new Date();tom.setDate(tom.getDate()+1);const ts=tom.toISOString().split('T')[0];
+  // FIX #11: set min date at DOMContentLoaded as a baseline; recalculated on every form open
+  const ts=tomorrowLocalStr();
   ['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
   updateClock();setInterval(updateClock,1000);
   setupOfflineSupport();
@@ -1476,24 +1516,18 @@ function showApp(){
 }
 
 function applyRoleVisibility(){
-  const role=appState.currentUser?.role;
   const isAdminHR=isHRorAdmin();
   const isOpsAdminHR=isHRorAdminOrOPS();
-  // Directory — Admin, HR only
   document.querySelectorAll('.adm-hr-only').forEach(el=>{el.style.display=isAdminHR?'':'none';});
-  // Ops-level tabs
   document.querySelectorAll('.adm-ops-hr-only').forEach(el=>{el.style.display=isOpsAdminHR?'':'none';});
-  // Nav sections
   document.getElementById('navManage').style.display=isOpsAdminHR?'':'none';
   document.getElementById('navReports').style.display=isOpsAdminHR?'':'none';
-  // Inbox/notif bell
   document.getElementById('inboxBtn').classList.toggle('hidden',!isOpsAdminHR);
   document.getElementById('notifBtn').classList.toggle('hidden',!isOpsAdminHR);
 }
 
 // ── TABS ───────────────────────────────────────────────────────
 function switchTabInternal(tabName,btnEl){
-  // Payroll — HR/Admin only (FIX: server-side enforcement needed in DB rules too)
   if(tabName==='pay'&&!isHRorAdmin()){showToast('Payroll is restricted to HR and Admin','error');return;}
   document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -1523,7 +1557,8 @@ function updateDashboard(){
   if(!appState.currentUser)return;
   const now=new Date(),month=now.getMonth();
   const uid=appState.currentUser.id;
-  const user=appState.users[uid]||appState.currentUser;
+  // FIX #2: use getUserForCalc so fresh logins work before realtime listener fires
+  const user=getUserForCalc(uid)||appState.currentUser;
   const slUsed=calculateUsedLeaves(uid,'SL'),vlUsed=calculateUsedLeaves(uid,'VL');
   const slMax=user.slMax||0,vlMax=user.vlMax||0;
   document.getElementById('slView').textContent=Math.max(0,slMax-slUsed);
@@ -1538,12 +1573,11 @@ function updateDashboard(){
   document.getElementById('myTime').textContent=user['out_'+month]||'TBA';
   const o1=user['off1_'+month]||'',o2=user['off2_'+month]||'';
   document.getElementById('myOff').textContent=`${o1} ${o2}`.trim()||'TBA';
-  // Attendance stats
   let present=0,lates=0;
   for(let d=1;d<=now.getDate();d++){const k=`${month}_${d}`;const s=appState.attendance[uid]?.[k];const l=appState.attendance[uid]?.[`${k}_late`]||0;if(s==='P'){present++;lates+=parseInt(l);}}
   document.getElementById('monthPresent').textContent=present;
   document.getElementById('monthLates').textContent=lates;
-  // Clock state
+  // FIX #10: defer clock state to after attendance listener fires; show loading state initially
   const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
   const yk=`${yesterday.getMonth()}_${yesterday.getDate()}`;
   const todayKey=`${month}_${now.getDate()}`;
@@ -1558,11 +1592,11 @@ function toggleLeaveForm(){
   const lf=document.getElementById('leaveFormSection');
   lf.classList.toggle('hidden');
   if(!lf.classList.contains('hidden')){
+    // FIX #11: recalculate tomorrow's date every time the form is opened
+    const ts=tomorrowLocalStr();
     const s=document.getElementById('lvStartDate'),e=document.getElementById('lvEndDate');
-    // FIX: recalculate tomorrow at open time
-    const tom=new Date();tom.setDate(tom.getDate()+1);const ts=tom.toISOString().split('T')[0];
-    if(!s.value){s.value=ts;e.value=ts;}
-    // Clear stale errors
+    s.min=ts;e.min=ts;
+    if(!s.value||s.value<ts){s.value=ts;e.value=ts;}
     ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     updateLeaveBalance();checkDateRange();
   }
@@ -1572,8 +1606,9 @@ function checkDateRange(){
   const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;
   ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   if(!s)return;
-  const start=new Date(s),end=e?new Date(e):start;
-  const today=new Date();today.setHours(0,0,0,0);
+  // FIX #1: use local date parsing
+  const start=parseLocalDate(s),end=e?parseLocalDate(e):new Date(start);
+  const today=todayLocal();
   if(start<today){showFieldValidation('dateRangeError','Cannot request leave for past dates');return;}
   if(end<start){showFieldValidation('dateRangeError','End date cannot be before start date');return;}
   if(hasOverlappingLeave(appState.currentUser.id,s,e))showFieldValidation('overlapError','You already have a leave during this period');
@@ -1586,12 +1621,13 @@ function checkDateRange(){
 
 function checkScheduleConflictInfo(startDate,endDate){
   const el=document.getElementById('scheduleConflict');if(!el||!startDate)return;
-  const user=appState.users[appState.currentUser.id]||appState.currentUser;
-  const start=new Date(startDate),end=endDate?new Date(endDate):start;
+  const user=getUserForCalc(appState.currentUser.id);
+  // FIX #1: local date parsing
+  const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);
   const cur=new Date(start);let rest=0,work=0;
   while(cur<=end){
     const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
-    const o1=user['off1_'+m]||'',o2=user['off2_'+m]||'';
+    const o1=user?user['off1_'+m]||'':'',o2=user?user['off2_'+m]||'':'';
     if(o1===dn||o2===dn)rest++;else work++;cur.setDate(cur.getDate()+1);
   }
   if(rest>0){el.innerHTML=`ℹ️ Leave includes ${rest} rest day(s). Only ${work} working day(s) will be deducted.`;el.classList.remove('hidden');}
@@ -1602,11 +1638,12 @@ function updateLeaveBalance(){
   if(!appState.currentUser)return;
   const type=document.getElementById('lvType').value;
   const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;
-  const user=appState.users[appState.currentUser.id]||appState.currentUser;
+  // FIX #2: use getUserForCalc
+  const user=getUserForCalc(appState.currentUser.id);
   const wd=s?calculateWorkingDays(s,e,appState.currentUser.id):0;
   document.getElementById('requestedDays').textContent=wd;
   const used=calculateUsedLeaves(appState.currentUser.id,type);
-  const max=type==='SL'?(user.slMax||0):(user.vlMax||0);
+  const max=type==='SL'?(user?user.slMax||0:0):(user?user.vlMax||0:0);
   const avail=Math.max(0,max-used);
   document.getElementById('availableBalance').textContent=avail;
   const btn=document.querySelector('#leaveFormSection .btn-primary');
@@ -1620,8 +1657,9 @@ async function submitLeave(){
   const reason=document.getElementById('lvReason').value.trim();
   if(!s){showToast('Please select a start date','error');return;}
   if(!reason){showToast('Please provide a reason','error');return;}
-  const today=new Date();today.setHours(0,0,0,0);
-  if(new Date(s)<today){showToast('Cannot request leave for past dates','error');return;}
+  // FIX #1: use local date parsing for server-side submit validation
+  const today=todayLocal();
+  if(parseLocalDate(s)<today){showToast('Cannot request leave for past dates','error');return;}
   if(hasOverlappingLeave(appState.currentUser.id,s,e)){showToast('Overlapping leave exists','error');return;}
   const cc=checkConsecutiveLimit(appState.currentUser.id,s,e);
   if(!cc.valid){showToast(`Max ${cc.max} consecutive days. You requested ${cc.days}.`,'error');return;}
@@ -1704,16 +1742,16 @@ async function addEmployee(){
   const customId=document.getElementById('addEmpNum').value.trim();
   if(!email||!fullName){showToast('Email and full name are required','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&!pass){showToast('Password is required for new employees','error');appState.isProcessing['emp']=false;return;}
-  // FIX: validate email format
   if(!appState.editingEmployeeId&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('Invalid email format','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&pass.length<6){showToast('Password must be at least 6 characters','error');appState.isProcessing['emp']=false;return;}
   try{
     let uid;
     if(appState.editingEmployeeId){uid=appState.editingEmployeeId;}
     else{
-      // FIX: secondary auth — admin stays logged in
       const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
-      uid=cred.user.uid;await signOut(secondaryAuth);
+      uid=cred.user.uid;
+      // FIX #6: always sign out secondary auth in finally block
+      try{await signOut(secondaryAuth);}catch{}
     }
     const data={
       fullName,email,empID:customId||uid,
@@ -1730,7 +1768,7 @@ async function addEmployee(){
       slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),
       vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),
       maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),
-      disabled:false  // FIX: explicit disabled flag
+      disabled:false
     };
     await set(ref(db,`users/${uid}`),data);
     showToast(appState.editingEmployeeId?'Employee updated!':'Employee added!','success');
@@ -1738,14 +1776,26 @@ async function addEmployee(){
   }catch(e){
     if(e.code==='auth/email-already-in-use')showToast('Email already in use','error');
     else showToast('Failed to save: '+(e.message||''),'error');
+    // FIX #6: ensure secondary auth is signed out even on failure
+    try{await signOut(secondaryAuth);}catch{}
   }finally{appState.isProcessing['emp']=false;}
 }
 
+// FIX #4: when a user's own record is disabled via the realtime listener, force sign-out
+function checkCurrentUserDisabled(){
+  if(!appState.currentUser)return;
+  const uid=appState.currentUser.id;
+  const latest=appState.users[uid];
+  if(latest&&latest.disabled){
+    showToast('Your account has been disabled. Signing out…','error');
+    setTimeout(()=>handleLogout(true),2000);
+  }
+}
+
 async function deleteEmployee(empId){
-  if(!confirm(`Delete ${empId}? Their login account in Firebase Auth will remain but their data will be removed.`))return;
+  if(!confirm(`Disable ${empId}? Their login account in Firebase Auth will remain but they will not be able to log in.`))return;
   try{
     await update(ref(db,`users/${empId}`),{disabled:true,deletedAt:new Date().toISOString()});
-    // FIX: mark disabled rather than full remove, so they can't log in
     showToast('Employee disabled. Their data is retained. Firebase Auth account still exists.','info');
     renderDirectory();
   }catch(e){showToast('Failed to disable employee','error');}
@@ -1787,14 +1837,17 @@ function searchEmployees(){
 
 // ── ATTENDANCE ─────────────────────────────────────────────────
 function renderAttendance(){
-  // FIX: gate at render time as well
   if(!isHRorAdmin()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
   const el=document.getElementById('payTable');if(!el)return;
   const month=parseInt(document.getElementById('pMonth').value);
+  // FIX #12: compute year correctly relative to current month
+  const now=new Date();
+  const currentMonth=now.getMonth();
+  const year=month>currentMonth?now.getFullYear()-1:now.getFullYear();
   const shiftF=(document.getElementById('pShiftSearch')?.value||'').trim().toLowerCase();
   const period=document.getElementById('pPeriod').value;
   const[pS,pE_raw]=period.split('-').map(Number);
-  const daysInMonth=new Date(new Date().getFullYear(),month+1,0).getDate();
+  const daysInMonth=new Date(year,month+1,0).getDate();
   const pE=pE_raw>=28?daysInMonth:pE_raw;
   let html=`<table style="min-width:${600+(pE-pS+1)*52}px;"><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
   for(let d=pS;d<=pE;d++)html+=`<th style="min-width:50px;">${d}</th>`;
@@ -1870,8 +1923,21 @@ async function saveSchedule(empId,month){
   try{
     const p=(appState.scheduleChanges||{})[empId]||{};
     const user=appState.users[empId]||{};
+    // FIX #9: only write fields that are present in scheduleChanges OR already exist on the user.
+    // Never write blank values for fields that weren't touched.
     const updates={};
-    ['out_','shift_','off1_','off2_'].forEach(pre=>{const f=pre+month;updates[f]=f in p?p[f]:(user[f]||'');});
+    ['out_','shift_','off1_','off2_'].forEach(pre=>{
+      const f=pre+month;
+      if(f in p){
+        // User explicitly set this field — write their value (even if blank, that's intentional)
+        updates[f]=p[f];
+      } else if(f in user){
+        // Not changed — preserve existing value
+        updates[f]=user[f];
+      }
+      // If field is in neither p nor user, we skip it — don't create a blank entry
+    });
+    if(Object.keys(updates).length===0){showToast('No changes to save','info');return;}
     await update(ref(db,`users/${empId}`),updates);
     if(appState.scheduleChanges?.[empId]){Object.keys(updates).forEach(f=>delete appState.scheduleChanges[empId][f]);if(!Object.keys(appState.scheduleChanges[empId]).length)delete appState.scheduleChanges[empId];}
     if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length)document.getElementById('saveSchedulesBtn').classList.add('hidden');
@@ -1880,9 +1946,11 @@ async function saveSchedule(empId,month){
 }
 
 async function saveAllSchedules(){
-  if(!appState.scheduleChanges)return;
+  if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length){showToast('No pending changes','info');return;}
   try{
-    for(const[empId,changes]of Object.entries(appState.scheduleChanges))await update(ref(db,`users/${empId}`),changes);
+    for(const[empId,changes]of Object.entries(appState.scheduleChanges)){
+      if(Object.keys(changes).length>0)await update(ref(db,`users/${empId}`),changes);
+    }
     appState.scheduleChanges={};document.getElementById('saveSchedulesBtn').classList.add('hidden');
     showToast('All schedules published!','success');
   }catch(e){showToast('Failed to publish','error');}
@@ -1977,7 +2045,8 @@ async function approveLeave(leaveId){
     const req=appState.leaveRequests[leaveId];
     if(!canApproveLeave(req)){showToast('Not authorized to approve','error');return;}
     const now=new Date();
-    const start=new Date(req.startDate),end=req.endDate?new Date(req.endDate):start;
+    // FIX #1: local date parsing for attendance key generation
+    const start=parseLocalDate(req.startDate),end=req.endDate?parseLocalDate(req.endDate):new Date(start);
     const dateUpdates={};const cur=new Date(start);const emp=appState.users[req.empID];
     while(cur<=end){
       const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
@@ -2056,7 +2125,7 @@ function updateMyLeaves(){
     else if(leave.status==='Rejected')rejected++;
     const wd=leave.workingDays||1;
     const statusClass=leave.status.toLowerCase();
-    html+=`<div class="leave-card ${statusClass}">
+    html+=`<div class="leave-card ${statusClass}" data-status="${statusClass}">
       <div class="leave-type">${LEAVE_TYPES[leave.type]||esc(leave.type)}</div>
       <div class="leave-dates">📅 ${leave.startDate}${leave.endDate!==leave.startDate?` → ${leave.endDate}`:''} · ${wd} working day${wd!==1?'s':''}</div>
       <span class="status-badge badge-${statusClass}">● ${esc(leave.status)}</span>
@@ -2074,23 +2143,31 @@ function updateMyLeaves(){
   });
   if(!mine.length)html=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No leave requests yet. File one from your dashboard!</div>`;
   container.innerHTML=html;
-  // FIX: update counts from data, not DOM
+  // FIX #7: always update counts directly from data, not from DOM
   document.getElementById('totalLeaves').textContent=total;
   document.getElementById('approvedLeaves').textContent=approved;
   document.getElementById('pendingLeaves').textContent=pending;
   document.getElementById('rejectedLeaves').textContent=rejected;
 }
 
-// FIX: searchMyLeaves re-counts from filtered data
+// FIX #7: searchMyLeaves reads data-status attribute, not class names, for reliable counting
 function searchMyLeaves(){
   const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();
   let t=0,a=0,p=0,r=0;
   document.querySelectorAll('#myLeavesContainer .leave-card').forEach(c=>{
     const vis=c.textContent.toLowerCase().includes(q);c.style.display=vis?'':'none';
-    if(vis){t++;if(c.classList.contains('approved'))a++;else if(c.classList.contains('pending'))p++;else if(c.classList.contains('rejected'))r++;}
+    if(vis){
+      t++;
+      const st=c.getAttribute('data-status')||'';
+      if(st==='approved')a++;
+      else if(st==='pending')p++;
+      else if(st==='rejected')r++;
+    }
   });
-  document.getElementById('totalLeaves').textContent=t;document.getElementById('approvedLeaves').textContent=a;
-  document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;
+  document.getElementById('totalLeaves').textContent=t;
+  document.getElementById('approvedLeaves').textContent=a;
+  document.getElementById('pendingLeaves').textContent=p;
+  document.getElementById('rejectedLeaves').textContent=r;
 }
 
 // ── BULK REGISTER ──────────────────────────────────────────────
@@ -2106,14 +2183,15 @@ async function runBulkRegister(){
     const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());
     prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;
     if(!fullName||!email||!password){fail++;prog.textContent+=' ⚠ Skipped (missing fields)';continue;}
-    // FIX: validate email per row
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){fail++;prog.textContent+=' ⚠ Skipped (invalid email)';continue;}
     try{
       const cred=await createUserWithEmailAndPassword(secondaryAuth,email,password);
-      const uid=cred.user.uid;await signOut(secondaryAuth);
+      const uid=cred.user.uid;
       await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',disabled:false});
       ok++;
     }catch(e){console.error('Bulk fail',email,e);fail++;prog.textContent+=` ⚠ Failed: ${e.code||e.message}`;}
+    // FIX #6: always sign out secondary auth after each row, success or failure
+    finally{try{await signOut(secondaryAuth);}catch{}}
   }
   prog.textContent=`✅ Done: ${ok} created, ${fail} failed.`;
   if(ok>0){renderDirectory();showToast(`${ok} employee(s) registered!`,'success');}
@@ -2124,7 +2202,10 @@ async function runBulkRegister(){
 function renderTimestamps(){
   const el=document.getElementById('timestampTable');if(!el)return;
   const month=parseInt(document.getElementById('tsMonth').value);
-  const year=new Date().getFullYear();
+  // FIX #12: compute year correctly relative to current month
+  const now=new Date();
+  const currentMonth=now.getMonth();
+  const year=month>currentMonth?now.getFullYear()-1:now.getFullYear();
   const daysInMonth=new Date(year,month+1,0).getDate();
   const DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   let html=`<table><thead>
@@ -2164,7 +2245,9 @@ function renderTimestamps(){
 
 function exportTimestampsToExcel(){
   const month=parseInt(document.getElementById('tsMonth').value);
-  const year=new Date().getFullYear();
+  // FIX #12
+  const now=new Date();const currentMonth=now.getMonth();
+  const year=month>currentMonth?now.getFullYear()-1:now.getFullYear();
   const days=new Date(year,month+1,0).getDate();
   const DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   const r1=[`DTR - ${MONTH_FULL[month].toUpperCase()} ${year}`,'','POSITION'];
@@ -2197,12 +2280,13 @@ function exportTimestampsToExcel(){
 
 // ── PAYROLL EXPORT (HR/Admin only) ────────────────────────────
 function exportPayrollRequestReport(){
-  // FIX: role check at function level
   if(!isHRorAdmin()){showToast('Payroll reports are restricted to HR and Admin','error');return;}
   const month=parseInt(document.getElementById('pMonth').value);
   const period=document.getElementById('pPeriod').value;
   const[pS,pE_raw]=period.split('-').map(Number);
-  const year=new Date().getFullYear();
+  // FIX #12
+  const now=new Date();const currentMonth=now.getMonth();
+  const year=month>currentMonth?now.getFullYear()-1:now.getFullYear();
   const daysInMonth=new Date(year,month+1,0).getDate();
   const pE=pE_raw>=28?daysInMonth:pE_raw;
   const startLabel=`${MONTHS[month].toUpperCase()} ${pS},${year}`;
@@ -2284,7 +2368,9 @@ function exportToExcel(){
   const month=parseInt(document.getElementById('pMonth').value);
   const period=document.getElementById('pPeriod').value;
   const[pS,pE_raw]=period.split('-').map(Number);
-  const daysInMonth=new Date(new Date().getFullYear(),month+1,0).getDate();
+  const now=new Date();const currentMonth=now.getMonth();
+  const year=month>currentMonth?now.getFullYear()-1:now.getFullYear();
+  const daysInMonth=new Date(year,month+1,0).getDate();
   const pE=pE_raw>=28?daysInMonth:pE_raw;
   const data=[['Emp ID','Name','Dept','Shift']];
   for(let d=pS;d<=pE;d++)data[0].push(`Day ${d}`);
@@ -2297,17 +2383,20 @@ function exportToExcel(){
   }
   const ws=XLSX.utils.aoa_to_sheet(data);const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Attendance');
-  XLSX.writeFile(wb,`Attendance_${MONTHS[month]}_${period}.xlsx`);
+  XLSX.writeFile(wb,`Attendance_${MONTHS[month]}_${period}_${year}.xlsx`);
 }
 
 // ── TOAST ──────────────────────────────────────────────────────
+// FIX #13: cap toast count at 5 to prevent overflow on reconnect storms
 function showToast(msg,type='info'){
   const c=document.getElementById('toastContainer');
+  // Remove oldest toasts if over limit
+  while(c.children.length>=5){c.removeChild(c.firstChild);}
   const t=document.createElement('div');
   t.className=`toast toast-${type}`;
   const icon=type==='success'?'✅':type==='error'?'❌':'ℹ️';
   t.textContent=`${icon} ${msg}`;c.appendChild(t);
-  setTimeout(()=>t.remove(),3500);
+  setTimeout(()=>{if(t.parentNode)t.remove();},3500);
 }
 
 function showFieldError(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
@@ -2331,7 +2420,13 @@ function qRender(...tasks){
 // ── REALTIME LISTENERS ─────────────────────────────────────────
 function setupRealtimeListeners(){
   Object.values(appState.listeners).forEach(u=>{if(typeof u==='function')u();});
-  appState.listeners.users=onValue(ref(db,'users'),snap=>{appState.users=snap.val()||{};appState.lastRenderTime=0;qRender('tab','dashboard');});
+  appState.listeners.users=onValue(ref(db,'users'),snap=>{
+    appState.users=snap.val()||{};
+    appState.lastRenderTime=0;
+    // FIX #4: check if current user's account has been disabled remotely
+    checkCurrentUserDisabled();
+    qRender('tab','dashboard');
+  });
   appState.listeners.attendance=onValue(ref(db,'attendance'),snap=>{appState.attendance=snap.val()||{};qRender('tab','dashboard');});
   appState.listeners.leaveRequests=onValue(ref(db,'leave_requests'),snap=>{appState.leaveRequests=snap.val()||{};qRender('inbox','myLeaves');});
   appState.listeners.notifications=onValue(ref(db,'notifications'),snap=>{appState.notifications=snap.val()||{};qRender('notifications');});
