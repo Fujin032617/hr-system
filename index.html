@@ -131,6 +131,7 @@ td.att-cell{cursor:pointer;min-width:50px;text-align:center;font-size:10px;font-
 td.att-cell:hover{transform:scale(1.08);}
 .s-P{background:#dcfce7!important;color:#166534!important;}
 .s-RD{background:#fed7aa!important;color:#9a3412!important;}
+.s-RDS{background:#c8e6c9!important;color:#1b5e20!important;}
 .s-SL{background:#fef9c3!important;color:#713f12!important;}
 .s-A{background:#fee2e2!important;color:#991b1b!important;}
 .s-NPL{background:#cffafe!important;color:#164e63!important;}
@@ -213,7 +214,6 @@ td.att-cell:hover{transform:scale(1.08);}
 .py-stat .ps-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-top:4px;color:var(--navy);}
 .py-stat .ps-sub{font-size:10px;color:var(--muted);margin-top:2px;}
 
-/* Payroll preview table */
 #payrollPreview{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
 #payrollPreview table{border-collapse:collapse;width:100%;min-width:1400px;font-size:11px;}
 #payrollPreview thead tr:first-child th{background:#1c1e21;color:#fff;padding:10px 8px;text-align:center;border:1px solid #3a3b3c;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
@@ -680,11 +680,11 @@ td.att-cell:hover{transform:scale(1.08);}
 </script>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import{getDatabase,ref,set,get,update,onValue,push,remove}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const firebaseConfig={
+const firebaseConfig = {
   apiKey:"AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",
   authDomain:"realtime-database-49a47.firebaseapp.com",
   databaseURL:"https://realtime-database-49a47-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -694,39 +694,32 @@ const firebaseConfig={
   appId:"1:879389111428:web:cf1bf08dbdf46c87533ed1"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getDatabase(app);
-const auth=getAuth(app);
-const secondaryApp=initializeApp(firebaseConfig,"Secondary");
-const secondaryAuth=getAuth(secondaryApp);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+const secondaryApp = initializeApp(firebaseConfig,"Secondary");
+const secondaryAuth = getAuth(secondaryApp);
 
-const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const MONTH_FULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
-const STATUS_CYCLE=['','P','RD','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
-const LEAVE_TYPES={SL:'Sick Leave',VL:'Vacation Leave'};
-const DAYS_OF_WEEK=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const LEGEND_ITEMS=[['RD','RESTDAY'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEREAVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
-const WD_BASIS=26; // Philippine standard: 26 working days/month
-const NIGHT_HRS=80; // Standard night hours per pay period in file
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const STATUS_CYCLE = ['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
+const LEAVE_TYPES = {SL:'Sick Leave',VL:'Vacation Leave'};
+const DAYS_OF_WEEK = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const LEGEND_ITEMS = [['RD','RESTDAY'],['RDS','REST DAY SHIFT'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEREAVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
+const WD_BASIS = 26;
 
-const appState={
+const appState = {
   users:{},attendance:{},leaveRequests:{},notifications:{},
   currentUser:null,listeners:{},isProcessing:{},isOnline:navigator.onLine,
   offlineQueue:[],autoClockOutInterval:null,forgotLogoutTimer:null,
   editingEmployeeId:null,scheduleChanges:null,lastRenderTime:0
 };
 
-// ── HELPERS ───────────────────────────────────────────────────
+/* ── HELPERS ─────────────────────────────────────────────────── */
 function esc(t){if(t===null||t===undefined)return'';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML;}
 function php(n){return'₱'+(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function num(n){return(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
-
-// FIX: Parse dates as local time (not UTC) — prevents off-by-one in PH (UTC+8)
-function parseLocalDate(str){
-  if(!str)return null;
-  const[y,m,d]=str.split('-').map(Number);
-  return new Date(y,m-1,d);
-}
+function parseLocalDate(str){if(!str)return null;const[y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);}
 function todayLocal(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
 function tomorrowLocalStr(){const t=new Date();t.setDate(t.getDate()+1);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
 
@@ -750,9 +743,17 @@ function getUserForCalc(empId){
 function parseTime(s){
   if(!s||!s.trim())return null;
   s=s.trim().toUpperCase().replace(/(\d)(AM|PM)/i,'$1 $2');
-  if(s.includes(':')){const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;return[h,m];}
+  if(s.includes(':')){
+    const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;
+    if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;
+    return[h,m];
+  }
   const m=s.match(/(\d+)\s*(AM|PM)?/i);
-  if(m){let h=parseInt(m[1])||0;const pd=(m[2]||'AM').toUpperCase();if(pd==='PM'&&h<12)h+=12;if(pd==='AM'&&h===12)h=0;return[h,0];}
+  if(m){
+    let h=parseInt(m[1])||0;const pd=(m[2]||'AM').toUpperCase();
+    if(pd==='PM'&&h<12)h+=12;if(pd==='AM'&&h===12)h=0;
+    return[h,0];
+  }
   return null;
 }
 
@@ -834,7 +835,36 @@ function canCancelLeave(req){
 function isHRorAdmin(){return appState.currentUser&&['HR','Admin'].includes(appState.currentUser.role);}
 function isHRorAdminOrOPS(){return appState.currentUser&&['HR','Admin','OPS'].includes(appState.currentUser.role);}
 
-// ── OFFLINE ───────────────────────────────────────────────────
+/* ── NIGHT HOURS (10PM-6AM) ─────────────────────────────────── */
+function getNightMinutes(clockIn, clockOut){
+  if(!clockIn||!clockOut)return 0;
+  const toMins = d => d.getHours()*60 + d.getMinutes();
+  let start = toMins(clockIn);
+  let end = toMins(clockOut);
+  if(end<start) end += 24*60;
+  const nightStart = 22*60;
+  const nightEnd = 6*60 + 24*60;
+  const overlapStart = Math.max(start, nightStart);
+  const overlapEnd = Math.min(end, nightEnd);
+  return Math.max(0, overlapEnd - overlapStart);
+}
+
+function computeNightHours(uid, month, pStart, pEnd){
+  const att = appState.attendance[uid] || {};
+  let totalMins = 0;
+  for(let d=pStart; d<=pEnd; d++){
+    const key = `${month}_${d}`;
+    const status = att[key] || '';
+    const ci = att[`${key}_time`];
+    const co = att[`${key}_out`];
+    if(status === 'P' && ci && co){
+      totalMins += getNightMinutes(new Date(ci), new Date(co));
+    }
+  }
+  return totalMins/60;
+}
+
+/* ── OFFLINE / QUEUE ─────────────────────────────────────────── */
 function queueKey(){return appState.currentUser?`hr_offline_${appState.currentUser.id}`:null;}
 
 function setupOfflineSupport(){
@@ -848,19 +878,26 @@ function setupOfflineSupport(){
 function updateOfflineUI(){
   const banner=document.getElementById('offlineBanner');if(banner)banner.style.display=appState.isOnline?'none':'block';
   const qb=document.getElementById('offlineQueueBanner');
-  if(qb){qb.classList.toggle('hidden',appState.offlineQueue.length===0);const el=document.getElementById('queueCount');if(el)el.textContent=appState.offlineQueue.length;}
+  if(qb){qb.classList.toggle('hidden',appState.offlineQueue.length===0);document.getElementById('queueCount').textContent=appState.offlineQueue.length;}
 }
 
 function addToOfflineQueue(type,data){
   appState.offlineQueue.push({type,data,timestamp:new Date().toISOString()});
-  const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));updateOfflineUI();
+  const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
+  updateOfflineUI();
 }
 
 async function processPendingActions(){
   if(!appState.offlineQueue.length||!appState.isOnline)return;
   const failed=[];
-  for(const a of appState.offlineQueue){try{await executeQueuedAction(a.type,a.data);await new Promise(r=>setTimeout(r,300));}catch(e){failed.push(a);}}
-  appState.offlineQueue=failed;const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
+  for(const a of appState.offlineQueue){
+    try{
+      await executeQueuedAction(a.type,a.data);
+      await new Promise(r=>setTimeout(r,300));
+    }catch(e){failed.push(a);}
+  }
+  appState.offlineQueue=failed;
+  const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
   if(!failed.length)showToast('All queued actions synced!','success');
   else showToast(`${failed.length} action(s) failed to sync`,'error');
   updateOfflineUI();
@@ -882,29 +919,37 @@ async function safeOp(operation,data,actionType){
   catch(e){if(!navigator.onLine){addToOfflineQueue(actionType,data);return{success:false,queued:true};}throw e;}
 }
 
-// ── AUTO CLOCK-OUT ────────────────────────────────────────────
+/* ── AUTO CLOCK-OUT ──────────────────────────────────────────── */
 async function checkAutoClockOut(){
   if(!appState.currentUser)return;
   const now=new Date(),yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
-  let activeKey=null,clockInTimeStr=null;
+  let activeKey=null;
   for(const d of[now,yesterday]){
     const k=`${d.getMonth()}_${d.getDate()}`;
     const status=appState.attendance[appState.currentUser.id]?.[k];
     const clockOut=appState.attendance[appState.currentUser.id]?.[`${k}_out`];
     const timeStr=appState.attendance[appState.currentUser.id]?.[`${k}_time`];
-    if(status==='P'&&!clockOut&&timeStr){activeKey=k;clockInTimeStr=timeStr;break;}
+    if(status==='P'&&!clockOut&&timeStr){activeKey=k;break;}
   }
   if(!activeKey)return;
-  const clockInTime=new Date(clockInTimeStr);
+  const clockInTime=new Date(appState.attendance[appState.currentUser.id][`${activeKey}_time`]);
   const autoTime=new Date(clockInTime.getTime()+12*60*60*1000);
   const warnTime=new Date(autoTime.getTime()-30*60*1000);
-  if(now>=autoTime){try{await autoClockOutUserWithKey(activeKey);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}catch{addToOfflineQueue('auto_clock_out',buildAutoPayload(activeKey));}}
+  if(now>=autoTime){
+    try{await autoClockOutUserWithKey(activeKey);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}
+    catch{addToOfflineQueue('auto_clock_out',buildAutoPayload(activeKey));}
+  }
   else if(now>=warnTime){showAutoClockoutBanner(Math.ceil((autoTime-now)/60000));}
 }
 
 function buildAutoPayload(key){
   const now=new Date();
-  return{userId:appState.currentUser.id,updates:{[`${key}_out`]:now.toISOString(),[`${key}_auto`]:true},auditLog:{name:appState.currentUser.fullName,action:'AUTO CLOCK OUT (12h shift)',timestamp:now.toISOString(),empID:appState.currentUser.id,department:appState.currentUser.dept,time:now.toLocaleTimeString(),auto:true},notification:{userId:appState.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${now.toLocaleTimeString()} after 12-hour shift.`,type:'warning',timestamp:now.toISOString(),read:false}};
+  return{
+    userId:appState.currentUser.id,
+    updates:{[`${key}_out`]:now.toISOString(),[`${key}_auto`]:true},
+    auditLog:{name:appState.currentUser.fullName,action:'AUTO CLOCK OUT (12h shift)',timestamp:now.toISOString(),empID:appState.currentUser.id,department:appState.currentUser.dept,time:now.toLocaleTimeString(),auto:true},
+    notification:{userId:appState.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${now.toLocaleTimeString()} after 12-hour shift.`,type:'warning',timestamp:now.toISOString(),read:false}
+  };
 }
 
 async function autoClockOutUserWithKey(key){
@@ -927,7 +972,7 @@ function hideBanner(){const b=document.getElementById('autoClockoutBanner');if(b
 function fmtTime(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function manualClockOutNow(){userClockAction('OUT');}
 
-// ── CLOCK IN/OUT ──────────────────────────────────────────────
+/* ── CLOCK IN/OUT ────────────────────────────────────────────── */
 async function userClockAction(type){
   if(appState.isProcessing['clock'])return;
   const now=new Date(),month=now.getMonth(),day=now.getDate(),key=`${month}_${day}`,uid=appState.currentUser.id;
@@ -956,7 +1001,7 @@ async function userClockAction(type){
   finally{appState.isProcessing['clock']=false;}
 }
 
-// ── AUTH ──────────────────────────────────────────────────────
+/* ── AUTH ────────────────────────────────────────────────────── */
 onAuthStateChanged(auth,async(user)=>{
   if(user){
     if(!appState.currentUser){
@@ -1001,7 +1046,7 @@ function updateClock(){
   if(greet){const h=now.getHours();greet.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${appState.currentUser?.fullName?.split(' ')[0]||''}!`;}
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
+/* ── LOGIN ───────────────────────────────────────────────────── */
 async function handleLogin(){
   if(appState.isProcessing['login'])return;
   const email=document.getElementById('lUser').value.trim(),pass=document.getElementById('lPass').value;
@@ -1039,7 +1084,7 @@ function doLogout(){
   const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');
 }
 
-// ── SHOW APP ──────────────────────────────────────────────────
+/* ── SHOW APP ────────────────────────────────────────────────── */
 function showApp(){
   document.getElementById('loginSection').style.display='none';
   document.getElementById('appShell').classList.remove('hidden');
@@ -1061,7 +1106,7 @@ function applyRoleVisibility(){
   document.getElementById('notifBtn').classList.toggle('hidden',!isOpsAdminHR);
 }
 
-// ── TABS ──────────────────────────────────────────────────────
+/* ── TABS ────────────────────────────────────────────────────── */
 function switchTabInternal(tabName,btnEl){
   if((tabName==='pay'||tabName==='payroll')&&!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
   document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
@@ -1088,7 +1133,7 @@ function renderCurrentTab(force=false){
   else if(tab==='timestamps')renderTimestamps();
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────
+/* ── DASHBOARD ───────────────────────────────────────────────── */
 function updateDashboard(){
   if(!appState.currentUser)return;
   const now=new Date(),month=now.getMonth(),uid=appState.currentUser.id;
@@ -1119,7 +1164,7 @@ function updateDashboard(){
   updateClock();
 }
 
-// ── LEAVE FORM ────────────────────────────────────────────────
+/* ── LEAVE FORM ──────────────────────────────────────────────── */
 function toggleLeaveForm(){
   const lf=document.getElementById('leaveFormSection');lf.classList.toggle('hidden');
   if(!lf.classList.contains('hidden')){
@@ -1213,7 +1258,7 @@ async function cancelLeave(leaveId){
   }catch(e){showToast('Failed to cancel leave','error');}
 }
 
-// ── DIRECTORY ─────────────────────────────────────────────────
+/* ── DIRECTORY ───────────────────────────────────────────────── */
 function editEmployee(empId){
   const user=appState.users[empId];if(!user)return;
   appState.editingEmployeeId=empId;
@@ -1289,7 +1334,7 @@ function checkCurrentUserDisabled(){
 }
 
 async function deleteEmployee(empId){
-  if(!confirm(`Disable employee ${empId}? Their login remains in Firebase Auth but they won't be able to log in.`))return;
+  if(!confirm(`Disable employee ${empId}?`))return;
   try{
     await update(ref(db,`users/${empId}`),{disabled:true,deletedAt:new Date().toISOString()});
     showToast('Employee disabled. Data retained.','info');renderDirectory();
@@ -1325,7 +1370,7 @@ function searchEmployees(){
   document.querySelectorAll('#dirTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
 }
 
-// ── ATTENDANCE ────────────────────────────────────────────────
+/* ── ATTENDANCE ──────────────────────────────────────────────── */
 function renderAttendance(){
   if(!isHRorAdmin()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
   const el=document.getElementById('payTable');if(!el)return;
@@ -1362,7 +1407,7 @@ function searchAttendance(){
   document.querySelectorAll('#payTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
 }
 
-// ── SCHEDULES ─────────────────────────────────────────────────
+/* ── SCHEDULES ───────────────────────────────────────────────── */
 function renderSchedules(){
   const el=document.getElementById('schedTable');if(!el)return;
   const month=parseInt(document.getElementById('sMonth').value);
@@ -1419,7 +1464,7 @@ function searchSchedules(){
   document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
 }
 
-// ── ACTIVE NOW ────────────────────────────────────────────────
+/* ── ACTIVE NOW ──────────────────────────────────────────────── */
 function renderActiveNow(){
   const el=document.getElementById('activeTable');if(!el)return;
   const now=new Date(),month=now.getMonth(),day=now.getDate(),todayKey=`${month}_${day}`;
@@ -1437,7 +1482,7 @@ function renderActiveNow(){
 }
 function searchActive(){const q=document.querySelector('#sec-active .search-input').value.toLowerCase();document.querySelectorAll('#activeTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-// ── AUDIT ─────────────────────────────────────────────────────
+/* ── AUDIT ───────────────────────────────────────────────────── */
 function renderAudit(logs){
   const el=document.getElementById('auditTable');if(!el||!logs)return;
   let html=`<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>`;
@@ -1446,7 +1491,7 @@ function renderAudit(logs){
 }
 function searchAudit(){const q=document.querySelector('#sec-audit .search-input').value.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-// ── INBOX ─────────────────────────────────────────────────────
+/* ── INBOX ───────────────────────────────────────────────────── */
 function updateInbox(){
   if(!appState.currentUser||!isHRorAdminOrOPS())return;
   const content=document.getElementById('inboxContent'),countEl=document.getElementById('inboxCountBadge'),dot=document.getElementById('inboxDot');
@@ -1468,7 +1513,12 @@ async function approveLeave(leaveId){
     const req=appState.leaveRequests[leaveId];if(!canApproveLeave(req)){showToast('Not authorized to approve','error');return;}
     const now=new Date(),start=parseLocalDate(req.startDate),end=req.endDate?parseLocalDate(req.endDate):new Date(start);
     const dateUpdates={},cur=new Date(start),emp=appState.users[req.empID];
-    while(cur<=end){const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];const o1=emp?(emp['off1_'+m]||''):'',o2=emp?(emp['off2_'+m]||''):'';if(o1!==dn&&o2!==dn)dateUpdates[`${m}_${cur.getDate()}`]=req.type;cur.setDate(cur.getDate()+1);}
+    while(cur<=end){
+      const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
+      const o1=emp?(emp['off1_'+m]||''):'',o2=emp?(emp['off2_'+m]||''):'';
+      if(o1!==dn&&o2!==dn)dateUpdates[`${m}_${cur.getDate()}`]=req.type;
+      cur.setDate(cur.getDate()+1);
+    }
     await update(ref(db,`leave_requests/${leaveId}`),{status:'Approved',approvedBy:appState.currentUser.fullName,approvedAt:now.toISOString(),approvedByRole:appState.currentUser.role});
     if(Object.keys(dateUpdates).length)await update(ref(db,`attendance/${req.empID}`),dateUpdates);
     await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Approved',message:`Your ${LEAVE_TYPES[req.type]||req.type} from ${req.startDate} to ${req.endDate} was approved by ${appState.currentUser.fullName}.`,type:'success',timestamp:now.toISOString(),read:false});
@@ -1488,7 +1538,7 @@ async function rejectLeave(leaveId){
   }catch(e){showToast('Failed to reject','error');}
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────
+/* ── NOTIFICATIONS ───────────────────────────────────────────── */
 function updateNotifications(){
   if(!appState.currentUser)return;
   const content=document.getElementById('notifContent'),dot=document.getElementById('notifDot');if(!appState.notifications)return;
@@ -1503,11 +1553,11 @@ function updateNotifications(){
 }
 async function markNotificationRead(id){try{await update(ref(db,`notifications/${id}`),{read:true});}catch{}}
 
-// ── PANELS ────────────────────────────────────────────────────
+/* ── PANELS ──────────────────────────────────────────────────── */
 function openPanel(panelId){document.getElementById('panelOverlay').classList.add('open');document.getElementById(panelId).classList.add('open');}
 function closeAllPanels(){document.getElementById('panelOverlay').classList.remove('open');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));}
 
-// ── MY LEAVES ─────────────────────────────────────────────────
+/* ── MY LEAVES ───────────────────────────────────────────────── */
 function updateMyLeaves(){
   if(!appState.currentUser)return;
   const container=document.getElementById('myLeavesContainer');if(!container)return;
@@ -1535,7 +1585,7 @@ function searchMyLeaves(){
   document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;
 }
 
-// ── BULK REGISTER ─────────────────────────────────────────────
+/* ── BULK REGISTER ───────────────────────────────────────────── */
 function toggleBulkRegister(){document.getElementById('bulkRegisterPanel').classList.toggle('hidden');}
 async function runBulkRegister(){
   const raw=document.getElementById('bulkRegisterData').value.trim();if(!raw){showToast('No data entered','error');return;}
@@ -1559,7 +1609,7 @@ async function runBulkRegister(){
   if(fail>0)showToast(`${fail} failed — check console`,'error');
 }
 
-// ── TIMESTAMP SHEET ───────────────────────────────────────────
+/* ── TIMESTAMP SHEET ─────────────────────────────────────────── */
 function renderTimestamps(){
   const el=document.getElementById('timestampTable');if(!el)return;
   const month=parseInt(document.getElementById('tsMonth').value);
@@ -1608,79 +1658,85 @@ function exportTimestampsToExcel(){
   XLSX.writeFile(wb,`DTR_${MONTH_FULL[month]}_${year}.xlsx`);
 }
 
-// ══════════════════════════════════════════════════════════════
-// PAYROLL MODULE — exact match to NUEBE Excel format
-// ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
+   PAYROLL MODULE – EXACT MATCH
+   ══════════════════════════════════════════════════════════════ */
 
-// Build per-employee payroll row matching the exact column structure
 function buildPayrollRows(month, pStart, pEnd, year){
-  const rows=[];let sn=1;
-  for(const[uid,user]of activeEmployeesSorted()){
-    const att=appState.attendance[uid]||{};
-    const salary=Math.max(0,parseFloat(user.monthlySalary)||0);
-    const cutoff=salary/2;
-    const daily=salary/WD_BASIS;
-    // Allowances from employee record (matching Excel columns exactly)
-    const meal=Math.max(0,parseFloat(user.mealAllow)||0);
-    const transpo=Math.max(0,parseFloat(user.transpoAllow)||0);
-    const stat=Math.max(0,parseFloat(user.statBenefits)||0);
-    const bday=0; // Birthday bonus — manual input in original
+  const rows = [];
+  let sn = 1;
+  for(const [uid, user] of activeEmployeesSorted()){
+    const att = appState.attendance[uid] || {};
+    const salary = Math.max(0, parseFloat(user.monthlySalary) || 0);
+    const cutoff = salary / 2;
+    const daily = salary / WD_BASIS;
 
-    // Standard values matching Excel formula pattern
-    const nightHrs=NIGHT_HRS;   // Col R — always 80 hrs per period
-    const nd=nightHrs*(daily/8)*0.10; // Col S — Night Diff
-    const regHolDays=1;          // Col U — 1 regular holiday per cut-off (matches Excel)
-    const regHol=regHolDays*daily; // Col V
-    const specHolDays=1;         // Col W
-    const specHol=specHolDays*daily*0.30; // Col X
+    /* Attendance counts for meal & cost – exact Excel formula */
+    let pCount = 0, rdsCount = 0, hdCount = 0;
+    let absentDays = 0, lateMins = 0, undertimeHrs = 0;
+    const totalNightHrs = computeNightHours(uid, month, pStart, pEnd);
 
-    // NO RD ADJUSTMENT (Col K) = daily rate — included in total allowances
-    const noRdAdj=daily;
+    for(let d = pStart; d <= pEnd; d++){
+      const key = `${month}_${d}`;
+      const status = att[key] || '';
+      const late = parseInt(att[`${key}_late`] || 0);
+      lateMins += late;
 
-    // Total Allowances (Col Y) = meal+transpo+bday+ND+stat+regHol+specHol+noRdAdj
-    const totalAllow=meal+transpo+bday+nd+stat+regHol+specHol+noRdAdj;
-
-    // Absences
-    let absentDays=0,lateMins=0,undertimeHrs=0,presentDays=0;
-    for(let d=pStart;d<=pEnd;d++){
-      const k=`${month}_${d}`,status=appState.attendance[uid]?.[k]||'',late=parseInt(appState.attendance[uid]?.[`${k}_late`]||0);
-      lateMins+=late;
-      switch(status){
-        case'P':presentDays++;break;case'SL':presentDays++;break;case'VL':presentDays++;break;
-        case'BL':presentDays++;break;case'PL':presentDays++;break;case'ML':presentDays++;break;
-        case'HD':presentDays+=0.5;undertimeHrs+=4;break;case'UT':presentDays++;undertimeHrs+=1;break;
-        case'A':absentDays++;break;case'NPL':absentDays++;break;case'NPSL':absentDays++;break;
-        case'S':absentDays++;break;
-      }
+      if(status === 'P') pCount++;
+      else if(status === 'RDS') rdsCount++;
+      else if(status === 'HD') hdCount++;
+      else if(['A','NPL','NPSL','S'].includes(status)) absentDays++;
+      else if(status === 'UT'){ pCount++; undertimeHrs += 1; }
+      /* SL, VL, BL, PL, ML are NOT counted in meal (paid but not present on site) */
     }
 
-    // Deductions
-    const absencesAmt=absentDays*daily;               // Col AA
-    const tardinessAmt=lateMins>0?(lateMins/60)*(daily/8):0; // Col AC
-    const undertimeAmt=undertimeHrs>0?undertimeHrs*(daily/8):0; // Col AE
-    const totalDeduct=absencesAmt+tardinessAmt+undertimeAmt; // Col AF
+    /* Meal = (P+RDS)*200 + HD*100 */
+    const meal = (pCount + rdsCount) * 200 + hdCount * 100;
 
-    // Net Salary (Col AG) = cutoff + totalAllow - totalDeduct
-    const netSalary=cutoff+totalAllow-totalDeduct;
+    /* Fixed allowances from employee data */
+    const transpo = Math.max(0, parseFloat(user.transpoAllow) || 0);
+    const stat = Math.max(0, parseFloat(user.statBenefits) || 0);
+    const bday = 0;
+    const nightDiff = (cutoff / 13) / 8 * 0.1 * totalNightHrs;
+    const regHolDays = 0, regHol = 0;
+    const specHolDays = 0, specHol = 0;
+    const overtime = 0, discrepancy = 0, noRdAdj1 = 0, noRdAdj2 = 0;
 
-    const nameParts=(user.fullName||'').trim().split(' ');
-    const lastName=nameParts.length>1?nameParts[nameParts.length-1]:(user.fullName||'');
-    const firstName=nameParts.length>1?nameParts.slice(0,-1).join(' '):'';
+    /* Total Allowances (column Y) */
+    const totalAllow = daily + noRdAdj1 + overtime + discrepancy + noRdAdj2 +
+                       meal + transpo + bday + nightDiff + stat + regHol + specHol;
+
+    /* Deductions */
+    const absencesAmt = absentDays * daily;
+    const tardinessAmt = lateMins > 0 ? (lateMins / 60) * (daily / 8) : 0;
+    const undertimeAmt = undertimeHrs > 0 ? undertimeHrs * (daily / 8) : 0;
+    const totalDeduct = absencesAmt + tardinessAmt + undertimeAmt;
+
+    /* Net Salary (AG) */
+    const netSalary = cutoff + overtime + discrepancy + meal + transpo +
+                      bday + nightDiff + stat + regHol + specHol - totalDeduct;
+
+    const nameParts = (user.fullName || '').trim().split(' ');
+    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (user.fullName || '');
+    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
 
     rows.push({
-      sn,uid,lastName,firstName,
-      position:user.position||user.dept||'',
-      fullName:user.fullName||'',
-      salary,cutoff,daily,noRdAdj,
-      meal,transpo,bday,nightHrs,nd,stat,
-      regHolDays,regHol,specHolDays,specHol,
+      sn, uid, lastName, firstName,
+      position: user.position || user.dept || '',
+      fullName: user.fullName || '',
+      salary, cutoff, daily, noRdAdj1, noRdAdj2,
+      overtime, discrepancy,
+      meal, transpo, bday,
+      nightHrs: totalNightHrs, nightDiff, stat,
+      regHolDays, regHol, specHolDays, specHol,
       totalAllow,
-      absentDays,absencesAmt,
-      lateMins,tardinessAmt,
-      undertimeHrs,undertimeAmt,
-      totalDeduct,netSalary,
-      presentDays,hireDate:user.hireDate||user.birthday||'',
-      empNo:user.empID||uid,
+      absentDays, absencesAmt,
+      lateMins, tardinessAmt,
+      undertimeHrs, undertimeAmt,
+      totalDeduct, netSalary,
+      hireDate: user.hireDate || '',
+      empNo: user.empID || uid,
+      pCount, rdsCount, hdCount
     });
     sn++;
   }
@@ -1688,356 +1744,427 @@ function buildPayrollRows(month, pStart, pEnd, year){
 }
 
 function renderPayrollPreview(){
-  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
-  const month=parseInt(document.getElementById('pyMonth').value);
-  if(isNaN(month))return;
-  const period=document.getElementById('pyPeriod').value;
-  const[pS,pEr]=period.split('-').map(Number);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pEr;
-  const rows=buildPayrollRows(month,pS,pE,year);
+  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
+  const month = parseInt(document.getElementById('pyMonth').value);
+  if(isNaN(month)) return;
+  const period = document.getElementById('pyPeriod').value;
+  const [pS, pEr] = period.split('-').map(Number);
+  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+  const daysInMonth = new Date(year, month + 1, 0).getDate(), pE = pEr >= 28 ? daysInMonth : pEr;
+  const rows = buildPayrollRows(month, pS, pE, year);
 
-  // Period label
-  const label=`${MONTH_FULL[month].toUpperCase()} ${pS} – ${pE}, ${year}`;
-  const lel=document.getElementById('pyPeriodLabel');if(lel)lel.textContent=label;
+  const label = `${MONTH_FULL[month].toUpperCase()} ${pS} – ${pE}, ${year}`;
+  document.getElementById('pyPeriodLabel').textContent = label;
 
   if(!rows.length){
-    document.getElementById('payrollPreview').innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;
-    document.getElementById('pyStats').style.display='none';return;
+    document.getElementById('payrollPreview').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;
+    document.getElementById('pyStats').style.display = 'none';
+    return;
   }
 
-  // Totals
-  const T=rows.reduce((acc,r)=>({
-    salary:acc.salary+(r.salary||0),cutoff:acc.cutoff+(r.cutoff||0),
-    meal:acc.meal+(r.meal||0),transpo:acc.transpo+(r.transpo||0),
-    nd:acc.nd+(r.nd||0),stat:acc.stat+(r.stat||0),
-    regHol:acc.regHol+(r.regHol||0),specHol:acc.specHol+(r.specHol||0),
-    totalAllow:acc.totalAllow+(r.totalAllow||0),
-    absencesAmt:acc.absencesAmt+(r.absencesAmt||0),
-    tardinessAmt:acc.tardinessAmt+(r.tardinessAmt||0),
-    undertimeAmt:acc.undertimeAmt+(r.undertimeAmt||0),
-    totalDeduct:acc.totalDeduct+(r.totalDeduct||0),
-    netSalary:acc.netSalary+(r.netSalary||0),
-  }),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0});
+  const T = rows.reduce((acc, r) => ({
+    salary: acc.salary + r.salary,
+    cutoff: acc.cutoff + r.cutoff,
+    overtime: acc.overtime + r.overtime,
+    discrepancy: acc.discrepancy + r.discrepancy,
+    meal: acc.meal + r.meal,
+    transpo: acc.transpo + r.transpo,
+    bday: acc.bday + r.bday,
+    nightDiff: acc.nightDiff + r.nightDiff,
+    stat: acc.stat + r.stat,
+    regHol: acc.regHol + r.regHol,
+    specHol: acc.specHol + r.specHol,
+    absencesAmt: acc.absencesAmt + r.absencesAmt,
+    tardinessAmt: acc.tardinessAmt + r.tardinessAmt,
+    undertimeAmt: acc.undertimeAmt + r.undertimeAmt,
+    totalDeduct: acc.totalDeduct + r.totalDeduct,
+    netSalary: acc.netSalary + r.netSalary,
+  }), { salary:0, cutoff:0, overtime:0, discrepancy:0, meal:0, transpo:0, bday:0, nightDiff:0, stat:0, regHol:0, specHol:0, absencesAmt:0, tardinessAmt:0, undertimeAmt:0, totalDeduct:0, netSalary:0 });
 
-  // Summary cards
-  const stats=document.getElementById('pyStats');
-  stats.style.display='';
-  stats.innerHTML=`
+  document.getElementById('pyStats').style.display = '';
+  document.getElementById('pyStats').innerHTML = `
     <div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">${rows.length}</div><div class="ps-sub">${label}</div></div>
     <div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">${php(T.netSalary)}</div></div>
     <div class="py-stat amber"><div class="ps-label">Total Basic (Cut-off)</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div>
-    <div class="py-stat purple"><div class="ps-label">Total Allowances</div><div class="ps-val" style="font-size:14px;">${php(T.totalAllow)}</div></div>
+    <div class="py-stat purple"><div class="ps-label">Total Meal (P+RDS)*200+HD*100</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div></div>
     <div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">${php(T.totalDeduct)}</div></div>`;
 
-  // Preview table — matches Payroll Request sheet structure
-  let html=`<table>
+  let html = `<table>
     <thead>
       <tr>
-        <th rowspan="2" style="width:30px;">#</th>
-        <th rowspan="2" style="text-align:left;">LAST NAME</th>
-        <th rowspan="2" style="text-align:left;">FIRST NAME</th>
-        <th rowspan="2" style="text-align:left;">POSITION</th>
-        <th rowspan="2">MONTHLY BASIC</th>
-        <th rowspan="2">CUT-OFF BASIC</th>
-        <th rowspan="2">DAILY RATE</th>
-        <th rowspan="2">NO RD ADJ</th>
-        <th colspan="6" style="background:#1e40af;color:#fff;text-align:center;">ALLOWANCES</th>
-        <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
-        <th colspan="3" style="background:#991b1b;color:#fff;text-align:center;">DEDUCTIONS</th>
-        <th rowspan="2" style="background:#065f46;color:#fff;">NET SALARY</th>
+        <th rowspan="2">#</th><th rowspan="2">Last Name</th><th rowspan="2">First Name</th><th rowspan="2">Position</th>
+        <th rowspan="2">Monthly</th><th rowspan="2">Cut-off</th><th rowspan="2">Daily</th>
+        <th colspan="2">NO RD ADJ</th><th rowspan="2">OT</th><th rowspan="2">Disc</th>
+        <th rowspan="2">Meal</th><th rowspan="2">Transpo</th><th rowspan="2">Bday</th>
+        <th rowspan="2">NightHrs</th><th rowspan="2">ND</th><th rowspan="2">Stat</th>
+        <th colspan="2">RegHol</th><th colspan="2">SpecHol</th>
+        <th rowspan="2">Total Allow</th><th rowspan="2">Abs</th><th rowspan="2">$ Abs</th>
+        <th rowspan="2">Late</th><th rowspan="2">$ Late</th><th rowspan="2">UT</th><th rowspan="2">$ UT</th>
+        <th rowspan="2">Total Ded</th><th rowspan="2">Net Salary</th>
       </tr>
       <tr>
-        <th style="background:#2563eb;color:#fff;">MEAL</th>
-        <th style="background:#2563eb;color:#fff;">TRANSPO</th>
-        <th style="background:#2563eb;color:#fff;">ND (80h)</th>
-        <th style="background:#2563eb;color:#fff;">STAT</th>
-        <th style="background:#2563eb;color:#fff;">REG HOL</th>
-        <th style="background:#2563eb;color:#fff;">SPEC HOL</th>
-        <th style="background:#b91c1c;color:#fff;">ABSENCES</th>
-        <th style="background:#b91c1c;color:#fff;">TARDINESS</th>
-        <th style="background:#b91c1c;color:#fff;">UNDERTIME</th>
+        <th>J</th><th>K</th>
+        <th>Days</th><th>$</th><th>Days</th><th>$</th>
       </tr>
     </thead>
     <tbody>`;
-
-  rows.forEach(r=>{
-    html+=`<tr>
-      <td class="ctr sn-col">${r.sn}</td>
-      <td class="txt" style="font-weight:700;">${esc(r.lastName)}</td>
-      <td class="txt">${esc(r.firstName)}</td>
-      <td class="txt" style="font-size:11px;color:var(--muted);">${esc(r.position)}</td>
-      <td>${php(r.salary)}</td>
-      <td style="font-weight:700;color:var(--accent);">${php(r.cutoff)}</td>
-      <td style="color:var(--muted);">${php(r.daily)}</td>
-      <td style="color:var(--muted);">${php(r.noRdAdj)}</td>
-      <td class="allow-cell">${r.meal?php(r.meal):'—'}</td>
-      <td class="allow-cell">${r.transpo?php(r.transpo):'—'}</td>
-      <td class="allow-cell">${php(r.nd)}</td>
-      <td class="allow-cell">${r.stat?php(r.stat):'—'}</td>
-      <td class="allow-cell">${php(r.regHol)}</td>
-      <td class="allow-cell">${php(r.specHol)}</td>
-      <td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td>
-      <td class="deduct-cell">${r.absencesAmt?php(r.absencesAmt):'—'}</td>
-      <td class="deduct-cell">${r.tardinessAmt?php(r.tardinessAmt):'—'}</td>
-      <td class="deduct-cell">${r.undertimeAmt?php(r.undertimeAmt):'—'}</td>
-      <td class="net-cell">${php(r.netSalary)}</td>
+  rows.forEach(r => {
+    html += `<tr>
+      <td class="ctr">${r.sn}</td><td class="txt">${esc(r.lastName)}</td><td class="txt">${esc(r.firstName)}</td>
+      <td class="txt">${esc(r.position)}</td><td>${php(r.salary)}</td><td>${php(r.cutoff)}</td><td>${php(r.daily)}</td>
+      <td>${php(r.noRdAdj1)}</td><td>${php(r.daily)}</td><td>${php(r.overtime)}</td><td>${php(r.discrepancy)}</td>
+      <td class="allow-cell">${php(r.meal)}</td><td class="allow-cell">${php(r.transpo)}</td><td class="allow-cell">${r.bday}</td>
+      <td>${r.nightHrs.toFixed(1)}</td><td class="allow-cell">${php(r.nightDiff)}</td><td class="allow-cell">${php(r.stat)}</td>
+      <td>${r.regHolDays}</td><td class="allow-cell">${php(r.regHol)}</td><td>${r.specHolDays}</td><td class="allow-cell">${php(r.specHol)}</td>
+      <td>${php(r.totalAllow)}</td><td>${r.absentDays}</td><td class="deduct-cell">${php(r.absencesAmt)}</td>
+      <td>${r.lateMins}</td><td class="deduct-cell">${php(r.tardinessAmt)}</td><td>${r.undertimeHrs}</td><td class="deduct-cell">${php(r.undertimeAmt)}</td>
+      <td class="deduct-cell">${php(r.totalDeduct)}</td><td class="net-cell">${php(r.netSalary)}</td>
     </tr>`;
   });
-
-  html+=`<tr class="total-row">
-    <td colspan="4" style="text-align:right;letter-spacing:1px;">TOTALS</td>
-    <td>${php(T.salary)}</td><td>${php(T.cutoff)}</td><td></td><td></td>
-    <td>${php(T.meal)}</td><td>${php(T.transpo)}</td><td>${php(T.nd)}</td>
-    <td>${php(T.stat)}</td><td>${php(T.regHol)}</td><td>${php(T.specHol)}</td>
-    <td>${php(T.totalAllow)}</td>
-    <td>${php(T.absencesAmt)}</td><td>${php(T.tardinessAmt)}</td><td>${php(T.undertimeAmt)}</td>
-    <td style="font-size:13px;">${php(T.netSalary)}</td>
-  </tr></tbody></table>`;
-
-  document.getElementById('payrollPreview').innerHTML=html;
+  html += `</tbody></table>`;
+  document.getElementById('payrollPreview').innerHTML = html;
 }
 
-// ── EXCEL EXPORT — exact 4-sheet format ───────────────────────
 function exportPayrollExcel(){
-  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
-  const month=parseInt(document.getElementById('pyMonth').value);
-  if(isNaN(month)){showToast('Please select a month','error');return;}
-  const period=document.getElementById('pyPeriod').value;
-  const[pS,pEr]=period.split('-').map(Number);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pE||daysInMonth;
-  // Recalculate pE properly
-  const pEnd=pEr>=28?daysInMonth:pEr;
+  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
+  const month = parseInt(document.getElementById('pyMonth').value);
+  if(isNaN(month)){ showToast('Please select a month','error'); return; }
+  const period = document.getElementById('pyPeriod').value;
+  const [pS, pEr] = period.split('-').map(Number);
+  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const pEnd = pEr >= 28 ? daysInMonth : pEr;
 
-  const rows=buildPayrollRows(month,pS,pEnd,year);
-  if(!rows.length){showToast('No employee data to export','error');return;}
+  const rows = buildPayrollRows(month, pS, pEnd, year);
+  if(!rows.length){ showToast('No employee data to export','error'); return; }
 
-  const mLabel=`${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pS},${year}`;
-  const mEnd=`${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`;
-  const remark=`${MONTH_FULL[month].toUpperCase()} ${pS} TO ${pEnd}`;
+  const mLabel = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pS},${year}`;
+  const mEnd  = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`;
+  const remark = `${MONTH_FULL[month].toUpperCase()} ${pS} TO ${pEnd}`;
 
-  const T=rows.reduce((acc,r)=>({
-    salary:acc.salary+(r.salary||0),cutoff:acc.cutoff+(r.cutoff||0),
-    meal:acc.meal+(r.meal||0),transpo:acc.transpo+(r.transpo||0),
-    nd:acc.nd+(r.nd||0),stat:acc.stat+(r.stat||0),
-    regHol:acc.regHol+(r.regHol||0),specHol:acc.specHol+(r.specHol||0),
-    totalAllow:acc.totalAllow+(r.totalAllow||0),
-    absencesAmt:acc.absencesAmt+(r.absencesAmt||0),
-    tardinessAmt:acc.tardinessAmt+(r.tardinessAmt||0),
-    undertimeAmt:acc.undertimeAmt+(r.undertimeAmt||0),
-    totalDeduct:acc.totalDeduct+(r.totalDeduct||0),
-    netSalary:acc.netSalary+(r.netSalary||0),
-  }),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0});
+  const T = rows.reduce((acc, r) => ({
+    salary: acc.salary + r.salary,
+    cutoff: acc.cutoff + r.cutoff,
+    noRdAdj1: acc.noRdAdj1 + r.noRdAdj1,
+    overtime: acc.overtime + r.overtime,
+    discrepancy: acc.discrepancy + r.discrepancy,
+    noRdAdj2: acc.noRdAdj2 + r.noRdAdj2,
+    meal: acc.meal + r.meal,
+    transpo: acc.transpo + r.transpo,
+    bday: acc.bday + r.bday,
+    nightDiff: acc.nightDiff + r.nightDiff,
+    stat: acc.stat + r.stat,
+    regHol: acc.regHol + r.regHol,
+    specHol: acc.specHol + r.specHol,
+    totalAllow: acc.totalAllow + r.totalAllow,
+    absencesAmt: acc.absencesAmt + r.absencesAmt,
+    tardinessAmt: acc.tardinessAmt + r.tardinessAmt,
+    undertimeAmt: acc.undertimeAmt + r.undertimeAmt,
+    totalDeduct: acc.totalDeduct + r.totalDeduct,
+    netSalary: acc.netSalary + r.netSalary,
+  }), { salary:0, cutoff:0, noRdAdj1:0, overtime:0, discrepancy:0, noRdAdj2:0, meal:0, transpo:0, bday:0, nightDiff:0, stat:0, regHol:0, specHol:0, totalAllow:0, absencesAmt:0, tardinessAmt:0, undertimeAmt:0, totalDeduct:0, netSalary:0 });
 
-  const wb=XLSX.utils.book_new();
+  const wb = XLSX.utils.book_new();
 
-  // ── SHEET 1: REQUEST CLAIM ─────────────────────────────────
-  const sheet1=[
+  /* ── SHEET 1: REQUEST CLAIM ───────────────────────────────── */
+  const sheet1 = [
     ['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],
-    [1,new Date(),'Salary for Staff',null,rows.length,T.netSalary,'AFB','AFB','All','Salary and Wages',remark,null,null],
-    [2,new Date(),'Salary Charge Fee',null,1,300,'AFB','AFB','All','Salary Charge Fee',remark,null,null],
-    [],[null,null,null,null,null,T.netSalary+300],
+    [1, new Date(),'Salary for Staff','',rows.length,T.netSalary,'AFB','AFB','All','Salary and Wages',remark],
+    [2, new Date(),'Salary Charge Fee','',1,300,'AFB','AFB','All','Salary Charge Fee',remark],
+    [],
+    ['','','','',T.netSalary+300]
   ];
-  const ws1=XLSX.utils.aoa_to_sheet(sheet1,{cellDates:true});
-  ws1['!cols']=[{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
-  XLSX.utils.book_append_sheet(wb,ws1,'REQUEST CLAIM');
+  const ws1 = XLSX.utils.aoa_to_sheet(sheet1, { cellDates:true });
+  ws1['!cols'] = [{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'REQUEST CLAIM');
 
-  // ── SHEET 2: PAYROLL REQUEST ───────────────────────────────
-  // Rows 1–10: header block matching original exactly
-  const sheet2=[
-    ['Pay Period',null,null,null,null,'BASIC',T.cutoff],
-    ['Start',mLabel,null,null,null,'OT',0],
-    ['End',mEnd,null,null,null,'MEAL',T.meal],
-    [null,null,null,null,null,'TRANSPO',T.transpo],
-    ['Total Salary',T.netSalary,null,null,null,'BIRTHDAY',0],
-    [null,null,null,null,null,'ND',T.nd],
-    [null,null,null,null,null,'STAT',T.stat],
-    [null,null,null,null,null,'Regular Holiday',T.regHol],
-    [null,null,null,null,null,'Speacial Holiday',T.specHol], // sic — matches original typo
-    [null,null,null,null,null,'DISCREPANCY',0,null,null,null,null,null,null,null,'Allowances',null,null,null,null,null,null,null,null,null,null,null,'Deductions'],
-    // Row 11: column headers
-    ['SN / HRID','Last Name','First Name','Position','Full Name',
-     'Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary',
-     'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)',null,
-     'Overtime','Discrepancy',
-     'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)',
-     'Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour',
-     'NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS',
-     'NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday',
-     'Total Allowances',
-     'NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime',
-     'Total Deductions','Net Salary'],
-    // Row 12: department totals row
-    [null,null,null,'AFB / TMT',null,null,null,
-     T.cutoff,null,null,null,0,0,0,
-     T.meal,T.transpo,0,null,T.nd,T.stat,
-     null,T.regHol,null,T.specHol,T.totalAllow,
-     null,T.absencesAmt,null,T.tardinessAmt,null,T.undertimeAmt,T.totalDeduct,T.netSalary],
-  ];
-  // Employee data rows (row 13+)
-  rows.forEach(r=>{
+  /* ── SHEET 2: PAYROLL REQUEST ────────────────────────────── */
+  const sheet2 = [];
+  sheet2.push(['Pay Period','','','','','BASIC',T.cutoff].concat(Array(26).fill('')));
+  sheet2.push(['Start',mLabel,'','','','OT',T.overtime]);
+  sheet2.push(['End',mEnd,'','','','MEAL',T.meal]);
+  sheet2.push(['','','','','TRANSPO',T.transpo]);
+  sheet2.push(['Total Salary',T.netSalary,'','','','BIRTHDAY',T.bday]);
+  sheet2.push(['','','','','ND',T.nightDiff]);
+  sheet2.push(['','','','','STAT',T.stat]);
+  sheet2.push(['','','','','Regular Holiday',T.regHol]);
+  sheet2.push(['','','','','Speacial Holiday',T.specHol]);
+
+  const row10 = Array(33).fill('');
+  row10[5] = 'DISCREPANCY';
+  row10[6] = T.discrepancy;
+  row10[14] = 'Allowances';
+  row10[26] = 'Deductions';
+  sheet2.push(row10);
+
+  sheet2.push([
+    'SN / HRID','Last Name','First Name','Position','Full Name',
+    'Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary',
+    'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','',
+    'Overtime','Discrepancy',
+    'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)',
+    'Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour',
+    'NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS',
+    'NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday',
+    'Total Allowances',
+    'NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness',
+    'No. of Hrs','Undertime','Total Deductions','Net Salary'
+  ]);
+
+  const row12 = Array(33).fill('');
+  row12[3] = 'AFB / TMT';
+  row12[7] = T.cutoff;
+  row12[11] = T.overtime;
+  row12[12] = T.discrepancy;
+  row12[13] = T.noRdAdj2;
+  row12[14] = T.meal;
+  row12[15] = T.transpo;
+  row12[16] = T.bday;
+  row12[18] = T.nightDiff;
+  row12[19] = T.stat;
+  row12[21] = T.regHol;
+  row12[23] = T.specHol;
+  row12[24] = T.totalAllow;
+  row12[26] = T.absencesAmt;
+  row12[28] = T.tardinessAmt;
+  row12[30] = T.undertimeAmt;
+  row12[31] = T.totalDeduct;
+  row12[32] = T.netSalary;
+  sheet2.push(row12);
+
+  rows.forEach(r => {
     sheet2.push([
-      r.sn,r.lastName,r.firstName,r.position,r.fullName,
-      r.salary,r.hireDate?new Date(r.hireDate):null,
-      r.cutoff,r.daily,r.noRdAdj,r.noRdAdj, // J,K = NO RD ADJ
-      0,0,0,  // OT, Discrepancy, another adj
-      r.meal,r.transpo,r.bday,
-      r.nightHrs,r.nd,r.stat,
-      r.regHolDays,r.regHol,r.specHolDays,r.specHol,
+      r.sn, r.lastName, r.firstName, r.position, r.fullName,
+      r.salary, new Date(r.hireDate), r.cutoff, r.daily,
+      r.noRdAdj1, r.daily,
+      r.overtime, r.discrepancy,
+      r.noRdAdj2,
+      r.meal, r.transpo, r.bday,
+      r.nightHrs, r.nightDiff, r.stat,
+      r.regHolDays, r.regHol, r.specHolDays, r.specHol,
       r.totalAllow,
-      r.absentDays,r.absencesAmt,
-      r.lateMins,r.tardinessAmt,
-      r.undertimeHrs,r.undertimeAmt,
-      r.totalDeduct,r.netSalary,
+      r.absentDays, r.absencesAmt,
+      r.lateMins, r.tardinessAmt,
+      r.undertimeHrs, r.undertimeAmt,
+      r.totalDeduct, r.netSalary,
     ]);
   });
-  const ws2=XLSX.utils.aoa_to_sheet(sheet2,{cellDates:true});
-  ws2['!cols']=[{wch:10},{wch:14},{wch:14},{wch:20},{wch:22},{wch:14},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:12},{wch:12},{wch:16},{wch:20},{wch:10},{wch:10},{wch:18},{wch:16},{wch:10},{wch:14},{wch:10},{wch:14},{wch:14},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:12},{wch:14},{wch:14}];
-  ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{r:9,c:31}}];
-  XLSX.utils.book_append_sheet(wb,ws2,'PAYROLL REQUEST');
 
-  // ── SHEET 3: ATTENDANCE SHEET ──────────────────────────────
-  const attHeader=['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
-  for(let d=pS;d<=pEnd;d++)attHeader.push(new Date(year,month,d));
-  attHeader.push('TOTAL DAYS','COST',null,'LEGEND:');
-  const sheet3=[attHeader];
-  let grandCost=0;
-  rows.forEach((r,i)=>{
-    const att=appState.attendance[r.uid]||{};const user=appState.users[r.uid]||{};
-    let totalDays=0;
-    const rowData=[r.empNo,r.lastName,r.firstName,r.position,r.hireDate?new Date(r.hireDate):null,'ACTIVE'];
-    for(let d=pS;d<=pEnd;d++){const status=att[`${month}_${d}`]||'';rowData.push(status);if(['P','SL','VL','BL','PL','ML'].includes(status))totalDays++;if(status==='HD')totalDays+=0.5;}
-    const cost=Math.round(r.daily*totalDays);grandCost+=cost;
-    rowData.push(totalDays,cost);
-    if(i<LEGEND_ITEMS.length)rowData.push(null,LEGEND_ITEMS[i][0],LEGEND_ITEMS[i][1]);
+  const ws2 = XLSX.utils.aoa_to_sheet(sheet2, { cellDates:true });
+  ws2['!cols'] = [
+    {wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20.0},
+    {wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},
+    {wch:11.0},{wch:7.29},{wch:9.0},{wch:8.0},{wch:10.71},
+    {wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},
+    {wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},
+    {wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},
+    {wch:14.29},{wch:15.86},{wch:8.71}
+  ];
+  ws2['!merges'] = [
+    { s:{r:9,c:14}, e:{r:9,c:24} },
+    { s:{r:9,c:26}, e:{r:9,c:31} }
+  ];
+
+  /* Styling */
+  const darkGrayFill = { patternType:"solid", fgColor:{rgb:"666666"} };
+  const whiteFont = { color:{rgb:"FFFFFF"}, bold:true, sz:9 };
+  const headerRow = 10;
+  [0,1,2,3,4,5,6,7,8,11,12,24,31,32].forEach(c => {
+    const addr = XLSX.utils.encode_cell({ r:headerRow, c });
+    if(ws2[addr]) ws2[addr].s = { fill:darkGrayFill, font:whiteFont, alignment:{ wrapText:true, vertical:'center', horizontal:'center' } };
+  });
+  ['O15','AA10'].forEach(addr => {
+    if(ws2[addr]) ws2[addr].s = { fill:darkGrayFill, font:whiteFont };
+  });
+  if(ws2['G11']) ws2['G11'].s = { fill:{ patternType:"solid", fgColor:{rgb:"92D050"} } };
+  XLSX.utils.book_append_sheet(wb, ws2, 'PAYROLL REQUEST');
+
+  /* ── SHEET 3: ATTENDANCE SHEET ───────────────────────────── */
+  const attHeader = ['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
+  for(let d = pS; d <= pEnd; d++) attHeader.push(new Date(year, month, d));
+  attHeader.push('TOTAL DAYS', 'COST', '', 'LEGEND:');
+  const sheet3 = [attHeader];
+  let grandCost = 0;
+
+  rows.forEach((r, i) => {
+    const att = appState.attendance[r.uid] || {};
+    const totalDays = r.pCount + r.rdsCount + r.hdCount * 0.5;   // exact formula
+    const cost = (r.pCount + r.rdsCount) * 200 + r.hdCount * 100;
+    grandCost += cost;
+
+    const rowData = [r.empNo, r.lastName, r.firstName, r.position, new Date(r.hireDate), 'ACTIVE'];
+    for(let d = pS; d <= pEnd; d++) {
+      rowData.push(att[`${month}_${d}`] || '');
+    }
+    rowData.push(totalDays, cost);
+    if(i < LEGEND_ITEMS.length) rowData.push('', LEGEND_ITEMS[i][0], LEGEND_ITEMS[i][1]);
     sheet3.push(rowData);
   });
-  const costRowLen=6+(pEnd-pS+1)+1;const costRow=Array(costRowLen).fill(null);costRow.push(grandCost);sheet3.push(costRow);
-  const ws3=XLSX.utils.aoa_to_sheet(sheet3,{cellDates:true});
-  const attCols=[{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];
-  for(let d=pS;d<=pEnd;d++)attCols.push({wch:5});attCols.push({wch:10},{wch:10},{wch:4},{wch:6},{wch:22});
-  ws3['!cols']=attCols;
-  XLSX.utils.book_append_sheet(wb,ws3,'ATTENDANCE SHEET');
 
-  // ── SHEET 4: 13TH MONTH & LEAVE CREDIT ────────────────────
-  const sheet4=[
-    [null,'LEAVE CREDITS'],
-    [null,'COUNT','NAME','LAST NAME','START DATE','BASIC','RANK','DAILY RATE','REMAINING CREDITS','TOTAL LEAVE',null,'13TH MONTH',null,'GRAND TOTAL'],
+  const ws3 = XLSX.utils.aoa_to_sheet(sheet3, { cellDates:true });
+  const attCols = [{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];
+  for(let d = pS; d <= pEnd; d++) attCols.push({wch:5});
+  attCols.push({wch:10},{wch:10},{wch:4},{wch:6},{wch:22});
+  ws3['!cols'] = attCols;
+  XLSX.utils.book_append_sheet(wb, ws3, 'ATTENDANCE SHEET');
+
+  /* ── SHEET 4: 13TH MONTH & LEAVE CREDIT ──────────────────── */
+  const sheet4 = [
+    [null, 'LEAVE CREDITS'],
+    [null, 'COUNT','NAME','LAST NAME','START DATE','BASIC','RANK','DAILY RATE','REMAINING CREDITS','TOTAL LEAVE',null,'13TH MONTH',null,'GRAND TOTAL']
   ];
-  rows.forEach((r,i)=>{
-    const user=appState.users[r.uid]||{};
-    const slUsed=calculateUsedLeaves(r.uid,'SL'),vlUsed=calculateUsedLeaves(r.uid,'VL');
-    const slRem=Math.max(0,(user.slMax||0)-slUsed),vlRem=Math.max(0,(user.vlMax||0)-vlUsed);
-    const totalCredits=slRem+vlRem;
-    const totalLeave=totalCredits*r.daily;
-    const month13=r.salary/12;
-    sheet4.push([null,i+1,r.firstName,r.lastName,r.hireDate?new Date(r.hireDate):null,r.salary,0,r.daily,totalCredits,totalLeave,null,month13,null,totalLeave+month13]);
+  rows.forEach((r, i) => {
+    const user = appState.users[r.uid] || {};
+    const slUsed = calculateUsedLeaves(r.uid, 'SL');
+    const vlUsed = calculateUsedLeaves(r.uid, 'VL');
+    const slRem = Math.max(0, (user.slMax || 0) - slUsed);
+    const vlRem = Math.max(0, (user.vlMax || 0) - vlUsed);
+    const totalCredits = slRem + vlRem;
+    const totalLeave = totalCredits * r.daily;
+    const month13 = r.salary / 12;
+    sheet4.push([null, i + 1, r.firstName, r.lastName, new Date(r.hireDate), r.salary, 0, r.daily, totalCredits, totalLeave, null, month13, null, totalLeave + month13]);
   });
-  const ws4=XLSX.utils.aoa_to_sheet(sheet4,{cellDates:true});
-  ws4['!cols']=[{wch:4},{wch:6},{wch:16},{wch:16},{wch:14},{wch:12},{wch:8},{wch:12},{wch:16},{wch:14},{wch:4},{wch:14},{wch:4},{wch:16}];
-  XLSX.utils.book_append_sheet(wb,ws4,'13TH MONTH & LEAVE CREDIT');
+  const ws4 = XLSX.utils.aoa_to_sheet(sheet4, { cellDates:true });
+  ws4['!cols'] = [{wch:4},{wch:6},{wch:16},{wch:16},{wch:14},{wch:12},{wch:8},{wch:12},{wch:16},{wch:14},{wch:4},{wch:14},{wch:4},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws4, '13TH MONTH & LEAVE CREDIT');
 
-  const fname=`PAYROLL_${MONTH_FULL[month].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
-  XLSX.writeFile(wb,fname);
-  showToast(`Exported: ${fname}`,'success');
+  const fname = `PAYROLL_${MONTH_FULL[month].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast(`Exported: ${fname}`, 'success');
 }
 
+/* ── EXPORT ATTENDANCE TO EXCEL (simple) ────────────────────── */
 function exportToExcel(){
-  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
-  const month=parseInt(document.getElementById('pMonth').value);
-  const period=document.getElementById('pPeriod').value;const[pS,pEr]=period.split('-').map(Number);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pEr;
-  const data=[['Emp ID','Name','Dept','Shift']];
-  for(let d=pS;d<=pE;d++)data[0].push(`Day ${d}`);data[0].push('Total Lates (min)');
-  for(const[uid,user]of activeEmployeesSorted()){
-    const row=[user.empID||uid,user.fullName,user.dept,user['shift_'+month]||user.defaultShift||''];
-    let totalLates=0;
-    for(let d=pS;d<=pE;d++){const k=`${month}_${d}`;const s=appState.attendance[uid]?.[k]||'';const l=appState.attendance[uid]?.[`${k}_late`]||0;if(l)totalLates+=parseInt(l);row.push(l?`${s} (${l}m late)`:s);}
-    row.push(totalLates);data.push(row);
+  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
+  const month = parseInt(document.getElementById('pMonth').value);
+  const period = document.getElementById('pPeriod').value;
+  const [pS,pEr] = period.split('-').map(Number);
+  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+  const daysInMonth = new Date(year, month + 1, 0).getDate(), pE = pEr >= 28 ? daysInMonth : pEr;
+  const data = [['Emp ID','Name','Dept','Shift']];
+  for(let d = pS; d <= pE; d++) data[0].push(`Day ${d}`);
+  data[0].push('Total Lates (min)');
+  for(const [uid, user] of activeEmployeesSorted()){
+    const row = [user.empID || uid, user.fullName, user.dept, user['shift_'+month] || user.defaultShift || ''];
+    let totalLates = 0;
+    for(let d = pS; d <= pE; d++){
+      const k = `${month}_${d}`;
+      const s = appState.attendance[uid]?.[k] || '';
+      const l = appState.attendance[uid]?.[`${k}_late`] || 0;
+      if(l) totalLates += parseInt(l);
+      row.push(l ? `${s} (${l}m late)` : s);
+    }
+    row.push(totalLates);
+    data.push(row);
   }
-  const ws=XLSX.utils.aoa_to_sheet(data);const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Attendance');
-  XLSX.writeFile(wb,`Attendance_${MONTHS[month]}_${period}_${year}.xlsx`);
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}_${year}.xlsx`);
 }
 
-// ── TOAST ─────────────────────────────────────────────────────
-function showToast(msg,type='info'){
-  const c=document.getElementById('toastContainer');
-  while(c.children.length>=5){c.removeChild(c.firstChild);}
-  const t=document.createElement('div');t.className=`toast toast-${type}`;
-  t.textContent=`${type==='success'?'✅':type==='error'?'❌':'ℹ️'} ${msg}`;c.appendChild(t);
-  setTimeout(()=>{if(t.parentNode)t.remove();},3500);
+/* ── TOAST ───────────────────────────────────────────────────── */
+function showToast(msg, type = 'info'){
+  const c = document.getElementById('toastContainer');
+  while(c.children.length >= 5){ c.removeChild(c.firstChild); }
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = `${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'} ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { if(t.parentNode) t.remove(); }, 3500);
 }
-function showFieldError(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
-function showFieldValidation(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
+function showFieldError(id, msg){
+  const el = document.getElementById(id);
+  if(el){ el.textContent = msg; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 5000); }
+}
+function showFieldValidation(id, msg){
+  const el = document.getElementById(id);
+  if(el){ el.textContent = msg; el.classList.remove('hidden'); }
+}
 
-// ── RENDER QUEUE ──────────────────────────────────────────────
-const _rq=new Set();let _rt=null;
+/* ── RENDER QUEUE ────────────────────────────────────────────── */
+const _rq = new Set();
+let _rt = null;
 function qRender(...tasks){
-  tasks.forEach(t=>_rq.add(t));
-  if(_rt)clearTimeout(_rt);
-  _rt=setTimeout(()=>{
-    _rt=null;const jobs=[..._rq];_rq.clear();
-    if(jobs.includes('tab'))renderCurrentTab(true);
-    if(jobs.includes('inbox'))updateInbox();
-    if(jobs.includes('myLeaves'))updateMyLeaves();
-    if(jobs.includes('notifications'))updateNotifications();
-    if(jobs.includes('dashboard'))updateDashboard();
-  },80);
+  tasks.forEach(t => _rq.add(t));
+  if(_rt) clearTimeout(_rt);
+  _rt = setTimeout(() => {
+    _rt = null;
+    const jobs = [..._rq]; _rq.clear();
+    if(jobs.includes('tab')) renderCurrentTab(true);
+    if(jobs.includes('inbox')) updateInbox();
+    if(jobs.includes('myLeaves')) updateMyLeaves();
+    if(jobs.includes('notifications')) updateNotifications();
+    if(jobs.includes('dashboard')) updateDashboard();
+  }, 80);
 }
 
-// ── REALTIME LISTENERS ────────────────────────────────────────
+/* ── REALTIME LISTENERS ──────────────────────────────────────── */
 function setupRealtimeListeners(){
-  Object.values(appState.listeners).forEach(u=>{if(typeof u==='function')u();});
-  appState.listeners.users=onValue(ref(db,'users'),snap=>{appState.users=snap.val()||{};appState.lastRenderTime=0;checkCurrentUserDisabled();qRender('tab','dashboard');});
-  appState.listeners.attendance=onValue(ref(db,'attendance'),snap=>{appState.attendance=snap.val()||{};qRender('tab','dashboard');});
-  appState.listeners.leaveRequests=onValue(ref(db,'leave_requests'),snap=>{appState.leaveRequests=snap.val()||{};qRender('inbox','myLeaves');});
-  appState.listeners.notifications=onValue(ref(db,'notifications'),snap=>{appState.notifications=snap.val()||{};qRender('notifications');});
-  appState.listeners.auditLogs=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
+  Object.values(appState.listeners).forEach(u => { if(typeof u === 'function') u(); });
+  appState.listeners.users = onValue(ref(db,'users'), snap => {
+    appState.users = snap.val() || {};
+    appState.lastRenderTime = 0;
+    checkCurrentUserDisabled();
+    qRender('tab','dashboard');
+  });
+  appState.listeners.attendance = onValue(ref(db,'attendance'), snap => {
+    appState.attendance = snap.val() || {};
+    qRender('tab','dashboard');
+  });
+  appState.listeners.leaveRequests = onValue(ref(db,'leave_requests'), snap => {
+    appState.leaveRequests = snap.val() || {};
+    qRender('inbox','myLeaves');
+  });
+  appState.listeners.notifications = onValue(ref(db,'notifications'), snap => {
+    appState.notifications = snap.val() || {};
+    qRender('notifications');
+  });
+  appState.listeners.auditLogs = onValue(ref(db,'audit_logs'), snap => {
+    renderAudit(snap.val());
+  });
 }
 
-// ── EXPORT TO WINDOW ──────────────────────────────────────────
-function ex(name,fn){window[name]=fn;window['__hr_'+name]=fn;}
-ex('handleLogin',handleLogin);
-ex('handleLogout',()=>handleLogout(false));
-ex('userClockAction',userClockAction);
-ex('submitLeave',submitLeave);
-ex('cancelLeave',cancelLeave);
-ex('addEmployee',addEmployee);
-ex('editEmployee',editEmployee);
-ex('cancelEdit',cancelEdit);
-ex('manualClockOutNow',manualClockOutNow);
-ex('switchTab',switchTabInternal);
-ex('toggleLeaveForm',toggleLeaveForm);
-ex('renderAttendance',renderAttendance);
-ex('renderSchedules',renderSchedules);
-ex('updateLeaveBalance',updateLeaveBalance);
-ex('checkDateRange',checkDateRange);
-ex('exportToExcel',exportToExcel);
-ex('renderPayrollPreview',renderPayrollPreview);
-ex('exportPayrollExcel',exportPayrollExcel);
-ex('searchEmployees',searchEmployees);
-ex('searchActive',searchActive);
-ex('searchSchedules',searchSchedules);
-ex('searchAttendance',searchAttendance);
-ex('searchAudit',searchAudit);
-ex('searchMyLeaves',searchMyLeaves);
-ex('changeAttendanceStatus',changeAttendanceStatus);
-ex('updateScheduleField',updateScheduleField);
-ex('saveSchedule',saveSchedule);
-ex('saveAllSchedules',saveAllSchedules);
-ex('openPanel',openPanel);
-ex('closeAllPanels',closeAllPanels);
-ex('approveLeave',approveLeave);
-ex('rejectLeave',rejectLeave);
-ex('markNotificationRead',markNotificationRead);
-ex('deleteEmployee',deleteEmployee);
-ex('toggleBulkRegister',toggleBulkRegister);
-ex('runBulkRegister',runBulkRegister);
-ex('renderTimestamps',renderTimestamps);
-ex('exportTimestampsToExcel',exportTimestampsToExcel);
+/* ── EXPORT TO WINDOW ────────────────────────────────────────── */
+function ex(name, fn){ window[name] = fn; window['__hr_' + name] = fn; }
+ex('handleLogin', handleLogin);
+ex('handleLogout', () => handleLogout(false));
+ex('userClockAction', userClockAction);
+ex('submitLeave', submitLeave);
+ex('cancelLeave', cancelLeave);
+ex('addEmployee', addEmployee);
+ex('editEmployee', editEmployee);
+ex('cancelEdit', cancelEdit);
+ex('manualClockOutNow', manualClockOutNow);
+ex('switchTab', switchTabInternal);
+ex('toggleLeaveForm', toggleLeaveForm);
+ex('renderAttendance', renderAttendance);
+ex('renderSchedules', renderSchedules);
+ex('updateLeaveBalance', updateLeaveBalance);
+ex('checkDateRange', checkDateRange);
+ex('exportToExcel', exportToExcel);
+ex('renderPayrollPreview', renderPayrollPreview);
+ex('exportPayrollExcel', exportPayrollExcel);
+ex('searchEmployees', searchEmployees);
+ex('searchActive', searchActive);
+ex('searchSchedules', searchSchedules);
+ex('searchAttendance', searchAttendance);
+ex('searchAudit', searchAudit);
+ex('searchMyLeaves', searchMyLeaves);
+ex('changeAttendanceStatus', changeAttendanceStatus);
+ex('updateScheduleField', updateScheduleField);
+ex('saveSchedule', saveSchedule);
+ex('saveAllSchedules', saveAllSchedules);
+ex('openPanel', openPanel);
+ex('closeAllPanels', closeAllPanels);
+ex('approveLeave', approveLeave);
+ex('rejectLeave', rejectLeave);
+ex('markNotificationRead', markNotificationRead);
+ex('deleteEmployee', deleteEmployee);
+ex('toggleBulkRegister', toggleBulkRegister);
+ex('runBulkRegister', runBulkRegister);
+ex('renderTimestamps', renderTimestamps);
+ex('exportTimestampsToExcel', exportTimestampsToExcel);
 </script>
 </body>
 </html>
