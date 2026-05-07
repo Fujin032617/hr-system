@@ -1079,51 +1079,11 @@ function activeEmployeesSorted(){
   return Object.entries(appState.users).filter(([,u])=>!u.disabled).sort(compareByEmployeeNumber);
 }
 
-// ── FIXED: Simplified, reliable login profile loader ──────────
-// Uses direct UID lookup (same as the working v1 code).
-// Checks disabled flag safely. Shows clear errors on failure.
-async function loadUserProfile(authUser){
-  try{
-    const snap=await get(ref(db,`users/${authUser.uid}`));
-    if(snap.exists()){
-      const data=snap.val();
-      if(data.disabled){
-        await signOut(auth);
-        showFieldError('loginError','Your account has been disabled. Contact your administrator.');
-        showToast('Account disabled','error');
-        return;
-      }
-      appState.currentUser={id:authUser.uid,...data};
-      const k=queueKey();
-      if(k){try{const s=localStorage.getItem(k);if(s)appState.offlineQueue=JSON.parse(s);}catch{}}
-      showApp();
-      setupRealtimeListeners();
-    }else{
-      await signOut(auth);
-      showFieldError('loginError','No employee profile found for this account. Please ask your admin to add you in the Directory first.');
-    }
-  }catch(e){
-    await signOut(auth);
-    if(e&&e.code==='PERMISSION_DENIED'){
-      showFieldError('loginError','Access denied. Your Firebase Database rules may be blocking reads. Check the Rules tab in your Firebase console.');
-    }else{
-      showFieldError('loginError','Could not load your profile. Check your internet connection and try again.');
-    }
-    console.error('Profile load error:',e);
-  }
+async function findUserProfile(authUser){
+  const direct=await get(ref(db,`users/${authUser.uid}`));
+  if(direct.exists())return{id:authUser.uid,data:direct.val()};
+  return null;
 }
-
-onAuthStateChanged(auth,async(user)=>{
-  if(user){
-    // Clear any previous login error when auth fires
-    document.getElementById('loginError').classList.add('hidden');
-    if(!appState.currentUser){
-      await loadUserProfile(user);
-    }
-  }else{
-    if(appState.currentUser)doLogout(true);
-  }
-});
 
 function finishLogin(profile){
   appState.currentUser={id:profile.id,...profile.data};
@@ -1221,6 +1181,7 @@ function canCancelLeave(req){
   return false;
 }
 
+// ── ROLE CHECK helpers ─────────────────────────────────────────
 function isHRorAdmin(){return appState.currentUser&&['HR','Admin'].includes(appState.currentUser.role);}
 function isHRorAdminOrOPS(){return appState.currentUser&&['HR','Admin','OPS'].includes(appState.currentUser.role);}
 
@@ -1414,25 +1375,69 @@ async function userClockAction(type){
   finally{appState.isProcessing['clock']=false;}
 }
 
+// ── AUTH ───────────────────────────────────────────────────────
+onAuthStateChanged(auth,async(user)=>{
+  if(user){
+    if(!appState.currentUser){
+      try{
+        const profile=await findUserProfile(user);
+        if(profile){
+          // FIX: check disabled flag
+          const data=profile.data;
+          if(data.disabled){await signOut(auth);showFieldError('loginError','Account disabled. Contact admin.');showToast('Account disabled. Contact admin.','error');return;}
+          finishLogin({id:profile.id,data:{authUid:user.uid,...data}});
+        }else{
+          await signOut(auth);
+          showFieldError('loginError','Login exists, but no employee profile was found for this email. Add this user in Directory first.');
+        }
+      }catch(e){
+        await signOut(auth);
+        const msg=e&&e.code==='PERMISSION_DENIED'
+          ?'Login worked, but database access was denied. Check Firebase Realtime Database rules.'
+          :'Login worked, but employee profile could not be loaded.';
+        showFieldError('loginError',msg);
+      }
+    }
+  }else{if(appState.currentUser)doLogout(true);}
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const now=new Date();
+  document.querySelectorAll('#pMonth,#sMonth,#tsMonth').forEach(sel=>{
+    sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');
+  });
+  const pp=document.getElementById('pPeriod');if(pp)pp.value=now.getDate()<=15?'1-15':'16-31';
+  const tom=new Date();tom.setDate(tom.getDate()+1);const ts=tom.toISOString().split('T')[0];
+  ['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
+  updateClock();setInterval(updateClock,1000);
+  setupOfflineSupport();
+  document.getElementById('lPass').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
+});
+
+function updateClock(){
+  const now=new Date();
+  const el=document.getElementById('liveClock');if(el)el.textContent=now.toLocaleTimeString();
+  const dl=document.getElementById('liveDate');
+  if(dl)dl.textContent=now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const greet=document.getElementById('dashGreet');
+  if(greet){const h=now.getHours();greet.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${appState.currentUser?.fullName?.split(' ')[0]||''}!`;}
+}
+
 // ── LOGIN ──────────────────────────────────────────────────────
 async function handleLogin(){
   if(appState.isProcessing['login'])return;
-  // Clear previous errors before each attempt
-  document.getElementById('loginError').classList.add('hidden');
   const email=document.getElementById('lUser').value.trim();
   const pass=document.getElementById('lPass').value;
   if(!email||!pass){showFieldError('loginError','Please enter email and password');return;}
   appState.isProcessing['login']=true;
   const btn=document.getElementById('loginButton');btn.textContent='Signing in…';btn.disabled=true;
-  try{
-    await signInWithEmailAndPassword(auth,email,pass);
-    // onAuthStateChanged will fire and call loadUserProfile automatically
-  }catch(e){
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){
     let msg='Login failed';
     if(e.code==='auth/invalid-email')msg='Invalid email format';
     else if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(e.code))msg='Invalid email or password';
-    else if(e.code==='auth/unauthorized-domain')msg='This domain is not authorized in Firebase. Check Authentication → Settings → Authorized domains.';
-    else if(e.code==='auth/network-request-failed')msg='Network error. Check your internet connection.';
+    else if(e.code==='auth/unauthorized-domain')msg='This website domain is not authorized in Firebase Authentication.';
+    else if(e.code==='auth/network-request-failed')msg='Network error. Check your internet connection or Firebase access.';
     else if(!navigator.onLine)msg='You are offline';
     else if(e.code)msg=`Login failed: ${e.code}`;
     showFieldError('loginError',msg);
@@ -1471,18 +1476,24 @@ function showApp(){
 }
 
 function applyRoleVisibility(){
+  const role=appState.currentUser?.role;
   const isAdminHR=isHRorAdmin();
   const isOpsAdminHR=isHRorAdminOrOPS();
+  // Directory — Admin, HR only
   document.querySelectorAll('.adm-hr-only').forEach(el=>{el.style.display=isAdminHR?'':'none';});
+  // Ops-level tabs
   document.querySelectorAll('.adm-ops-hr-only').forEach(el=>{el.style.display=isOpsAdminHR?'':'none';});
+  // Nav sections
   document.getElementById('navManage').style.display=isOpsAdminHR?'':'none';
   document.getElementById('navReports').style.display=isOpsAdminHR?'':'none';
+  // Inbox/notif bell
   document.getElementById('inboxBtn').classList.toggle('hidden',!isOpsAdminHR);
   document.getElementById('notifBtn').classList.toggle('hidden',!isOpsAdminHR);
 }
 
 // ── TABS ───────────────────────────────────────────────────────
 function switchTabInternal(tabName,btnEl){
+  // Payroll — HR/Admin only (FIX: server-side enforcement needed in DB rules too)
   if(tabName==='pay'&&!isHRorAdmin()){showToast('Payroll is restricted to HR and Admin','error');return;}
   document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -1527,10 +1538,12 @@ function updateDashboard(){
   document.getElementById('myTime').textContent=user['out_'+month]||'TBA';
   const o1=user['off1_'+month]||'',o2=user['off2_'+month]||'';
   document.getElementById('myOff').textContent=`${o1} ${o2}`.trim()||'TBA';
+  // Attendance stats
   let present=0,lates=0;
   for(let d=1;d<=now.getDate();d++){const k=`${month}_${d}`;const s=appState.attendance[uid]?.[k];const l=appState.attendance[uid]?.[`${k}_late`]||0;if(s==='P'){present++;lates+=parseInt(l);}}
   document.getElementById('monthPresent').textContent=present;
   document.getElementById('monthLates').textContent=lates;
+  // Clock state
   const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
   const yk=`${yesterday.getMonth()}_${yesterday.getDate()}`;
   const todayKey=`${month}_${now.getDate()}`;
@@ -1540,23 +1553,16 @@ function updateDashboard(){
   updateClock();
 }
 
-function updateClock(){
-  const now=new Date();
-  const el=document.getElementById('liveClock');if(el)el.textContent=now.toLocaleTimeString();
-  const dl=document.getElementById('liveDate');
-  if(dl)dl.textContent=now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const greet=document.getElementById('dashGreet');
-  if(greet){const h=now.getHours();greet.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${appState.currentUser?.fullName?.split(' ')[0]||''}!`;}
-}
-
 // ── LEAVE FORM ─────────────────────────────────────────────────
 function toggleLeaveForm(){
   const lf=document.getElementById('leaveFormSection');
   lf.classList.toggle('hidden');
   if(!lf.classList.contains('hidden')){
     const s=document.getElementById('lvStartDate'),e=document.getElementById('lvEndDate');
+    // FIX: recalculate tomorrow at open time
     const tom=new Date();tom.setDate(tom.getDate()+1);const ts=tom.toISOString().split('T')[0];
     if(!s.value){s.value=ts;e.value=ts;}
+    // Clear stale errors
     ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     updateLeaveBalance();checkDateRange();
   }
@@ -1698,15 +1704,16 @@ async function addEmployee(){
   const customId=document.getElementById('addEmpNum').value.trim();
   if(!email||!fullName){showToast('Email and full name are required','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&!pass){showToast('Password is required for new employees','error');appState.isProcessing['emp']=false;return;}
+  // FIX: validate email format
   if(!appState.editingEmployeeId&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('Invalid email format','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&pass.length<6){showToast('Password must be at least 6 characters','error');appState.isProcessing['emp']=false;return;}
   try{
     let uid;
     if(appState.editingEmployeeId){uid=appState.editingEmployeeId;}
     else{
+      // FIX: secondary auth — admin stays logged in
       const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);
-      uid=cred.user.uid;
-      try{await signOut(secondaryAuth);}catch{}
+      uid=cred.user.uid;await signOut(secondaryAuth);
     }
     const data={
       fullName,email,empID:customId||uid,
@@ -1723,7 +1730,7 @@ async function addEmployee(){
       slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),
       vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),
       maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),
-      disabled:false
+      disabled:false  // FIX: explicit disabled flag
     };
     await set(ref(db,`users/${uid}`),data);
     showToast(appState.editingEmployeeId?'Employee updated!':'Employee added!','success');
@@ -1735,10 +1742,11 @@ async function addEmployee(){
 }
 
 async function deleteEmployee(empId){
-  if(!confirm(`Disable ${empId}? Their data is kept but they cannot log in.`))return;
+  if(!confirm(`Delete ${empId}? Their login account in Firebase Auth will remain but their data will be removed.`))return;
   try{
     await update(ref(db,`users/${empId}`),{disabled:true,deletedAt:new Date().toISOString()});
-    showToast('Employee disabled. Firebase Auth account still exists.','info');
+    // FIX: mark disabled rather than full remove, so they can't log in
+    showToast('Employee disabled. Their data is retained. Firebase Auth account still exists.','info');
     renderDirectory();
   }catch(e){showToast('Failed to disable employee','error');}
 }
@@ -1779,6 +1787,7 @@ function searchEmployees(){
 
 // ── ATTENDANCE ─────────────────────────────────────────────────
 function renderAttendance(){
+  // FIX: gate at render time as well
   if(!isHRorAdmin()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
   const el=document.getElementById('payTable');if(!el)return;
   const month=parseInt(document.getElementById('pMonth').value);
@@ -2065,12 +2074,14 @@ function updateMyLeaves(){
   });
   if(!mine.length)html=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No leave requests yet. File one from your dashboard!</div>`;
   container.innerHTML=html;
+  // FIX: update counts from data, not DOM
   document.getElementById('totalLeaves').textContent=total;
   document.getElementById('approvedLeaves').textContent=approved;
   document.getElementById('pendingLeaves').textContent=pending;
   document.getElementById('rejectedLeaves').textContent=rejected;
 }
 
+// FIX: searchMyLeaves re-counts from filtered data
 function searchMyLeaves(){
   const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();
   let t=0,a=0,p=0,r=0;
@@ -2094,12 +2105,12 @@ async function runBulkRegister(){
   for(let i=0;i<lines.length;i++){
     const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());
     prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;
-    if(!fullName||!email||!password){fail++;continue;}
+    if(!fullName||!email||!password){fail++;prog.textContent+=' ⚠ Skipped (missing fields)';continue;}
+    // FIX: validate email per row
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){fail++;prog.textContent+=' ⚠ Skipped (invalid email)';continue;}
     try{
       const cred=await createUserWithEmailAndPassword(secondaryAuth,email,password);
-      const uid=cred.user.uid;
-      try{await signOut(secondaryAuth);}catch{}
+      const uid=cred.user.uid;await signOut(secondaryAuth);
       await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',disabled:false});
       ok++;
     }catch(e){console.error('Bulk fail',email,e);fail++;prog.textContent+=` ⚠ Failed: ${e.code||e.message}`;}
@@ -2184,8 +2195,9 @@ function exportTimestampsToExcel(){
   XLSX.writeFile(wb,`DTR_${MONTH_FULL[month]}_${year}.xlsx`);
 }
 
-// ── PAYROLL EXPORT ─────────────────────────────────────────────
+// ── PAYROLL EXPORT (HR/Admin only) ────────────────────────────
 function exportPayrollRequestReport(){
+  // FIX: role check at function level
   if(!isHRorAdmin()){showToast('Payroll reports are restricted to HR and Admin','error');return;}
   const month=parseInt(document.getElementById('pMonth').value);
   const period=document.getElementById('pPeriod').value;
@@ -2298,7 +2310,7 @@ function showToast(msg,type='info'){
   setTimeout(()=>t.remove(),3500);
 }
 
-function showFieldError(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),8000);}}
+function showFieldError(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
 function showFieldValidation(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
 
 // ── RENDER QUEUE ───────────────────────────────────────────────
@@ -2325,20 +2337,6 @@ function setupRealtimeListeners(){
   appState.listeners.notifications=onValue(ref(db,'notifications'),snap=>{appState.notifications=snap.val()||{};qRender('notifications');});
   appState.listeners.auditLogs=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
 }
-
-// ── DOM READY ──────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  const now=new Date();
-  document.querySelectorAll('#pMonth,#sMonth,#tsMonth').forEach(sel=>{
-    sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');
-  });
-  const pp=document.getElementById('pPeriod');if(pp)pp.value=now.getDate()<=15?'1-15':'16-31';
-  const tom=new Date();tom.setDate(tom.getDate()+1);const ts=tom.toISOString().split('T')[0];
-  ['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
-  updateClock();setInterval(updateClock,1000);
-  setupOfflineSupport();
-  document.getElementById('lPass').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
-});
 
 // ── EXPORT TO WINDOW ───────────────────────────────────────────
 function ex(name,fn){window[name]=fn;window['__hr_'+name]=fn;}
