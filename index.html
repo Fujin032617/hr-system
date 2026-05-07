@@ -238,8 +238,6 @@
         
         .notification-bell { position: relative; cursor: pointer; font-size: 20px; }
         
-        #calendar { background: white; border-radius: 12px; padding: 20px; margin: 20px; }
-        
         .balance-display { font-size: 9px; padding: 5px; background: #f8fafc; border-radius: 4px; margin: 2px 0; }
         .balance-remaining { font-weight: bold; color: var(--success); }
         .balance-used      { color: var(--text-light); }
@@ -462,7 +460,9 @@
                     <option value="RC">RC</option>
                     <option value="CSR">CSR</option>
                 </select>
-                <input type="date"  id="addBday">
+                <input type="date"  id="addBday" placeholder="Birthday">
+                <input type="date"  id="addHireDate" placeholder="Hire Date">
+                <input type="number" id="addSalary" placeholder="Monthly Salary" min="0" style="width:100%;">
                 <input type="tel"   id="addContact"   placeholder="Contact #">
                 <input type="tel"   id="addEmergency" placeholder="Emergency #">
                 <input type="text"  id="addBackend"   placeholder="Back End ID">
@@ -534,6 +534,7 @@
                         <option value="16-31">Period: 16 - End</option>
                     </select>
                     <button class="action-btn" style="background:#15803d; padding:8px 15px;" onclick="exportToExcel()">EXPORT EXCEL</button>
+                    <button class="action-btn" style="background:#0f172a; padding:8px 15px;" onclick="exportPayrollRequestReport()">EXPORT PAYROLL REPORT</button>
                 </div>
             </div>
             <div class="search-container">
@@ -600,7 +601,7 @@
             'addEmployee','editEmployee','cancelEdit','manualClockOutNow','switchTab',
             'toggleLeaveForm','updateLeaveBalance','checkDateRange','exportToExcel',
             'renderAttendance','renderSchedules',
-            'changeCalendarView','refreshCalendarEvents','searchEmployees','searchActive',
+            'searchEmployees','searchActive',
             'searchSchedules','searchAttendance','searchAudit','searchMyLeaves',
             'changeAttendanceStatus','updateScheduleField','saveSchedule','saveAllSchedules',
             'toggleInbox','toggleNotifications','approveLeave','rejectLeave',
@@ -661,10 +662,9 @@
         users: {}, attendance: {}, leaveRequests: {}, notifications: {},
         currentUser: null, listeners: {}, isProcessing: false,
         isOnline: navigator.onLine, offlineQueue: [],
-        autoClockOutInterval: null, calendarInstance: null,
+        autoClockOutInterval: null,
         forgotLogoutTimer: null, editingEmployeeId: null,
-        scheduleChanges: null, lastRenderTime: 0, renderThrottle: 1000,
-        calendarInitialized: false
+        scheduleChanges: null, lastRenderTime: 0, renderThrottle: 1000
     };
 
     const MONTHS       = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1143,7 +1143,6 @@
         if (!silent && !confirm('Are you sure you want to logout?')) return;
         if (appState.autoClockOutInterval) clearInterval(appState.autoClockOutInterval);
         if (appState.forgotLogoutTimer)    clearInterval(appState.forgotLogoutTimer);
-        if (appState.calendarInstance)     { appState.calendarInstance.destroy(); appState.calendarInstance = null; appState.calendarInitialized = false; }
 
         // Persist user-scoped queue, remove the old generic key
         const qKey = offlineQueueKey();
@@ -1153,7 +1152,7 @@
         Object.values(appState.listeners).forEach(fn => { if (typeof fn === 'function') fn(); });
         await signOut(auth);
 
-        Object.assign(appState, { currentUser: null, users: {}, attendance: {}, leaveRequests: {}, listeners: {}, offlineQueue: [], editingEmployeeId: null, scheduleChanges: null, calendarInitialized: false });
+        Object.assign(appState, { currentUser: null, users: {}, attendance: {}, leaveRequests: {}, listeners: {}, offlineQueue: [], editingEmployeeId: null, scheduleChanges: null });
 
         ['adminPanel','leaveInbox','notificationsModal','forgotLogoutAlert'].forEach(id => document.getElementById(id).classList.add('hidden'));
         document.getElementById('connectionStatus').classList.add('hidden');
@@ -1180,13 +1179,13 @@
         }
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.add('hidden'));
-        ['profile','pay','leaves'].forEach(tab => {
+        ['profile','leaves'].forEach(tab => {
             document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden');
         });
 
         const role = appState.currentUser.role;
         if (role === 'Admin' || role === 'HR') {
-            ['dir','active','sched','audit','timestamps'].forEach(tab => document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden'));
+            ['pay','dir','active','sched','audit','timestamps'].forEach(tab => document.querySelector(`[data-tab="${tab}"]`)?.classList.remove('hidden'));
             document.getElementById('mailIcon').classList.remove('hidden');
             document.getElementById('notificationBell').classList.remove('hidden');
         } else if (role === 'OPS') {
@@ -1207,7 +1206,6 @@
         if (tabElement) {
             tabElement.classList.remove('hidden');
             if (buttonElement) buttonElement.classList.add('active');
-            if (tabName === 'calendar' && !appState.calendarInitialized) setTimeout(() => initializeCalendar(), 100);
             renderCurrentTabOnly();
         }
     }
@@ -1397,7 +1395,6 @@
                 document.getElementById('lvReason').value    = '';
                 document.getElementById('leaveFormSection').classList.add('hidden');
                 showSuccess('Leave request submitted!', null, 3000);
-                refreshCalendarEvents();
             } else if (result.queued) {
                 showError('Offline. Leave request queued.', null, false);
                 document.getElementById('leaveFormSection').classList.add('hidden');
@@ -1434,6 +1431,8 @@
         document.getElementById('addPass').value          = '';
         document.getElementById('addDept').value          = user.dept || 'RC';
         document.getElementById('addBday').value          = user.birthday || '';
+        document.getElementById('addHireDate').value      = user.hireDate || '';
+        document.getElementById('addSalary').value        = user.monthlySalary || '';
         document.getElementById('addContact').value       = user.contact || '';
         document.getElementById('addEmergency').value     = user.emergency || '';
         document.getElementById('addBackend').value       = user.backendID || '';
@@ -1451,7 +1450,7 @@
 
     function cancelEdit() {
         appState.editingEmployeeId = null;
-        ['addFullName','addUser','addPass','addBday','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id => {
+        ['addFullName','addUser','addPass','addBday','addHireDate','addSalary','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         // FIX #9: explicitly reset addEmpNum disabled state
@@ -1500,6 +1499,8 @@
                 emergency:        document.getElementById('addEmergency').value.trim(),
                 backendID:        document.getElementById('addBackend').value.trim(),
                 assets:           document.getElementById('addAssets').value.trim(),
+                hireDate:         document.getElementById('addHireDate').value,
+                monthlySalary:    Math.max(0, parseFloat(document.getElementById('addSalary').value) || 0),
                 defaultShift:     document.getElementById('addDefaultShift').value.trim(),
                 slMax:            Math.max(0, parseInt(document.getElementById('addSL').value) || 10),
                 vlMax:            Math.max(0, parseInt(document.getElementById('addVL').value) || 10),
@@ -2224,6 +2225,198 @@
         XLSX.writeFile(wb, `DTR_${MONTH_NAMES[month]}_${year}.xlsx`);
     }
 
+    function exportPayrollRequestReport() {
+        if (!appState.currentUser || !['Admin','HR'].includes(appState.currentUser.role)) {
+            showError('Only HR and Admin are authorized to export payroll reports.');
+            return;
+        }
+        const month  = parseInt(document.getElementById('pMonth').value);
+        const period = document.getElementById('pPeriod').value;
+        const [pStart, _pEnd] = period.split('-').map(Number);
+        const year = new Date().getFullYear();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const pEnd = _pEnd >= 28 ? daysInMonth : _pEnd;
+        const startDate = new Date(year, month, pStart - 1);
+        const endDate   = new Date(year, month, pEnd - 1);
+        const startLabel = `${MONTHS[month].toUpperCase()} ${pStart},${year}`;
+        const endLabel   = `${MONTHS[month].toUpperCase()} ${pEnd},${year}`;
+        const exportDate = new Date();
+
+        const employees = Object.entries(appState.users).sort(([,a],[,b]) => {
+            const la = (a.fullName || '').split(' ').pop();
+            const lb = (b.fullName || '').split(' ').pop();
+            return la.localeCompare(lb);
+        });
+
+        const dateKeys = [];
+        for (let d = pStart; d <= pEnd; d++) dateKeys.push(`${month}_${d}`);
+
+        const parsePossibleDate = (value) => {
+            if (value instanceof Date) return value;
+            if (!value && value !== 0) return null;
+            const date = new Date(value);
+            return isNaN(date) ? value : date;
+        };
+
+        const sheet1 = [
+            ['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],
+            [1, exportDate, 'Salary for Staff', null, employees.length, 0, appState.currentUser?.dept || '', appState.currentUser?.dept || '', 'All', 'Salary and Wages', `${startLabel} TO ${endLabel}`, null, null],
+            [2, exportDate, 'Salary Charge Fee', null, 1, 300, appState.currentUser?.dept || '', appState.currentUser?.dept || '', 'All', 'Salary Charge Fee', `${startLabel} TO ${endLabel}`, null, null],
+            [],
+            [null,null,null,null,null,0,null,null,null,null,null,null,null]
+        ];
+
+        const sheet2 = [
+            ['Pay Period', startLabel, null, null, null, 'BASIC', 0, ...Array(39).fill(null)],
+            ['Start', startLabel, null, null, null, 'OT', 0, ...Array(39).fill(null)],
+            ['End', endLabel, null, null, null, 'MEAL', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'TRANSPO', 0, ...Array(39).fill(null)],
+            ['Total Salary', 0, null, null, null, 'BIRTHDAY', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'ND', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'STAT', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'Regular Holiday', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'Speacial Holiday', 0, ...Array(39).fill(null)],
+            [null, null, null, null, null, 'DISCREPANCY', 0, null, null, null, null, null, null, null, 'Allowances', null, null, null, null, null, null, null, null, null, null, null, 'Deductions', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)',null,'Overtime','Discrepancy','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary',null,null,null,null,null,null,null]
+        ];
+
+        const attendanceHeaders = ['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
+        dateKeys.forEach((day, idx) => attendanceHeaders.push(new Date(year, month, pStart + idx - 1)));
+        attendanceHeaders.push('TOTAL DAYS','COST', null, 'LEGEND:', 'RD', ' RESTDAY', null, null, null, null);
+        const sheet3 = [attendanceHeaders];
+
+        let totalBasic = 0;
+        let totalNet = 0;
+
+        const leaveSheet = [
+            [null,'LEAVE CREDITS',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+            [null,'COUNT','NAME','LAST NAME','START DATE','BASIC','RANK','DAILY RATE','REMAINING CREDITS','TOTAL LEAVE',null,'13TH MONTH',null,'GRAND TOTAL',null,null,null]
+        ];
+
+        employees.forEach(([uid, user], index) => {
+            const monthlySalary = Math.max(0, parseFloat(user.monthlySalary) || 0);
+            const cutOffBasic = monthlySalary / 2;
+            const dailySalary = monthlySalary ? monthlySalary / 26 : 0;
+            const mealAllowance = 2000;
+            const transAllowance = 1500;
+            const birthdayAllowance = 0;
+            const nightDiff = (user.defaultShift || '').toLowerCase().includes('night') ? dailySalary : 0;
+            const statutory = 1000;
+            const regularHoliday = 0;
+            const specialHoliday = 0;
+            const totalAllowances = mealAllowance + transAllowance + birthdayAllowance + nightDiff + statutory + regularHoliday + specialHoliday;
+            const absenceCount = dateKeys.reduce((count, key) => {
+                const status = appState.attendance[uid]?.[key] || '';
+                return count + ((status && status !== 'P' && status !== 'RD') ? 1 : 0);
+            }, 0);
+            const lateMins = dateKeys.reduce((sum, key) => sum + (parseInt(appState.attendance[uid]?.[`${key}_late`] || 0) || 0), 0);
+            const periodDays = dateKeys.reduce((count, key) => count + (appState.attendance[uid]?.[key] === 'P' ? 1 : 0), 0);
+            const cost = dailySalary * periodDays;
+            const netSalary = cutOffBasic + totalAllowances;
+            totalBasic += cutOffBasic;
+            totalNet += netSalary;
+
+            const nameParts = (user.fullName || '').trim().split(' ');
+            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (user.fullName || '');
+            const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
+
+            const payrollRow = Array(46).fill(null);
+            payrollRow[0] = index + 1;
+            payrollRow[1] = lastName;
+            payrollRow[2] = firstName;
+            payrollRow[3] = user.role || user.dept || '';
+            payrollRow[4] = user.fullName || '';
+            payrollRow[5] = monthlySalary;
+            payrollRow[6] = parsePossibleDate(user.hireDate || user.birthday || '');
+            payrollRow[7] = cutOffBasic;
+            payrollRow[8] = dailySalary;
+            payrollRow[10] = dailySalary;
+            payrollRow[11] = 0;
+            payrollRow[14] = mealAllowance;
+            payrollRow[15] = transAllowance;
+            payrollRow[17] = 80;
+            payrollRow[18] = nightDiff;
+            payrollRow[19] = statutory;
+            payrollRow[20] = 1;
+            payrollRow[21] = regularHoliday;
+            payrollRow[22] = 1;
+            payrollRow[23] = specialHoliday;
+            payrollRow[24] = totalAllowances;
+            payrollRow[26] = absenceCount;
+            payrollRow[28] = lateMins;
+            payrollRow[30] = 0;
+            payrollRow[31] = netSalary;
+            sheet2.push(payrollRow);
+
+            const attendanceRow = Array(31).fill(null);
+            attendanceRow[0] = user.empID || uid;
+            attendanceRow[1] = lastName;
+            attendanceRow[2] = firstName;
+            attendanceRow[3] = user.role || user.dept || '';
+            attendanceRow[4] = parsePossibleDate(user.hireDate || user.birthday || '');
+            attendanceRow[5] = user.status || 'ACTIVE';
+            dateKeys.forEach((key, idx) => attendanceRow[6 + idx] = appState.attendance[uid]?.[key] || '');
+            attendanceRow[21] = periodDays;
+            attendanceRow[22] = cost;
+            attendanceRow[24] = 'RD';
+            attendanceRow[25] = ' RESTDAY';
+            sheet3.push(attendanceRow);
+
+            leaveSheet.push([
+                null,
+                index + 1,
+                firstName,
+                lastName,
+                parsePossibleDate(user.hireDate || user.birthday || ''),
+                monthlySalary,
+                statutory,
+                dailySalary,
+                (user.slMax || 0) + (user.vlMax || 0),
+                calculateUsedLeaves(uid, 'SL') + calculateUsedLeaves(uid, 'VL'),
+                null,
+                monthlySalary ? monthlySalary / 12 : 0,
+                null,
+                monthlySalary ? (monthlySalary / 12) + ((user.slMax || 0) + (user.vlMax || 0)) : 0,
+                null,
+                null,
+                null
+            ]);
+        });
+
+        sheet1[4][5] = totalNet + 300;
+        sheet2[0][6] = totalBasic;
+        sheet2[4][1] = totalNet;
+
+        const firstUser = employees[0] ? employees[0][1] : null;
+        const sheet4 = leaveSheet.slice();
+        sheet4.push([null,null,null,null,'13-MONTH PAY CALCULATOR',null,null,null,null,null,null,null,null,null,null,null,null]);
+        sheet4.push([null,null,'Name:', firstUser ? firstUser.fullName : '', null,'Month','Basic Salary (Monthly)','Rank Allowance (Monthly)','Total Monthly Salary','Deductions (due to absences or late)','Basic Salary Earned for the Month','Monthly Rate','Absences','Half-day / Undertime',null,null,null,null]);
+        sheet4.push([null,null,'Position:', firstUser ? firstUser.role || firstUser.dept || '' : '', 'January', firstUser ? parseFloat(firstUser.monthlySalary || 0) : 0, 1000, firstUser ? parseFloat(firstUser.monthlySalary || 0) + 1000 : 0, 0, firstUser ? parseFloat(firstUser.monthlySalary || 0) + 1000 : 0, firstUser ? ((parseFloat(firstUser.monthlySalary || 0) + 1000) / 12) : 0, 0, 0, null, null, null, null]);
+        sheet4.push([null,null,'Department:', firstUser ? firstUser.dept || '' : '', 'February', firstUser ? parseFloat(firstUser.monthlySalary || 0) : 0, 1000, firstUser ? parseFloat(firstUser.monthlySalary || 0) + 1000 : 0, 0, firstUser ? parseFloat(firstUser.monthlySalary || 0) + 1000 : 0, firstUser ? ((parseFloat(firstUser.monthlySalary || 0) + 1000) / 12) : 0, 0, null, null, null, null]);
+        sheet4.push([null,null,'Date Hired:', firstUser ? parsePossibleDate(firstUser.hireDate || firstUser.birthday || '') : '', 'March', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,'Seperation Date:', null, 'April ', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'May', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'June', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'July', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'August', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'September', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'October', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'November', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,'December', null, null, null, null, 0, 0, null, null, null, null, null, null]);
+        sheet4.push([null,null,null,null,null,null,null,null,'13-Month Pay for this year', firstUser ? ((parseFloat(firstUser.monthlySalary || 0) + 1000) / 12) : 0, null, null, null, null, null, null, null]);
+
+        const ws1 = XLSX.utils.aoa_to_sheet(sheet1, { cellDates: true });
+        const ws2 = XLSX.utils.aoa_to_sheet(sheet2, { cellDates: true });
+        const ws3 = XLSX.utils.aoa_to_sheet(sheet3, { cellDates: true });
+        const ws4 = XLSX.utils.aoa_to_sheet(sheet4, { cellDates: true });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws1, 'REQUEST CLAIM');
+        XLSX.utils.book_append_sheet(wb, ws2, 'PAYROLL REQUEST');
+        XLSX.utils.book_append_sheet(wb, ws3, 'ATTENDANCE SHEET');
+        XLSX.utils.book_append_sheet(wb, ws4, '13TH MONTH & LEAVE CREDIT');
+        XLSX.writeFile(wb, `PAYROLL_${MONTHS[month]}_${pStart}-${pEnd}_${year}.xlsx`);
+    }
+
     // ── Export ────────────────────────────────────────────────────────────────────────
     function exportToExcel() {
         const month  = parseInt(document.getElementById('pMonth').value);
@@ -2306,7 +2499,6 @@
             if (jobs.includes('myLeaves'))      updateMyLeaves();
             if (jobs.includes('notifications')) updateNotifications();
             if (jobs.includes('dashboard'))     updateDashboard();
-            if (jobs.includes('calendar') && appState.calendarInstance) refreshCalendarEvents();
         }, 80);
     }
 
@@ -2324,7 +2516,7 @@
         });
         appState.listeners.leaveRequests = onValue(ref(db, 'leave_requests'), snapshot => {
             appState.leaveRequests = snapshot.val() || {};
-            queueRender('inbox', 'myLeaves', 'calendar');
+            queueRender('inbox', 'myLeaves');
         });
         appState.listeners.notifications = onValue(ref(db, 'notifications'), snapshot => {
             appState.notifications = snapshot.val() || {};
@@ -2367,8 +2559,7 @@
     exportFn('updateLeaveBalance',      updateLeaveBalance);
     exportFn('checkDateRange',          checkDateRange);
     exportFn('exportToExcel',           exportToExcel);
-    exportFn('changeCalendarView',      changeCalendarView);
-    exportFn('refreshCalendarEvents',   refreshCalendarEvents);
+    exportFn('exportPayrollRequestReport', exportPayrollRequestReport);
     exportFn('searchEmployees',         searchEmployees);
     exportFn('searchActive',            searchActive);
     exportFn('searchSchedules',         searchSchedules);
