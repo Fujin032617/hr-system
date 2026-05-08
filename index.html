@@ -47,7 +47,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);fon
 .card{background:var(--card);border-radius:var(--r2);border:none;box-shadow:var(--shadow);padding:24px;}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);letter-spacing:0;}
-.card-sub{font-size:11px;color:var(--muted);margin-top:2px;}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{background:var(--card);border:none;border-radius:var(--r2);padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
 .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
@@ -56,7 +55,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);fon
 .stat-card.amber::after{background:var(--amber);}
 .stat-card.red::after{background:var(--red);}
 .stat-card.purple::after{background:var(--purple);}
-.stat-card.navy::after{background:var(--navy);}
 .stat-icon{font-size:22px;}
 .stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);line-height:1;}
 .stat-label{font-size:11px;color:var(--muted);font-weight:500;}
@@ -89,7 +87,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);fon
 .sched-row:last-child{border-bottom:none;}
 .sched-key{font-size:11px;color:var(--muted);}
 .sched-val{font-size:12px;font-weight:600;color:var(--navy);}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-primary:hover{background:var(--accent2);}
 .btn-success{background:var(--green);color:#fff;}
@@ -113,12 +111,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);fon
 .form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .alert{padding:10px 14px;border-radius:8px;font-size:12px;display:flex;align-items:flex-start;gap:8px;}
 .alert-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
-.alert-success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
 .alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
-.alert-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a;}
 .alert.hidden{display:none!important;}
 .search-wrap{position:relative;margin-bottom:16px;}
-.search-input{width:100%;padding:9px 14px 9px 38px;border:none;border-radius:20px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .15s;}
+.search-input{width:100%;padding:9px 14px 9px 38px;border:none;border-radius:20px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;}
 .search-input:focus{outline:none;}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
 .table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);}
@@ -170,8 +166,7 @@ td.att-cell:hover{transform:scale(1.08);}
 .panel-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
 .panel-close{cursor:pointer;font-size:20px;color:var(--muted);background:none;border:none;}
 .panel-body{flex:1;overflow-y:auto;padding:16px 24px;}
-.inbox-item{padding:14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;transition:box-shadow .15s;}
-.inbox-item:hover{box-shadow:var(--shadow);}
+.inbox-item{padding:14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;}
 .inbox-name{font-weight:700;font-size:13px;color:var(--navy);}
 .inbox-detail{font-size:11px;color:var(--muted);margin:3px 0 6px;}
 .inbox-reason{font-size:11px;color:var(--navy3);background:var(--bg);padding:6px 10px;border-radius:6px;margin-bottom:8px;}
@@ -201,10 +196,8 @@ td.att-cell:hover{transform:scale(1.08);}
 .section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
 .section-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
 .hierarchy-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--navy3);margin-bottom:14px;}
-
-/* ── PAYROLL TAB STYLES ─────────────────────────────── */
 .payroll-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
-.py-stat{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);border-bottom:3px solid transparent;position:relative;}
+.py-stat{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);border-bottom:3px solid transparent;}
 .py-stat.blue{border-bottom-color:var(--accent);}
 .py-stat.green{border-bottom-color:var(--green);}
 .py-stat.amber{border-bottom-color:var(--amber);}
@@ -213,12 +206,11 @@ td.att-cell:hover{transform:scale(1.08);}
 .py-stat .ps-label{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
 .py-stat .ps-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-top:4px;color:var(--navy);}
 .py-stat .ps-sub{font-size:10px;color:var(--muted);margin-top:2px;}
-
 #payrollPreview{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
 #payrollPreview table{border-collapse:collapse;width:100%;min-width:1400px;font-size:11px;}
 #payrollPreview thead tr:first-child th{background:#1c1e21;color:#fff;padding:10px 8px;text-align:center;border:1px solid #3a3b3c;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
 #payrollPreview thead tr:nth-child(2) th{background:#3a3b3c;color:#e4e6eb;padding:7px 8px;text-align:center;border:1px solid #4a4b4c;font-size:9px;font-weight:600;text-transform:uppercase;}
-#payrollPreview tbody td{padding:8px 8px;border:1px solid var(--border);text-align:right;vertical-align:middle;}
+#payrollPreview tbody td{padding:8px;border:1px solid var(--border);text-align:right;vertical-align:middle;}
 #payrollPreview tbody td.txt{text-align:left;}
 #payrollPreview tbody td.ctr{text-align:center;}
 #payrollPreview tbody tr:nth-child(even) td{background:#fafafa;}
@@ -227,9 +219,7 @@ td.att-cell:hover{transform:scale(1.08);}
 #payrollPreview .deduct-cell{background:#fef2f2!important;color:#dc2626;}
 #payrollPreview .net-cell{background:#f0fdf4!important;color:#065f46;font-weight:800;font-size:12px;}
 #payrollPreview .total-row td{background:#1c1e21!important;color:#fff!important;font-weight:700;font-size:11px;}
-#payrollPreview .sn-col{text-align:center;color:var(--muted);font-size:11px;}
 .payroll-info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;font-size:11px;color:#1e40af;margin-bottom:16px;line-height:1.8;}
-
 #menuToggle{display:none;}
 @media(max-width:768px){
   #sidebar{transform:translateX(-100%);}
@@ -260,27 +250,19 @@ td.att-cell:hover{transform:scale(1.08);}
   <button class="btn btn-danger btn-sm btn-full" onclick="manualClockOutNow()">Clock Out Now</button>
 </div>
 
-<!-- LOGIN -->
 <div id="loginSection">
   <div class="login-box">
     <div class="login-logo">AFB<span style="color:var(--accent);">.</span>Teams</div>
     <div class="login-tagline">Team attendance and payroll portal</div>
     <div id="loginError" class="alert alert-error hidden" style="margin-bottom:16px;"></div>
     <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" id="lUser" class="form-input" placeholder="you@company.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="lPass" class="form-input" placeholder="••••••••" autocomplete="current-password">
-      </div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" id="lUser" class="form-input" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" id="lPass" class="form-input" placeholder="••••••••" autocomplete="current-password"></div>
       <button id="loginButton" class="btn btn-primary btn-full" style="padding:12px;font-size:13px;" onclick="handleLogin()">Sign In</button>
     </div>
   </div>
 </div>
 
-<!-- APP SHELL -->
 <div id="appShell" class="hidden">
   <aside id="sidebar">
     <div class="sidebar-logo">
@@ -297,39 +279,21 @@ td.att-cell:hover{transform:scale(1.08);}
     <nav class="sidebar-nav">
       <div class="nav-section">
         <div class="nav-label">Main</div>
-        <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
-          <span class="icon">🏠</span> Dashboard
-        </button>
-        <button class="nav-item" data-tab="leaves" onclick="switchTab('leaves',this)">
-          <span class="icon">📋</span> My Leaves
-        </button>
+        <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)"><span class="icon">🏠</span> Dashboard</button>
+        <button class="nav-item" data-tab="leaves" onclick="switchTab('leaves',this)"><span class="icon">📋</span> My Leaves</button>
       </div>
       <div class="nav-section" id="navManage" style="display:none;">
         <div class="nav-label">Manage</div>
-        <button class="nav-item adm-hr-only" data-tab="dir" onclick="switchTab('dir',this)" style="display:none;">
-          <span class="icon">👥</span> Directory
-        </button>
-        <button class="nav-item adm-ops-hr-only" data-tab="active" onclick="switchTab('active',this)" style="display:none;">
-          <span class="icon">🟢</span> Active Now
-        </button>
-        <button class="nav-item adm-ops-hr-only" data-tab="sched" onclick="switchTab('sched',this)" style="display:none;">
-          <span class="icon">📅</span> Schedules
-        </button>
+        <button class="nav-item adm-hr-only" data-tab="dir" onclick="switchTab('dir',this)" style="display:none;"><span class="icon">👥</span> Directory</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="active" onclick="switchTab('active',this)" style="display:none;"><span class="icon">🟢</span> Active Now</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="sched" onclick="switchTab('sched',this)" style="display:none;"><span class="icon">📅</span> Schedules</button>
       </div>
       <div class="nav-section" id="navReports" style="display:none;">
         <div class="nav-label">Reports</div>
-        <button class="nav-item adm-hr-only" data-tab="pay" onclick="switchTab('pay',this)" style="display:none;">
-          <span class="icon">📊</span> Payroll &amp; Attendance
-        </button>
-        <button class="nav-item adm-hr-only" data-tab="payroll" onclick="switchTab('payroll',this)" style="display:none;">
-          <span class="icon">💰</span> Payroll Export
-        </button>
-        <button class="nav-item adm-ops-hr-only" data-tab="timestamps" onclick="switchTab('timestamps',this)" style="display:none;">
-          <span class="icon">⏱</span> Timestamp Sheet
-        </button>
-        <button class="nav-item adm-ops-hr-only" data-tab="audit" onclick="switchTab('audit',this)" style="display:none;">
-          <span class="icon">🔍</span> Audit Logs
-        </button>
+        <button class="nav-item adm-hr-only" data-tab="pay" onclick="switchTab('pay',this)" style="display:none;"><span class="icon">📊</span> Payroll &amp; Attendance</button>
+        <button class="nav-item adm-hr-only" data-tab="payroll" onclick="switchTab('payroll',this)" style="display:none;"><span class="icon">💰</span> Payroll Export</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="timestamps" onclick="switchTab('timestamps',this)" style="display:none;"><span class="icon">⏱</span> Timestamp Sheet</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="audit" onclick="switchTab('audit',this)" style="display:none;"><span class="icon">🔍</span> Audit Logs</button>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -347,12 +311,8 @@ td.att-cell:hover{transform:scale(1.08);}
         <div class="top-bar-title" id="topBarTitle">Dashboard</div>
       </div>
       <div class="top-bar-actions">
-        <button class="icon-btn hidden" id="inboxBtn" title="Leave Requests" onclick="openPanel('inboxPanel')">
-          ✉️<span class="dot hidden" id="inboxDot"></span>
-        </button>
-        <button class="icon-btn hidden" id="notifBtn" title="Notifications" onclick="openPanel('notifPanel')">
-          🔔<span class="dot hidden" id="notifDot"></span>
-        </button>
+        <button class="icon-btn hidden" id="inboxBtn" onclick="openPanel('inboxPanel')">✉️<span class="dot hidden" id="inboxDot"></span></button>
+        <button class="icon-btn hidden" id="notifBtn" onclick="openPanel('notifPanel')">🔔<span class="dot hidden" id="notifDot"></span></button>
       </div>
     </div>
 
@@ -373,18 +333,8 @@ td.att-cell:hover{transform:scale(1.08);}
             <div class="card">
               <div class="card-header"><div class="card-title">Leave Balance</div></div>
               <div class="balance-row">
-                <div class="bal-card sl">
-                  <div class="bal-label">Sick Leave</div>
-                  <div class="bal-num" id="slView">0</div>
-                  <div class="bal-bar"><div class="bal-bar-fill" id="slProg" style="width:0%"></div></div>
-                  <div class="bal-meta"><span>Used: <b id="slUsed">0</b></span><span>Total: <b id="slTotal">0</b></span></div>
-                </div>
-                <div class="bal-card vl">
-                  <div class="bal-label">Vacation Leave</div>
-                  <div class="bal-num" id="vlView">0</div>
-                  <div class="bal-bar"><div class="bal-bar-fill" id="vlProg" style="width:0%"></div></div>
-                  <div class="bal-meta"><span>Used: <b id="vlUsed">0</b></span><span>Total: <b id="vlTotal">0</b></span></div>
-                </div>
+                <div class="bal-card sl"><div class="bal-label">Sick Leave</div><div class="bal-num" id="slView">0</div><div class="bal-bar"><div class="bal-bar-fill" id="slProg" style="width:0%"></div></div><div class="bal-meta"><span>Used: <b id="slUsed">0</b></span><span>Total: <b id="slTotal">0</b></span></div></div>
+                <div class="bal-card vl"><div class="bal-label">Vacation Leave</div><div class="bal-num" id="vlView">0</div><div class="bal-bar"><div class="bal-bar-fill" id="vlProg" style="width:0%"></div></div><div class="bal-meta"><span>Used: <b id="vlUsed">0</b></span><span>Total: <b id="vlTotal">0</b></span></div></div>
               </div>
               <button class="btn btn-primary btn-full" onclick="toggleLeaveForm()" style="margin-top:4px;">+ File Leave Request</button>
             </div>
@@ -406,22 +356,10 @@ td.att-cell:hover{transform:scale(1.08);}
           </div>
         </div>
         <div id="leaveFormSection" class="card hidden" style="max-width:560px;margin-top:20px;">
-          <div class="card-header">
-            <div class="card-title">New Leave Request</div>
-            <button class="btn btn-ghost btn-sm" onclick="toggleLeaveForm()">✕ Close</button>
-          </div>
-          <div class="hierarchy-box">
-            <strong>Approval flow:</strong> Employee → OPS (same dept) → Admin (same dept) → HR<br>
-            Any authorized approver can action — no strict sequence required.
-          </div>
+          <div class="card-header"><div class="card-title">New Leave Request</div><button class="btn btn-ghost btn-sm" onclick="toggleLeaveForm()">✕ Close</button></div>
+          <div class="hierarchy-box"><strong>Approval flow:</strong> Employee → OPS (same dept) → Admin (same dept) → HR<br>Any authorized approver can action — no strict sequence required.</div>
           <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="form-group">
-              <label class="form-label">Leave Type</label>
-              <select id="lvType" class="form-select" onchange="updateLeaveBalance()">
-                <option value="SL">Sick Leave (SL)</option>
-                <option value="VL">Vacation Leave (VL)</option>
-              </select>
-            </div>
+            <div class="form-group"><label class="form-label">Leave Type</label><select id="lvType" class="form-select" onchange="updateLeaveBalance()"><option value="SL">Sick Leave (SL)</option><option value="VL">Vacation Leave (VL)</option></select></div>
             <div class="form-grid2">
               <div class="form-group"><label class="form-label">Start Date</label><input type="date" id="lvStartDate" class="form-input" onchange="checkDateRange()"></div>
               <div class="form-group"><label class="form-label">End Date</label><input type="date" id="lvEndDate" class="form-input" onchange="checkDateRange()"></div>
@@ -431,9 +369,7 @@ td.att-cell:hover{transform:scale(1.08);}
             <div id="scheduleConflict" class="alert alert-info hidden"></div>
             <div id="consecutiveError" class="alert alert-error hidden"></div>
             <div class="form-group"><label class="form-label">Reason</label><textarea id="lvReason" class="form-textarea" placeholder="Brief reason…"></textarea></div>
-            <div class="alert alert-info" style="font-size:11px;">
-              Balance: <b id="availableBalance">0</b> days &nbsp;|&nbsp; Requested: <b id="requestedDays">0</b> working days &nbsp;|&nbsp; Max consecutive: <b id="maxConsecutiveDisplay">30</b> days
-            </div>
+            <div class="alert alert-info" style="font-size:11px;">Balance: <b id="availableBalance">0</b> days &nbsp;|&nbsp; Requested: <b id="requestedDays">0</b> working days &nbsp;|&nbsp; Max consecutive: <b id="maxConsecutiveDisplay">30</b> days</div>
             <button onclick="submitLeave()" class="btn btn-primary btn-full">Submit Request</button>
           </div>
         </div>
@@ -444,13 +380,7 @@ td.att-cell:hover{transform:scale(1.08);}
         <div class="section-title">Staff Directory</div>
         <div class="section-sub">Manage all employee records</div>
         <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <div class="card-title" id="dirFormTitle">Add New Employee</div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-purple btn-sm" onclick="toggleBulkRegister()">📋 Bulk Register</button>
-              <button id="cancelEditBtn" class="btn btn-ghost btn-sm hidden" onclick="cancelEdit()">✕ Cancel Edit</button>
-            </div>
-          </div>
+          <div class="card-header"><div class="card-title" id="dirFormTitle">Add New Employee</div><div style="display:flex;gap:8px;"><button class="btn btn-purple btn-sm" onclick="toggleBulkRegister()">📋 Bulk Register</button><button id="cancelEditBtn" class="btn btn-ghost btn-sm hidden" onclick="cancelEdit()">✕ Cancel Edit</button></div></div>
           <div id="dirMessage" class="hidden" style="margin-bottom:14px;"></div>
           <div class="notice">ℹ️ New employees are created via a secondary auth instance — you will not be logged out.</div>
           <div id="bulkRegisterPanel" class="hidden" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;">
@@ -458,25 +388,19 @@ td.att-cell:hover{transform:scale(1.08);}
             <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">One per line: <code style="background:var(--border);padding:2px 6px;border-radius:4px;">FullName, Email, Password, Dept, Role, SL, VL</code></p>
             <textarea id="bulkRegisterData" class="form-textarea" style="height:120px;font-family:monospace;font-size:11px;" placeholder="Juan Dela Cruz, juan@company.com, pass123, RC, Employee, 10, 10"></textarea>
             <div id="bulkProgress" class="hidden" style="font-size:11px;color:var(--muted);margin:8px 0;"></div>
-            <div style="display:flex;gap:8px;margin-top:10px;">
-              <button class="btn btn-purple btn-sm" onclick="runBulkRegister()">▶ Run</button>
-              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('bulkRegisterPanel').classList.add('hidden')">Close</button>
-            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-purple btn-sm" onclick="runBulkRegister()">▶ Run</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('bulkRegisterPanel').classList.add('hidden')">Close</button></div>
           </div>
           <div class="form-grid">
             <div class="form-group"><label class="form-label">Emp ID</label><input type="text" id="addEmpNum" class="form-input" placeholder="EMP001"></div>
             <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="addFullName" class="form-input"></div>
             <div class="form-group"><label class="form-label">Email *</label><input type="email" id="addUser" class="form-input"></div>
             <div class="form-group"><label class="form-label">Password *</label><input type="password" id="addPass" class="form-input" placeholder="Min 6 chars"></div>
-            <div class="form-group"><label class="form-label">Department</label>
-              <select id="addDept" class="form-select"><option value="RC">RC</option><option value="CSR">CSR</option></select></div>
-            <div class="form-group"><label class="form-label">Role</label>
-              <select id="addRole" class="form-select"><option>Employee</option><option>Admin</option><option>OPS</option><option>HR</option></select></div>
+            <div class="form-group"><label class="form-label">Department</label><select id="addDept" class="form-select"><option value="RC">RC</option><option value="CSR">CSR</option></select></div>
+            <div class="form-group"><label class="form-label">Role</label><select id="addRole" class="form-select"><option>Employee</option><option>Admin</option><option>OPS</option><option>HR</option></select></div>
             <div class="form-group"><label class="form-label">Birthday</label><input type="date" id="addBday" class="form-input"></div>
             <div class="form-group"><label class="form-label">Hire Date</label><input type="date" id="addHireDate" class="form-input"></div>
             <div class="form-group"><label class="form-label">Position / Title</label><input type="text" id="addPosition" class="form-input" placeholder="e.g. Head - Operations"></div>
             <div class="form-group"><label class="form-label">Monthly Salary (₱)</label><input type="number" id="addSalary" class="form-input" placeholder="0" min="0" step="0.01"></div>
-            <div class="form-group"><label class="form-label">Meal Allow (₱)</label><input type="number" id="addMeal" class="form-input" value="2000" min="0" step="0.01"></div>
             <div class="form-group"><label class="form-label">Transpo Allow (₱)</label><input type="number" id="addTranspo" class="form-input" value="1500" min="0" step="0.01"></div>
             <div class="form-group"><label class="form-label">Stat Benefits (₱)</label><input type="number" id="addStat" class="form-input" value="1000" min="0" step="0.01"></div>
             <div class="form-group"><label class="form-label">Contact #</label><input type="tel" id="addContact" class="form-input"></div>
@@ -490,27 +414,18 @@ td.att-cell:hover{transform:scale(1.08);}
           </div>
           <div style="margin-top:16px;"><button id="addEmployeeBtn" class="btn btn-primary" onclick="addEmployee()">Add Employee</button></div>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">All Employees</div></div>
-          <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search employees…" onkeyup="searchEmployees()"></div>
-          <div class="table-wrap" id="dirTable"></div>
-        </div>
+        <div class="card"><div class="card-header"><div class="card-title">All Employees</div></div><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search employees…" onkeyup="searchEmployees()"></div><div class="table-wrap" id="dirTable"></div></div>
       </section>
 
       <!-- ACTIVE NOW -->
       <section id="sec-active" class="tab-content hidden">
-        <div class="section-title">Active Now</div>
-        <div class="section-sub">Employees currently clocked in</div>
-        <div class="card">
-          <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchActive()"></div>
-          <div class="table-wrap" id="activeTable"></div>
-        </div>
+        <div class="section-title">Active Now</div><div class="section-sub">Employees currently clocked in</div>
+        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchActive()"></div><div class="table-wrap" id="activeTable"></div></div>
       </section>
 
       <!-- SCHEDULES -->
       <section id="sec-sched" class="tab-content hidden">
-        <div class="section-title">Team Schedules</div>
-        <div class="section-sub">Set shift, time slot, and rest days per employee per month</div>
+        <div class="section-title">Team Schedules</div><div class="section-sub">Set shift, time slot, and rest days per employee per month</div>
         <div class="card">
           <div class="toolbar" style="margin-bottom:16px;">
             <select id="sMonth" class="toolbar-select" onchange="renderSchedules()"></select>
@@ -523,56 +438,39 @@ td.att-cell:hover{transform:scale(1.08);}
 
       <!-- PAYROLL & ATTENDANCE -->
       <section id="sec-pay" class="tab-content hidden">
-        <div class="section-title">Payroll &amp; Attendance</div>
-        <div class="section-sub">Attendance tracker — click any cell to cycle status</div>
+        <div class="section-title">Payroll &amp; Attendance</div><div class="section-sub">Attendance tracker — click any cell to cycle status</div>
         <div class="card">
           <div class="toolbar" style="margin-bottom:16px;flex-wrap:wrap;gap:8px;">
             <input type="text" id="pShiftSearch" class="toolbar-select" placeholder="Filter shift…" oninput="renderAttendance()" style="width:130px;">
             <select id="pMonth" class="toolbar-select" onchange="renderAttendance()"></select>
-            <select id="pPeriod" class="toolbar-select" onchange="renderAttendance()">
-              <option value="1-15">Period: 1–15</option>
-              <option value="16-31">Period: 16–End</option>
-            </select>
-            <div style="flex:1;min-width:200px;">
-              <div class="search-wrap" style="margin:0;"><span class="search-icon">🔍</span><input type="text" id="attendanceSearch" class="search-input" placeholder="Search attendance…" onkeyup="searchAttendance()"></div>
-            </div>
+            <select id="pPeriod" class="toolbar-select" onchange="renderAttendance()"><option value="1-15">Period: 1–15</option><option value="16-31">Period: 16–End</option></select>
+            <div style="flex:1;min-width:200px;"><div class="search-wrap" style="margin:0;"><span class="search-icon">🔍</span><input type="text" id="attendanceSearch" class="search-input" placeholder="Search attendance…" onkeyup="searchAttendance()"></div></div>
             <button class="btn btn-success btn-sm" onclick="exportToExcel()">⬇ Export Excel</button>
           </div>
           <div class="table-wrap" id="payTable"></div>
         </div>
       </section>
 
-      <!-- ══════════════════════════════════════════════════════
-           PAYROLL EXPORT — HR & Admin only
-      ══════════════════════════════════════════════════════════ -->
+      <!-- PAYROLL EXPORT -->
       <section id="sec-payroll" class="tab-content hidden">
         <div class="section-title">💰 Payroll Export</div>
-        <div class="section-sub">Generate and export the complete payroll report matching your exact format</div>
-
+        <div class="section-sub">Generate and export the complete payroll report</div>
         <div class="card" style="margin-bottom:20px;">
           <div class="toolbar" style="gap:10px;flex-wrap:wrap;">
             <select id="pyMonth" class="toolbar-select" onchange="renderPayrollPreview()"></select>
-            <select id="pyPeriod" class="toolbar-select" onchange="renderPayrollPreview()">
-              <option value="1-15">Period: 1 – 15</option>
-              <option value="16-31">Period: 16 – End</option>
-            </select>
+            <select id="pyPeriod" class="toolbar-select" onchange="renderPayrollPreview()"><option value="1-15">Period: 1 – 15</option><option value="16-31">Period: 16 – End</option></select>
             <button class="btn btn-navy btn-sm" onclick="exportPayrollExcel()" style="padding:9px 20px;">⬇ Export Payroll Excel (3 Sheets)</button>
           </div>
-
           <div class="payroll-info-box" style="margin-top:16px;">
-            📋 <strong>Exports exactly matching your payroll format:</strong><br>
+            📋 <strong>Exports matching your payroll format:</strong><br>
             <span style="margin-right:16px;">📄 <strong>Sheet 1</strong> — Request Claim</span>
             <span style="margin-right:16px;">📊 <strong>Sheet 2</strong> — Payroll Request (all columns)</span>
             <span>📅 <strong>Sheet 3</strong> — Attendance Sheet with legend</span><br>
-            <span style="font-size:10px;color:#64748b;">💡 Set each employee's <strong>Monthly Salary</strong>, <strong>Meal Allow</strong>, <strong>Transpo Allow</strong>, and <strong>Stat Benefits</strong> in the Directory tab for accurate payroll.</span>
+            <span style="font-size:10px;color:#1e40af;">💡 <strong>Meal</strong> = ₱200/day for P and RDS, ₱100 for HD. <strong>Night Diff</strong> = actual 10PM–6AM hours × (daily/8) × 10%. Set <strong>Monthly Salary</strong>, <strong>Transpo Allow</strong>, and <strong>Stat Benefits</strong> in Directory.</span>
           </div>
         </div>
-
-        <!-- Summary cards -->
         <div id="pyStats" class="payroll-summary" style="display:none;"></div>
-
-        <!-- Preview table -->
-        <div class="card" style="padding:0;overflow:hidden;" id="pyPreviewCard">
+        <div class="card" style="padding:0;overflow:hidden;">
           <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
             <div class="card-title">Payroll Preview</div>
             <div id="pyPeriodLabel" style="font-size:11px;color:var(--muted);font-weight:600;"></div>
@@ -588,18 +486,13 @@ td.att-cell:hover{transform:scale(1.08);}
 
       <!-- AUDIT -->
       <section id="sec-audit" class="tab-content hidden">
-        <div class="section-title">Audit Logs</div>
-        <div class="section-sub">System-wide action history</div>
-        <div class="card">
-          <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search logs…" onkeyup="searchAudit()"></div>
-          <div class="table-wrap" id="auditTable"></div>
-        </div>
+        <div class="section-title">Audit Logs</div><div class="section-sub">System-wide action history</div>
+        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search logs…" onkeyup="searchAudit()"></div><div class="table-wrap" id="auditTable"></div></div>
       </section>
 
       <!-- MY LEAVES -->
       <section id="sec-leaves" class="tab-content hidden">
-        <div class="section-title">My Leave History</div>
-        <div class="section-sub">Track and manage your leave requests</div>
+        <div class="section-title">My Leave History</div><div class="section-sub">Track and manage your leave requests</div>
         <div class="stats-row" style="margin-bottom:20px;">
           <div class="stat-card blue"><div class="stat-num" id="totalLeaves">0</div><div class="stat-label">Total Requests</div></div>
           <div class="stat-card green"><div class="stat-num" id="approvedLeaves">0</div><div class="stat-label">Approved</div></div>
@@ -612,13 +505,9 @@ td.att-cell:hover{transform:scale(1.08);}
 
       <!-- TIMESTAMP SHEET -->
       <section id="sec-timestamps" class="tab-content hidden">
-        <div class="section-title">Timestamp Sheet (DTR)</div>
-        <div class="section-sub">Daily time record — In/Out per employee per day</div>
+        <div class="section-title">Timestamp Sheet (DTR)</div><div class="section-sub">Daily time record — In/Out per employee per day</div>
         <div class="card">
-          <div class="toolbar" style="margin-bottom:16px;">
-            <select id="tsMonth" class="toolbar-select" onchange="renderTimestamps()"></select>
-            <button class="btn btn-success btn-sm" onclick="exportTimestampsToExcel()">⬇ Export DTR Excel</button>
-          </div>
+          <div class="toolbar" style="margin-bottom:16px;"><select id="tsMonth" class="toolbar-select" onchange="renderTimestamps()"></select><button class="btn btn-success btn-sm" onclick="exportTimestampsToExcel()">⬇ Export DTR Excel</button></div>
           <div class="table-wrap" id="timestampTable"></div>
         </div>
       </section>
@@ -627,30 +516,19 @@ td.att-cell:hover{transform:scale(1.08);}
   </div>
 </div>
 
-<!-- SLIDE PANELS -->
 <div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
 <div class="slide-panel" id="inboxPanel">
-  <div class="panel-head">
-    <div class="panel-title">Leave Requests <span id="inboxCountBadge" style="font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-left:8px;">0</span></div>
-    <button class="panel-close" onclick="closeAllPanels()">✕</button>
-  </div>
+  <div class="panel-head"><div class="panel-title">Leave Requests <span id="inboxCountBadge" style="font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-left:8px;">0</span></div><button class="panel-close" onclick="closeAllPanels()">✕</button></div>
   <div class="panel-body" id="inboxContent"></div>
 </div>
 <div class="slide-panel" id="notifPanel">
-  <div class="panel-head">
-    <div class="panel-title">Notifications</div>
-    <button class="panel-close" onclick="closeAllPanels()">✕</button>
-  </div>
+  <div class="panel-head"><div class="panel-title">Notifications</div><button class="panel-close" onclick="closeAllPanels()">✕</button></div>
   <div class="panel-body" id="notifContent"></div>
 </div>
 
-<!-- STUB SHIMS -->
 <script>
 (function(){
-  function showStartupError(message){
-    var box=document.getElementById('startupError'),msg=document.getElementById('startupErrorMsg');
-    if(box&&msg){msg.textContent=message||'Unknown startup error.';box.classList.remove('hidden');}
-  }
+  function showStartupError(msg){var b=document.getElementById('startupError'),m=document.getElementById('startupErrorMsg');if(b&&m){m.textContent=msg||'Unknown startup error.';b.classList.remove('hidden');}}
   window.addEventListener('error',function(e){showStartupError(e.message||'A script failed to load.');});
   window.addEventListener('unhandledrejection',function(e){var r=e.reason;showStartupError((r&&r.message)||String(r||'A startup promise failed.'));});
   window.__showStartupError=showStartupError;
@@ -666,93 +544,51 @@ td.att-cell:hover{transform:scale(1.08);}
     'deleteEmployee','toggleBulkRegister','runBulkRegister','renderTimestamps',
     'exportTimestampsToExcel','renderPayrollPreview','exportPayrollExcel'];
   names.forEach(function(name){
-    window[name]=function(){
-      var args=arguments,attempts=0;
-      var interval=setInterval(function(){
-        attempts++;
-        if(window['__hr_'+name]){clearInterval(interval);window['__hr_'+name].apply(null,args);}
-        else if(attempts>100){clearInterval(interval);console.error('AFB Teams module failed: '+name);}
-      },50);
-    };
+    window[name]=function(){var args=arguments,attempts=0;var interval=setInterval(function(){attempts++;if(window['__hr_'+name]){clearInterval(interval);window['__hr_'+name].apply(null,args);}else if(attempts>100){clearInterval(interval);console.error('AFB Teams module failed: '+name);}},50);};
   });
 })();
 </script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import{getDatabase,ref,set,get,update,onValue,push,remove}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey:"AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",
-  authDomain:"realtime-database-49a47.firebaseapp.com",
-  databaseURL:"https://realtime-database-49a47-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"realtime-database-49a47",
-  storageBucket:"realtime-database-49a47.firebasestorage.app",
-  messagingSenderId:"879389111428",
-  appId:"1:879389111428:web:cf1bf08dbdf46c87533ed1"
-};
+const firebaseConfig={apiKey:"AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",authDomain:"realtime-database-49a47.firebaseapp.com",databaseURL:"https://realtime-database-49a47-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"realtime-database-49a47",storageBucket:"realtime-database-49a47.firebasestorage.app",messagingSenderId:"879389111428",appId:"1:879389111428:web:cf1bf08dbdf46c87533ed1"};
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+const auth=getAuth(app);
+const secondaryApp=initializeApp(firebaseConfig,"Secondary");
+const secondaryAuth=getAuth(secondaryApp);
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const secondaryApp = initializeApp(firebaseConfig,"Secondary");
-const secondaryAuth = getAuth(secondaryApp);
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_FULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const STATUS_CYCLE=['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
+const LEAVE_TYPES={SL:'Sick Leave',VL:'Vacation Leave'};
+const DAYS_OF_WEEK=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const LEGEND_ITEMS=[['RD','RESTDAY'],['RDS','REST DAY SHIFT'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEREAVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
+const WD_BASIS=26;
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const MONTH_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const STATUS_CYCLE = ['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
-const LEAVE_TYPES = {SL:'Sick Leave',VL:'Vacation Leave'};
-const DAYS_OF_WEEK = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const LEGEND_ITEMS = [['RD','RESTDAY'],['RDS','REST DAY SHIFT'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEREAVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
-const WD_BASIS = 26;
-
-const appState = {
-  users:{},attendance:{},leaveRequests:{},notifications:{},
-  currentUser:null,listeners:{},isProcessing:{},isOnline:navigator.onLine,
-  offlineQueue:[],autoClockOutInterval:null,forgotLogoutTimer:null,
-  editingEmployeeId:null,scheduleChanges:null,lastRenderTime:0
-};
+const appState={users:{},attendance:{},leaveRequests:{},notifications:{},currentUser:null,listeners:{},isProcessing:{},isOnline:navigator.onLine,offlineQueue:[],autoClockOutInterval:null,forgotLogoutTimer:null,editingEmployeeId:null,scheduleChanges:null,lastRenderTime:0};
 
 /* ── HELPERS ─────────────────────────────────────────────────── */
 function esc(t){if(t===null||t===undefined)return'';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML;}
 function php(n){return'₱'+(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function num(n){return(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function parseLocalDate(str){if(!str)return null;const[y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);}
 function todayLocal(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
 function tomorrowLocalStr(){const t=new Date();t.setDate(t.getDate()+1);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
-
-function employeeNumberKey(uid,user){
-  const raw=String(user?.empID||uid||'').trim();
-  const n=raw.match(/\d+/);
-  return{raw,num:n?parseInt(n[0],10):Number.MAX_SAFE_INTEGER};
-}
-function compareByEmpNum([uidA,a],[uidB,b]){
-  const ka=employeeNumberKey(uidA,a),kb=employeeNumberKey(uidB,b);
-  if(ka.num!==kb.num)return ka.num-kb.num;
-  return ka.raw.localeCompare(kb.raw,undefined,{numeric:true,sensitivity:'base'});
-}
-function activeEmployeesSorted(){
-  return Object.entries(appState.users).filter(([,u])=>!u.disabled).sort(compareByEmpNum);
-}
-function getUserForCalc(empId){
-  return appState.users[empId]||(appState.currentUser?.id===empId?appState.currentUser:null);
-}
+function employeeNumberKey(uid,user){const raw=String(user?.empID||uid||'').trim();const n=raw.match(/\d+/);return{raw,num:n?parseInt(n[0],10):Number.MAX_SAFE_INTEGER};}
+function compareByEmpNum([uidA,a],[uidB,b]){const ka=employeeNumberKey(uidA,a),kb=employeeNumberKey(uidB,b);if(ka.num!==kb.num)return ka.num-kb.num;return ka.raw.localeCompare(kb.raw,undefined,{numeric:true,sensitivity:'base'});}
+function activeEmployeesSorted(){return Object.entries(appState.users).filter(([,u])=>!u.disabled).sort(compareByEmpNum);}
+function getUserForCalc(empId){return appState.users[empId]||(appState.currentUser?.id===empId?appState.currentUser:null);}
+function isHRorAdmin(){return appState.currentUser&&['HR','Admin'].includes(appState.currentUser.role);}
+function isHRorAdminOrOPS(){return appState.currentUser&&['HR','Admin','OPS'].includes(appState.currentUser.role);}
 
 function parseTime(s){
   if(!s||!s.trim())return null;
   s=s.trim().toUpperCase().replace(/(\d)(AM|PM)/i,'$1 $2');
-  if(s.includes(':')){
-    const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;
-    if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;
-    return[h,m];
-  }
-  const m=s.match(/(\d+)\s*(AM|PM)?/i);
-  if(m){
-    let h=parseInt(m[1])||0;const pd=(m[2]||'AM').toUpperCase();
-    if(pd==='PM'&&h<12)h+=12;if(pd==='AM'&&h===12)h=0;
-    return[h,0];
-  }
+  if(s.includes(':')){const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;return[h,m];}
+  const m=s.match(/(\d+)\s*(AM|PM)?/i);if(m){let h=parseInt(m[1])||0;const pd=(m[2]||'AM').toUpperCase();if(pd==='PM'&&h<12)h+=12;if(pd==='AM'&&h===12)h=0;return[h,0];}
   return null;
 }
 
@@ -761,156 +597,76 @@ function computeLateMins(clockInTime,empId,month){
   const slot=user?(user['out_'+month]||''):'';
   if(!slot||!/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot))return 0;
   const parsed=parseTime(slot.split(/[-–]/)[0].trim());if(!parsed)return 0;
-  const[sh,sm]=parsed;
-  const sched=new Date(clockInTime);sched.setHours(sh,sm,0,0);
+  const[sh,sm]=parsed;const sched=new Date(clockInTime);sched.setHours(sh,sm,0,0);
   if(sh>=18&&clockInTime.getHours()<12)sched.setDate(sched.getDate()-1);
   if(sh<6&&clockInTime.getHours()>=18)sched.setDate(sched.getDate()+1);
-  const diff=clockInTime-sched;
-  return diff<=0?0:Math.floor(diff/60000);
+  const diff=clockInTime-sched;return diff<=0?0:Math.floor(diff/60000);
 }
 
 function calculateUsedLeaves(empId,type){
-  let used=0;
-  if(!appState.leaveRequests)return 0;
-  Object.values(appState.leaveRequests).forEach(l=>{
-    if(l.empID===empId&&l.type===type&&l.status==='Approved')
-      used+=calculateWorkingDays(l.startDate,l.endDate||l.startDate,empId);
-  });
+  let used=0;if(!appState.leaveRequests)return 0;
+  Object.values(appState.leaveRequests).forEach(l=>{if(l.empID===empId&&l.type===type&&l.status==='Approved')used+=calculateWorkingDays(l.startDate,l.endDate||l.startDate,empId);});
   return used;
 }
 
 function calculateWorkingDays(startDate,endDate,empId){
-  if(!startDate)return 0;
-  const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);
-  const user=getUserForCalc(empId);if(!user)return 0;
-  let days=0;const cur=new Date(start);
-  while(cur<=end){
-    const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
-    const o1=user['off1_'+m]||'',o2=user['off2_'+m]||'';
-    if(o1!==dn&&o2!==dn)days++;cur.setDate(cur.getDate()+1);
-  }
+  if(!startDate)return 0;const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);
+  const user=getUserForCalc(empId);if(!user)return 0;let days=0;const cur=new Date(start);
+  while(cur<=end){const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];const o1=user['off1_'+m]||'',o2=user['off2_'+m]||'';if(o1!==dn&&o2!==dn)days++;cur.setDate(cur.getDate()+1);}
   return days;
 }
 
-function checkConsecutiveLimit(empId,startDate,endDate){
-  const user=getUserForCalc(empId);
-  const days=calculateWorkingDays(startDate,endDate||startDate,empId);
-  const max=(user&&user.maxConsecutiveLeave)?user.maxConsecutiveLeave:30;
-  return{valid:days<=max,days,max};
-}
+function checkConsecutiveLimit(empId,startDate,endDate){const user=getUserForCalc(empId);const days=calculateWorkingDays(startDate,endDate||startDate,empId);const max=(user&&user.maxConsecutiveLeave)?user.maxConsecutiveLeave:30;return{valid:days<=max,days,max};}
 
 function hasOverlappingLeave(empId,start,end,exclude=null){
-  if(!appState.leaveRequests)return false;
-  const s=parseLocalDate(start),e=end?parseLocalDate(end):new Date(s);
-  for(const[id,l]of Object.entries(appState.leaveRequests)){
-    if(exclude&&id===exclude)continue;
-    if(l.empID!==empId)continue;
-    if(l.status==='Rejected'||l.status==='Cancelled')continue;
-    const es=parseLocalDate(l.startDate),ee=l.endDate?parseLocalDate(l.endDate):new Date(es);
-    if(s<=ee&&e>=es)return true;
-  }
+  if(!appState.leaveRequests)return false;const s=parseLocalDate(start),e=end?parseLocalDate(end):new Date(s);
+  for(const[id,l]of Object.entries(appState.leaveRequests)){if(exclude&&id===exclude)continue;if(l.empID!==empId)continue;if(l.status==='Rejected'||l.status==='Cancelled')continue;const es=parseLocalDate(l.startDate),ee=l.endDate?parseLocalDate(l.endDate):new Date(es);if(s<=ee&&e>=es)return true;}
   return false;
 }
 
-function canApproveLeave(req){
-  if(!appState.currentUser)return false;
-  const emp=appState.users[req.empID];if(!emp)return false;
-  const cu=appState.currentUser;
-  if(cu.role==='HR')return true;
-  if(emp.dept!==cu.dept)return false;
-  const rh={Employee:1,OPS:2,Admin:3,HR:4};
-  return(rh[cu.role]||0)>(rh[emp.role]||0);
+function canApproveLeave(req){if(!appState.currentUser)return false;const emp=appState.users[req.empID];if(!emp)return false;const cu=appState.currentUser;if(cu.role==='HR')return true;if(emp.dept!==cu.dept)return false;const rh={Employee:1,OPS:2,Admin:3,HR:4};return(rh[cu.role]||0)>(rh[emp.role]||0);}
+function canCancelLeave(req){if(!appState.currentUser)return false;const cu=appState.currentUser,req_emp=appState.users[req.empID];if(cu.role==='HR')return true;if(cu.role==='Admin'&&req_emp&&req_emp.dept===cu.dept)return true;if(cu.id===req.empID&&req.status==='Pending')return true;return false;}
+
+/* ── NIGHT HOURS — 10PM to 6AM (single definition, no duplicate) ── */
+function getNightMinutes(clockIn,clockOut){
+  if(!clockIn||!clockOut)return 0;
+  const toMins=d=>d.getHours()*60+d.getMinutes();
+  let start=toMins(clockIn),end=toMins(clockOut);
+  if(end<start)end+=24*60;
+  const oStart=Math.max(start,22*60),oEnd=Math.min(end,6*60+24*60);
+  return Math.max(0,oEnd-oStart);
 }
 
-function canCancelLeave(req){
-  if(!appState.currentUser)return false;
-  const cu=appState.currentUser,req_emp=appState.users[req.empID];
-  if(cu.role==='HR')return true;
-  if(cu.role==='Admin'&&req_emp&&req_emp.dept===cu.dept)return true;
-  if(cu.id===req.empID&&req.status==='Pending')return true;
-  return false;
-}
-
-function isHRorAdmin(){return appState.currentUser&&['HR','Admin'].includes(appState.currentUser.role);}
-function isHRorAdminOrOPS(){return appState.currentUser&&['HR','Admin','OPS'].includes(appState.currentUser.role);}
-
-/* ── NIGHT HOURS (10PM-6AM) ─────────────────────────────────── */
-function getNightMinutes(clockIn, clockOut) {
-  if (!clockIn || !clockOut) return 0;
-  const toMins = d => d.getHours() * 60 + d.getMinutes();
-  let start = toMins(clockIn);
-  let end   = toMins(clockOut);
-  if (end < start) end += 24 * 60;
-  const nightStart = 22 * 60;
-  const nightEnd   = 6  * 60 + 24 * 60;
-  const oStart = Math.max(start, nightStart);
-  const oEnd   = Math.min(end,   nightEnd);
-  return Math.max(0, oEnd - oStart);
-}
-
-function computeNightHours(uid, month, pStart, pEnd) {
-  const att   = appState.attendance[uid] || {};
-  const user  = appState.users[uid] || {};
-  let totalMins = 0;
-  let hasAnyTimestamp = false;
-
-  for (let d = pStart; d <= pEnd; d++) {
-    const key    = `${month}_${d}`;
-    const status = att[key] || '';
-    const ci     = att[`${key}_time`];
-    const co     = att[`${key}_out`];
-    if ((status === 'P' || status === 'RDS') && ci && co) {
-      hasAnyTimestamp = true;
-      totalMins += getNightMinutes(new Date(ci), new Date(co));
-    }
+function computeNightHours(uid,month,pStart,pEnd){
+  const att=appState.attendance[uid]||{},user=appState.users[uid]||{};
+  let totalMins=0,hasTimestamp=false;
+  for(let d=pStart;d<=pEnd;d++){
+    const key=`${month}_${d}`,status=att[key]||'',ci=att[`${key}_time`],co=att[`${key}_out`];
+    if((status==='P'||status==='RDS')&&ci&&co){hasTimestamp=true;totalMins+=getNightMinutes(new Date(ci),new Date(co));}
   }
-
-  if (!hasAnyTimestamp) {
-    const shift = (user['shift_' + month] || user.defaultShift || '').toLowerCase();
-    return shift.includes('night') ? 80 : 0;
-  }
-  return totalMins / 60;
+  if(!hasTimestamp){const shift=(user['shift_'+month]||user.defaultShift||'').toLowerCase();return shift.includes('night')?80:0;}
+  return totalMins/60;
 }
 
-/* ── OFFLINE / QUEUE ─────────────────────────────────────────── */
+/* ── OFFLINE ─────────────────────────────────────────────────── */
 function queueKey(){return appState.currentUser?`hr_offline_${appState.currentUser.id}`:null;}
-
 function setupOfflineSupport(){
   window.addEventListener('online',()=>{appState.isOnline=true;updateOfflineUI();showToast('Connection restored! Syncing…','info');setTimeout(()=>processPendingActions(),1000);});
   window.addEventListener('offline',()=>{appState.isOnline=false;updateOfflineUI();});
-  updateOfflineUI();
-  appState.autoClockOutInterval=setInterval(checkAutoClockOut,60000);
+  updateOfflineUI();appState.autoClockOutInterval=setInterval(checkAutoClockOut,60000);
   setInterval(()=>{if(appState.isOnline&&appState.offlineQueue.length>0)processPendingActions();},30000);
 }
-
 function updateOfflineUI(){
   const banner=document.getElementById('offlineBanner');if(banner)banner.style.display=appState.isOnline?'none':'block';
-  const qb=document.getElementById('offlineQueueBanner');
-  if(qb){qb.classList.toggle('hidden',appState.offlineQueue.length===0);document.getElementById('queueCount').textContent=appState.offlineQueue.length;}
+  const qb=document.getElementById('offlineQueueBanner');if(qb){qb.classList.toggle('hidden',appState.offlineQueue.length===0);document.getElementById('queueCount').textContent=appState.offlineQueue.length;}
 }
-
-function addToOfflineQueue(type,data){
-  appState.offlineQueue.push({type,data,timestamp:new Date().toISOString()});
-  const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
-  updateOfflineUI();
-}
-
+function addToOfflineQueue(type,data){appState.offlineQueue.push({type,data,timestamp:new Date().toISOString()});const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));updateOfflineUI();}
 async function processPendingActions(){
-  if(!appState.offlineQueue.length||!appState.isOnline)return;
-  const failed=[];
-  for(const a of appState.offlineQueue){
-    try{
-      await executeQueuedAction(a.type,a.data);
-      await new Promise(r=>setTimeout(r,300));
-    }catch(e){failed.push(a);}
-  }
-  appState.offlineQueue=failed;
-  const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
-  if(!failed.length)showToast('All queued actions synced!','success');
-  else showToast(`${failed.length} action(s) failed to sync`,'error');
-  updateOfflineUI();
+  if(!appState.offlineQueue.length||!appState.isOnline)return;const failed=[];
+  for(const a of appState.offlineQueue){try{await executeQueuedAction(a.type,a.data);await new Promise(r=>setTimeout(r,300));}catch(e){failed.push(a);}}
+  appState.offlineQueue=failed;const k=queueKey();if(k)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
+  if(!failed.length)showToast('All queued actions synced!','success');else showToast(`${failed.length} action(s) failed to sync`,'error');updateOfflineUI();
 }
-
 async function executeQueuedAction(type,data){
   switch(type){
     case'clock_in':await update(ref(db,`attendance/${data.userId}`),data.updates);await push(ref(db,'audit_logs'),data.auditLog);break;
@@ -920,62 +676,25 @@ async function executeQueuedAction(type,data){
     case'cancel_leave':await update(ref(db,`leave_requests/${data.leaveId}`),data.updates);break;
   }
 }
-
 async function safeOp(operation,data,actionType){
   if(!appState.isOnline){addToOfflineQueue(actionType,data);return{success:false,queued:true};}
-  try{const r=await operation(data);return{success:true,data:r};}
-  catch(e){if(!navigator.onLine){addToOfflineQueue(actionType,data);return{success:false,queued:true};}throw e;}
+  try{const r=await operation(data);return{success:true,data:r};}catch(e){if(!navigator.onLine){addToOfflineQueue(actionType,data);return{success:false,queued:true};}throw e;}
 }
 
 /* ── AUTO CLOCK-OUT ──────────────────────────────────────────── */
 async function checkAutoClockOut(){
-  if(!appState.currentUser)return;
-  const now=new Date(),yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
+  if(!appState.currentUser)return;const now=new Date(),yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
   let activeKey=null;
-  for(const d of[now,yesterday]){
-    const k=`${d.getMonth()}_${d.getDate()}`;
-    const status=appState.attendance[appState.currentUser.id]?.[k];
-    const clockOut=appState.attendance[appState.currentUser.id]?.[`${k}_out`];
-    const timeStr=appState.attendance[appState.currentUser.id]?.[`${k}_time`];
-    if(status==='P'&&!clockOut&&timeStr){activeKey=k;break;}
-  }
+  for(const d of[now,yesterday]){const k=`${d.getMonth()}_${d.getDate()}`;const status=appState.attendance[appState.currentUser.id]?.[k];const clockOut=appState.attendance[appState.currentUser.id]?.[`${k}_out`];const timeStr=appState.attendance[appState.currentUser.id]?.[`${k}_time`];if(status==='P'&&!clockOut&&timeStr){activeKey=k;break;}}
   if(!activeKey)return;
   const clockInTime=new Date(appState.attendance[appState.currentUser.id][`${activeKey}_time`]);
-  const autoTime=new Date(clockInTime.getTime()+12*60*60*1000);
-  const warnTime=new Date(autoTime.getTime()-30*60*1000);
-  if(now>=autoTime){
-    try{await autoClockOutUserWithKey(activeKey);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}
-    catch{addToOfflineQueue('auto_clock_out',buildAutoPayload(activeKey));}
-  }
+  const autoTime=new Date(clockInTime.getTime()+12*60*60*1000),warnTime=new Date(autoTime.getTime()-30*60*1000);
+  if(now>=autoTime){try{await autoClockOutUserWithKey(activeKey);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}catch{addToOfflineQueue('auto_clock_out',buildAutoPayload(activeKey));}}
   else if(now>=warnTime){showAutoClockoutBanner(Math.ceil((autoTime-now)/60000));}
 }
-
-function buildAutoPayload(key){
-  const now=new Date();
-  return{
-    userId:appState.currentUser.id,
-    updates:{[`${key}_out`]:now.toISOString(),[`${key}_auto`]:true},
-    auditLog:{name:appState.currentUser.fullName,action:'AUTO CLOCK OUT (12h shift)',timestamp:now.toISOString(),empID:appState.currentUser.id,department:appState.currentUser.dept,time:now.toLocaleTimeString(),auto:true},
-    notification:{userId:appState.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${now.toLocaleTimeString()} after 12-hour shift.`,type:'warning',timestamp:now.toISOString(),read:false}
-  };
-}
-
-async function autoClockOutUserWithKey(key){
-  const now=new Date(),uid=appState.currentUser.id,payload=buildAutoPayload(key);
-  await update(ref(db,`attendance/${uid}`),payload.updates);
-  await push(ref(db,'audit_logs'),payload.auditLog);
-  await push(ref(db,'notifications'),payload.notification);
-  localStorage.removeItem('hr_last_clock');hideBanner();
-  document.getElementById('btnClockIn').classList.remove('hidden');
-  document.getElementById('btnClockOut').classList.add('hidden');
-}
-
-function showAutoClockoutBanner(mins){
-  const b=document.getElementById('autoClockoutBanner');if(!b)return;b.classList.remove('hidden');
-  let secs=mins*60;document.getElementById('autoClockoutTimer').textContent=fmtTime(secs);
-  if(appState.forgotLogoutTimer)clearInterval(appState.forgotLogoutTimer);
-  appState.forgotLogoutTimer=setInterval(()=>{secs--;if(secs<=0){clearInterval(appState.forgotLogoutTimer);hideBanner();}else document.getElementById('autoClockoutTimer').textContent=fmtTime(secs);},1000);
-}
+function buildAutoPayload(key){const now=new Date();return{userId:appState.currentUser.id,updates:{[`${key}_out`]:now.toISOString(),[`${key}_auto`]:true},auditLog:{name:appState.currentUser.fullName,action:'AUTO CLOCK OUT (12h shift)',timestamp:now.toISOString(),empID:appState.currentUser.id,department:appState.currentUser.dept,time:now.toLocaleTimeString(),auto:true},notification:{userId:appState.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${now.toLocaleTimeString()} after 12-hour shift.`,type:'warning',timestamp:now.toISOString(),read:false}};}
+async function autoClockOutUserWithKey(key){const now=new Date(),uid=appState.currentUser.id,payload=buildAutoPayload(key);await update(ref(db,`attendance/${uid}`),payload.updates);await push(ref(db,'audit_logs'),payload.auditLog);await push(ref(db,'notifications'),payload.notification);localStorage.removeItem('hr_last_clock');hideBanner();document.getElementById('btnClockIn').classList.remove('hidden');document.getElementById('btnClockOut').classList.add('hidden');}
+function showAutoClockoutBanner(mins){const b=document.getElementById('autoClockoutBanner');if(!b)return;b.classList.remove('hidden');let secs=mins*60;document.getElementById('autoClockoutTimer').textContent=fmtTime(secs);if(appState.forgotLogoutTimer)clearInterval(appState.forgotLogoutTimer);appState.forgotLogoutTimer=setInterval(()=>{secs--;if(secs<=0){clearInterval(appState.forgotLogoutTimer);hideBanner();}else document.getElementById('autoClockoutTimer').textContent=fmtTime(secs);},1000);}
 function hideBanner(){const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');if(appState.forgotLogoutTimer){clearInterval(appState.forgotLogoutTimer);appState.forgotLogoutTimer=null;}}
 function fmtTime(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function manualClockOutNow(){userClockAction('OUT');}
@@ -995,8 +714,7 @@ async function userClockAction(type){
       const result=await safeOp(async()=>{await update(ref(db,`attendance/${uid}`),updates);await push(ref(db,'audit_logs'),auditLog);},{userId:uid,updates,auditLog},'clock_in');
       if(result.success||result.queued){if(result.success)showToast(lateMins>0?`Clocked in — ${lateMins} min late`:'Clocked in! 👋','success');else showToast('Offline — clock in queued','info');document.getElementById('btnClockIn').classList.add('hidden');document.getElementById('btnClockOut').classList.remove('hidden');}
     }else{
-      let ciKey=key;
-      try{const p=JSON.parse(localStorage.getItem('hr_last_clock')||'{}');if(p.userId===uid&&p.dateKey)ciKey=p.dateKey;}catch{}
+      let ciKey=key;try{const p=JSON.parse(localStorage.getItem('hr_last_clock')||'{}');if(p.userId===uid&&p.dateKey)ciKey=p.dateKey;}catch{}
       const todayCi=appState.attendance[uid]?.[`${key}_time`];
       if(!todayCi){const y=new Date(now);y.setDate(y.getDate()-1);const yk=`${y.getMonth()}_${y.getDate()}`;if(appState.attendance[uid]?.[`${yk}_time`]&&!appState.attendance[uid]?.[`${yk}_out`])ciKey=yk;}
       const updates={[`${ciKey}_out`]:now.toISOString()};
@@ -1011,38 +729,17 @@ async function userClockAction(type){
 
 /* ── AUTH ────────────────────────────────────────────────────── */
 onAuthStateChanged(auth,async(user)=>{
-  if(user){
-    if(!appState.currentUser){
-      try{
-        const snap=await get(ref(db,`users/${user.uid}`));
-        if(snap.exists()){
-          const data=snap.val();
-          if(data.disabled){await signOut(auth);showFieldError('loginError','Account disabled. Contact admin.');return;}
-          appState.currentUser={id:user.uid,authUid:user.uid,...data};
-          const k=queueKey();if(k){try{const s=localStorage.getItem(k);if(s)appState.offlineQueue=JSON.parse(s);}catch{}}
-          showApp();setupRealtimeListeners();
-        }else{
-          await signOut(auth);showFieldError('loginError','No employee profile found. Add this user in Directory first.');
-        }
-      }catch(e){
-        await signOut(auth);
-        showFieldError('loginError',e?.code==='PERMISSION_DENIED'?'Database access denied. Check Firebase rules.':'Could not load employee profile.');
-      }
-    }
-  }else{if(appState.currentUser)doLogout(true);}
+  if(user){if(!appState.currentUser){try{const snap=await get(ref(db,`users/${user.uid}`));if(snap.exists()){const data=snap.val();if(data.disabled){await signOut(auth);showFieldError('loginError','Account disabled. Contact admin.');return;}appState.currentUser={id:user.uid,authUid:user.uid,...data};const k=queueKey();if(k){try{const s=localStorage.getItem(k);if(s)appState.offlineQueue=JSON.parse(s);}catch{}}showApp();setupRealtimeListeners();}else{await signOut(auth);showFieldError('loginError','No employee profile found. Add this user in Directory first.');}}catch(e){await signOut(auth);showFieldError('loginError',e?.code==='PERMISSION_DENIED'?'Database access denied. Check Firebase rules.':'Could not load employee profile.');}}}
+  else{if(appState.currentUser)doLogout(true);}
 });
 
 document.addEventListener('DOMContentLoaded',()=>{
   const now=new Date();
-  document.querySelectorAll('#pMonth,#sMonth,#tsMonth,#pyMonth').forEach(sel=>{
-    sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');
-  });
+  document.querySelectorAll('#pMonth,#sMonth,#tsMonth,#pyMonth').forEach(sel=>{sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');});
   const pp=document.getElementById('pPeriod');if(pp)pp.value=now.getDate()<=15?'1-15':'16-31';
   const pyp=document.getElementById('pyPeriod');if(pyp)pyp.value=now.getDate()<=15?'1-15':'16-31';
-  const ts=tomorrowLocalStr();
-  ['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
-  updateClock();setInterval(updateClock,1000);
-  setupOfflineSupport();
+  const ts=tomorrowLocalStr();['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
+  updateClock();setInterval(updateClock,1000);setupOfflineSupport();
   document.getElementById('lPass').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
 });
 
@@ -1050,198 +747,119 @@ function updateClock(){
   const now=new Date();
   const el=document.getElementById('liveClock');if(el)el.textContent=now.toLocaleTimeString();
   const dl=document.getElementById('liveDate');if(dl)dl.textContent=now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const greet=document.getElementById('dashGreet');
-  if(greet){const h=now.getHours();greet.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${appState.currentUser?.fullName?.split(' ')[0]||''}!`;}
+  const greet=document.getElementById('dashGreet');if(greet){const h=now.getHours();greet.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${appState.currentUser?.fullName?.split(' ')[0]||''}!`;}
 }
 
 /* ── LOGIN ───────────────────────────────────────────────────── */
 async function handleLogin(){
-  if(appState.isProcessing['login'])return;
-  const email=document.getElementById('lUser').value.trim(),pass=document.getElementById('lPass').value;
+  if(appState.isProcessing['login'])return;const email=document.getElementById('lUser').value.trim(),pass=document.getElementById('lPass').value;
   if(!email||!pass){showFieldError('loginError','Please enter email and password');return;}
-  appState.isProcessing['login']=true;
-  const btn=document.getElementById('loginButton');btn.textContent='Signing in…';btn.disabled=true;
+  appState.isProcessing['login']=true;const btn=document.getElementById('loginButton');btn.textContent='Signing in…';btn.disabled=true;
   try{await signInWithEmailAndPassword(auth,email,pass);}
-  catch(e){
-    let msg='Login failed';
-    if(e.code==='auth/invalid-email')msg='Invalid email format';
-    else if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(e.code))msg='Invalid email or password';
-    else if(e.code==='auth/network-request-failed')msg='Network error. Check your internet.';
-    else if(!navigator.onLine)msg='You are offline';
-    else if(e.code)msg=`Login failed: ${e.code}`;
-    showFieldError('loginError',msg);
-  }finally{appState.isProcessing['login']=false;btn.textContent='Sign In';btn.disabled=false;}
+  catch(e){let msg='Login failed';if(e.code==='auth/invalid-email')msg='Invalid email format';else if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(e.code))msg='Invalid email or password';else if(e.code==='auth/network-request-failed')msg='Network error.';else if(!navigator.onLine)msg='You are offline';else if(e.code)msg=`Login failed: ${e.code}`;showFieldError('loginError',msg);}
+  finally{appState.isProcessing['login']=false;btn.textContent='Sign In';btn.disabled=false;}
 }
 
 async function handleLogout(silent=false){
   if(!silent&&!confirm('Sign out?'))return;
-  if(appState.autoClockOutInterval)clearInterval(appState.autoClockOutInterval);
-  if(appState.forgotLogoutTimer)clearInterval(appState.forgotLogoutTimer);
+  if(appState.autoClockOutInterval)clearInterval(appState.autoClockOutInterval);if(appState.forgotLogoutTimer)clearInterval(appState.forgotLogoutTimer);
   const k=queueKey();if(k&&appState.offlineQueue.length>0)localStorage.setItem(k,JSON.stringify(appState.offlineQueue));
-  Object.values(appState.listeners).forEach(fn=>{if(typeof fn==='function')fn();});
-  await signOut(auth);doLogout();
+  Object.values(appState.listeners).forEach(fn=>{if(typeof fn==='function')fn();});await signOut(auth);doLogout();
 }
 
 function doLogout(){
   Object.assign(appState,{currentUser:null,users:{},attendance:{},leaveRequests:{},listeners:{},offlineQueue:[],editingEmployeeId:null,scheduleChanges:null});
-  document.getElementById('appShell').classList.add('hidden');
-  document.getElementById('loginSection').style.display='';
-  document.getElementById('lUser').value='';document.getElementById('lPass').value='';
-  document.getElementById('loginError').classList.add('hidden');
-  document.getElementById('lUser').focus();
-  const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');
+  document.getElementById('appShell').classList.add('hidden');document.getElementById('loginSection').style.display='';
+  document.getElementById('lUser').value='';document.getElementById('lPass').value='';document.getElementById('loginError').classList.add('hidden');
+  document.getElementById('lUser').focus();const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');
 }
 
 /* ── SHOW APP ────────────────────────────────────────────────── */
 function showApp(){
-  document.getElementById('loginSection').style.display='none';
-  document.getElementById('appShell').classList.remove('hidden');
-  const cu=appState.currentUser;
-  document.getElementById('sidebarName').textContent=cu.fullName;
-  document.getElementById('sidebarRole').textContent=cu.role;
-  document.getElementById('userAvatar').textContent=(cu.fullName||'U')[0].toUpperCase();
-  applyRoleVisibility();
-  switchTabInternal('dashboard',document.querySelector('[data-tab="dashboard"]'));
+  document.getElementById('loginSection').style.display='none';document.getElementById('appShell').classList.remove('hidden');
+  const cu=appState.currentUser;document.getElementById('sidebarName').textContent=cu.fullName;document.getElementById('sidebarRole').textContent=cu.role;document.getElementById('userAvatar').textContent=(cu.fullName||'U')[0].toUpperCase();
+  applyRoleVisibility();switchTabInternal('dashboard',document.querySelector('[data-tab="dashboard"]'));
 }
 
 function applyRoleVisibility(){
   const isAdminHR=isHRorAdmin(),isOpsAdminHR=isHRorAdminOrOPS();
   document.querySelectorAll('.adm-hr-only').forEach(el=>{el.style.display=isAdminHR?'':'none';});
   document.querySelectorAll('.adm-ops-hr-only').forEach(el=>{el.style.display=isOpsAdminHR?'':'none';});
-  document.getElementById('navManage').style.display=isOpsAdminHR?'':'none';
-  document.getElementById('navReports').style.display=isOpsAdminHR?'':'none';
-  document.getElementById('inboxBtn').classList.toggle('hidden',!isOpsAdminHR);
-  document.getElementById('notifBtn').classList.toggle('hidden',!isOpsAdminHR);
+  document.getElementById('navManage').style.display=isOpsAdminHR?'':'none';document.getElementById('navReports').style.display=isOpsAdminHR?'':'none';
+  document.getElementById('inboxBtn').classList.toggle('hidden',!isOpsAdminHR);document.getElementById('notifBtn').classList.toggle('hidden',!isOpsAdminHR);
 }
 
 /* ── TABS ────────────────────────────────────────────────────── */
 function switchTabInternal(tabName,btnEl){
   if((tabName==='pay'||tabName==='payroll')&&!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
-  document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  const sec=document.getElementById('sec-'+tabName);
-  if(sec){sec.classList.remove('hidden');if(btnEl)btnEl.classList.add('active');}
+  document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const sec=document.getElementById('sec-'+tabName);if(sec){sec.classList.remove('hidden');if(btnEl)btnEl.classList.add('active');}
   const titles={dashboard:'Dashboard',dir:'Staff Directory',active:'Active Now',sched:'Schedules',pay:'Payroll & Attendance',payroll:'Payroll Export',audit:'Audit Logs',leaves:'My Leaves',timestamps:'Timestamp Sheet'};
-  const tb=document.getElementById('topBarTitle');if(tb)tb.textContent=titles[tabName]||'';
-  renderCurrentTab(true);
+  const tb=document.getElementById('topBarTitle');if(tb)tb.textContent=titles[tabName]||'';renderCurrentTab(true);
 }
 
-function renderCurrentTab(force=false){
-  if(!appState.currentUser)return;
-  const active=document.querySelector('.nav-item.active');if(!active)return;
-  const tab=active.getAttribute('data-tab');
-  if(tab==='dashboard')updateDashboard();
-  else if(tab==='dir')renderDirectory();
-  else if(tab==='active')renderActiveNow();
-  else if(tab==='sched')renderSchedules();
-  else if(tab==='pay'&&isHRorAdmin())renderAttendance();
-  else if(tab==='payroll'&&isHRorAdmin())renderPayrollPreview();
+function renderCurrentTab(){
+  if(!appState.currentUser)return;const active=document.querySelector('.nav-item.active');if(!active)return;const tab=active.getAttribute('data-tab');
+  if(tab==='dashboard')updateDashboard();else if(tab==='dir')renderDirectory();else if(tab==='active')renderActiveNow();else if(tab==='sched')renderSchedules();
+  else if(tab==='pay'&&isHRorAdmin())renderAttendance();else if(tab==='payroll'&&isHRorAdmin())renderPayrollPreview();
   else if(tab==='audit'){get(ref(db,'audit_logs')).then(s=>renderAudit(s.val()));}
-  else if(tab==='leaves')updateMyLeaves();
-  else if(tab==='timestamps')renderTimestamps();
+  else if(tab==='leaves')updateMyLeaves();else if(tab==='timestamps')renderTimestamps();
 }
 
 /* ── DASHBOARD ───────────────────────────────────────────────── */
 function updateDashboard(){
-  if(!appState.currentUser)return;
-  const now=new Date(),month=now.getMonth(),uid=appState.currentUser.id;
+  if(!appState.currentUser)return;const now=new Date(),month=now.getMonth(),uid=appState.currentUser.id;
   const user=getUserForCalc(uid)||appState.currentUser;
-  const slUsed=calculateUsedLeaves(uid,'SL'),vlUsed=calculateUsedLeaves(uid,'VL');
-  const slMax=user.slMax||0,vlMax=user.vlMax||0;
-  document.getElementById('slView').textContent=Math.max(0,slMax-slUsed);
-  document.getElementById('vlView').textContent=Math.max(0,vlMax-vlUsed);
-  document.getElementById('slTotal').textContent=slMax;document.getElementById('vlTotal').textContent=vlMax;
-  document.getElementById('slUsed').textContent=slUsed;document.getElementById('vlUsed').textContent=vlUsed;
-  const sp=document.getElementById('slProg'),vp=document.getElementById('vlProg');
-  if(sp)sp.style.width=slMax>0?`${(slUsed/slMax)*100}%`:'0%';
-  if(vp)vp.style.width=vlMax>0?`${(vlUsed/vlMax)*100}%`:'0%';
-  document.getElementById('myShift').textContent=user['shift_'+month]||user.defaultShift||'TBA';
-  document.getElementById('myDays').textContent=user['in_'+month]||'TBA';
-  document.getElementById('myTime').textContent=user['out_'+month]||'TBA';
-  const o1=user['off1_'+month]||'',o2=user['off2_'+month]||'';
-  document.getElementById('myOff').textContent=`${o1} ${o2}`.trim()||'TBA';
-  let present=0,lates=0;
-  for(let d=1;d<=now.getDate();d++){const k=`${month}_${d}`;if(appState.attendance[uid]?.[k]==='P'){present++;lates+=parseInt(appState.attendance[uid]?.[`${k}_late`]||0);}}
-  document.getElementById('monthPresent').textContent=present;
-  document.getElementById('monthLates').textContent=lates;
-  const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);
-  const yk=`${yesterday.getMonth()}_${yesterday.getDate()}`,todayKey=`${month}_${now.getDate()}`;
+  const slUsed=calculateUsedLeaves(uid,'SL'),vlUsed=calculateUsedLeaves(uid,'VL'),slMax=user.slMax||0,vlMax=user.vlMax||0;
+  document.getElementById('slView').textContent=Math.max(0,slMax-slUsed);document.getElementById('vlView').textContent=Math.max(0,vlMax-vlUsed);
+  document.getElementById('slTotal').textContent=slMax;document.getElementById('vlTotal').textContent=vlMax;document.getElementById('slUsed').textContent=slUsed;document.getElementById('vlUsed').textContent=vlUsed;
+  const sp=document.getElementById('slProg'),vp=document.getElementById('vlProg');if(sp)sp.style.width=slMax>0?`${(slUsed/slMax)*100}%`:'0%';if(vp)vp.style.width=vlMax>0?`${(vlUsed/vlMax)*100}%`:'0%';
+  document.getElementById('myShift').textContent=user['shift_'+month]||user.defaultShift||'TBA';document.getElementById('myDays').textContent=user['in_'+month]||'TBA';document.getElementById('myTime').textContent=user['out_'+month]||'TBA';
+  const o1=user['off1_'+month]||'',o2=user['off2_'+month]||'';document.getElementById('myOff').textContent=`${o1} ${o2}`.trim()||'TBA';
+  let present=0,lates=0;for(let d=1;d<=now.getDate();d++){const k=`${month}_${d}`;if(appState.attendance[uid]?.[k]==='P'){present++;lates+=parseInt(appState.attendance[uid]?.[`${k}_late`]||0);}}
+  document.getElementById('monthPresent').textContent=present;document.getElementById('monthLates').textContent=lates;
+  const yesterday=new Date(now);yesterday.setDate(yesterday.getDate()-1);const yk=`${yesterday.getMonth()}_${yesterday.getDate()}`,todayKey=`${month}_${now.getDate()}`;
   const isClockedIn=(appState.attendance[uid]?.[todayKey]==='P'&&!appState.attendance[uid]?.[`${todayKey}_out`])||(appState.attendance[uid]?.[yk]==='P'&&!appState.attendance[uid]?.[`${yk}_out`]);
-  document.getElementById('btnClockIn').classList.toggle('hidden',isClockedIn);
-  document.getElementById('btnClockOut').classList.toggle('hidden',!isClockedIn);
-  updateClock();
+  document.getElementById('btnClockIn').classList.toggle('hidden',isClockedIn);document.getElementById('btnClockOut').classList.toggle('hidden',!isClockedIn);updateClock();
 }
 
 /* ── LEAVE FORM ──────────────────────────────────────────────── */
 function toggleLeaveForm(){
   const lf=document.getElementById('leaveFormSection');lf.classList.toggle('hidden');
-  if(!lf.classList.contains('hidden')){
-    const ts=tomorrowLocalStr();
-    const s=document.getElementById('lvStartDate'),e=document.getElementById('lvEndDate');
-    s.min=ts;e.min=ts;if(!s.value||s.value<ts){s.value=ts;e.value=ts;}
-    ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-    updateLeaveBalance();checkDateRange();
-  }
+  if(!lf.classList.contains('hidden')){const ts=tomorrowLocalStr();const s=document.getElementById('lvStartDate'),e=document.getElementById('lvEndDate');s.min=ts;e.min=ts;if(!s.value||s.value<ts){s.value=ts;e.value=ts;}['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));updateLeaveBalance();checkDateRange();}
 }
 
 function checkDateRange(){
   const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;
-  ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-  if(!s)return;
+  ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));if(!s)return;
   const start=parseLocalDate(s),end=e?parseLocalDate(e):new Date(start),today=todayLocal();
   if(start<today){showFieldValidation('dateRangeError','Cannot request leave for past dates');return;}
   if(end<start){showFieldValidation('dateRangeError','End date cannot be before start date');return;}
   if(hasOverlappingLeave(appState.currentUser.id,s,e))showFieldValidation('overlapError','You already have a leave during this period');
-  const cc=checkConsecutiveLimit(appState.currentUser.id,s,e);
-  document.getElementById('maxConsecutiveDisplay').textContent=cc.max;
-  if(!cc.valid)showFieldValidation('consecutiveError',`Max consecutive leave is ${cc.max} days (requested ${cc.days})`);
-  document.getElementById('requestedDays').textContent=calculateWorkingDays(s,e,appState.currentUser.id);
-  checkScheduleConflictInfo(s,e);updateLeaveBalance();
+  const cc=checkConsecutiveLimit(appState.currentUser.id,s,e);document.getElementById('maxConsecutiveDisplay').textContent=cc.max;if(!cc.valid)showFieldValidation('consecutiveError',`Max consecutive leave is ${cc.max} days (requested ${cc.days})`);
+  document.getElementById('requestedDays').textContent=calculateWorkingDays(s,e,appState.currentUser.id);checkScheduleConflictInfo(s,e);updateLeaveBalance();
 }
 
 function checkScheduleConflictInfo(startDate,endDate){
-  const el=document.getElementById('scheduleConflict');if(!el||!startDate)return;
-  const user=getUserForCalc(appState.currentUser.id);
-  const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);
-  const cur=new Date(start);let rest=0,work=0;
-  while(cur<=end){
-    const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
-    const o1=user?user['off1_'+m]||'':'',o2=user?user['off2_'+m]||'':'';
-    if(o1===dn||o2===dn)rest++;else work++;cur.setDate(cur.getDate()+1);
-  }
-  if(rest>0){el.innerHTML=`ℹ️ Leave includes ${rest} rest day(s). Only ${work} working day(s) will be deducted.`;el.classList.remove('hidden');}
-  else el.classList.add('hidden');
+  const el=document.getElementById('scheduleConflict');if(!el||!startDate)return;const user=getUserForCalc(appState.currentUser.id);const start=parseLocalDate(startDate),end=endDate?parseLocalDate(endDate):new Date(start);const cur=new Date(start);let rest=0,work=0;
+  while(cur<=end){const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];const o1=user?user['off1_'+m]||'':'',o2=user?user['off2_'+m]||'':'';if(o1===dn||o2===dn)rest++;else work++;cur.setDate(cur.getDate()+1);}
+  if(rest>0){el.innerHTML=`ℹ️ Leave includes ${rest} rest day(s). Only ${work} working day(s) will be deducted.`;el.classList.remove('hidden');}else el.classList.add('hidden');
 }
 
 function updateLeaveBalance(){
-  if(!appState.currentUser)return;
-  const type=document.getElementById('lvType').value;
-  const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;
-  const user=getUserForCalc(appState.currentUser.id);
-  const wd=s?calculateWorkingDays(s,e,appState.currentUser.id):0;
-  document.getElementById('requestedDays').textContent=wd;
-  const used=calculateUsedLeaves(appState.currentUser.id,type);
-  const max=type==='SL'?(user?user.slMax||0:0):(user?user.vlMax||0:0);
-  const avail=Math.max(0,max-used);
-  document.getElementById('availableBalance').textContent=avail;
-  const btn=document.querySelector('#leaveFormSection .btn-primary');
-  if(btn){const ok=avail>=wd&&wd>0;btn.disabled=!ok;btn.style.opacity=ok?'1':'0.5';}
+  if(!appState.currentUser)return;const type=document.getElementById('lvType').value;const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;const user=getUserForCalc(appState.currentUser.id);
+  const wd=s?calculateWorkingDays(s,e,appState.currentUser.id):0;document.getElementById('requestedDays').textContent=wd;
+  const used=calculateUsedLeaves(appState.currentUser.id,type);const max=type==='SL'?(user?user.slMax||0:0):(user?user.vlMax||0:0);const avail=Math.max(0,max-used);document.getElementById('availableBalance').textContent=avail;
+  const btn=document.querySelector('#leaveFormSection .btn-primary');if(btn){const ok=avail>=wd&&wd>0;btn.disabled=!ok;btn.style.opacity=ok?'1':'0.5';}
 }
 
 async function submitLeave(){
-  if(appState.isProcessing['leave'])return;
-  const type=document.getElementById('lvType').value;
-  const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;
-  const reason=document.getElementById('lvReason').value.trim();
-  if(!s){showToast('Please select a start date','error');return;}
-  if(!reason){showToast('Please provide a reason','error');return;}
+  if(appState.isProcessing['leave'])return;const type=document.getElementById('lvType').value;const s=document.getElementById('lvStartDate').value,e=document.getElementById('lvEndDate').value;const reason=document.getElementById('lvReason').value.trim();
+  if(!s){showToast('Please select a start date','error');return;}if(!reason){showToast('Please provide a reason','error');return;}
   if(parseLocalDate(s)<todayLocal()){showToast('Cannot request leave for past dates','error');return;}
   if(hasOverlappingLeave(appState.currentUser.id,s,e)){showToast('Overlapping leave exists','error');return;}
-  const cc=checkConsecutiveLimit(appState.currentUser.id,s,e);
-  if(!cc.valid){showToast(`Max ${cc.max} consecutive days. You requested ${cc.days}.`,'error');return;}
-  const wd=calculateWorkingDays(s,e,appState.currentUser.id);
-  const avail=parseInt(document.getElementById('availableBalance').textContent);
-  if(avail<wd){showToast(`Insufficient balance: ${avail} available, ${wd} needed`,'error');return;}
+  const cc=checkConsecutiveLimit(appState.currentUser.id,s,e);if(!cc.valid){showToast(`Max ${cc.max} consecutive days. You requested ${cc.days}.`,'error');return;}
+  const wd=calculateWorkingDays(s,e,appState.currentUser.id);const avail=parseInt(document.getElementById('availableBalance').textContent);if(avail<wd){showToast(`Insufficient balance: ${avail} available, ${wd} needed`,'error');return;}
   appState.isProcessing['leave']=true;
   try{
     const req={empID:appState.currentUser.id,name:appState.currentUser.fullName,type,startDate:s,endDate:e||s,reason,status:'Pending',department:appState.currentUser.dept,submittedAt:new Date().toISOString(),leaveTypeName:LEAVE_TYPES[type]||type,workingDays:wd};
@@ -1249,620 +867,306 @@ async function submitLeave(){
     const result=await safeOp(async()=>{await push(ref(db,'leave_requests'),req);await push(ref(db,'audit_logs'),audit);},{leaveRequest:req,auditLog:audit},'submit_leave');
     if(result.success){document.getElementById('lvStartDate').value='';document.getElementById('lvEndDate').value='';document.getElementById('lvReason').value='';document.getElementById('leaveFormSection').classList.add('hidden');showToast('Leave request submitted!','success');}
     else if(result.queued)showToast('Offline — leave request queued','info');
-  }catch(e){showToast('Failed to submit leave request','error');}
-  finally{appState.isProcessing['leave']=false;}
+  }catch(e){showToast('Failed to submit leave request','error');}finally{appState.isProcessing['leave']=false;}
 }
 
 async function cancelLeave(leaveId){
-  if(!confirm('Cancel this leave request?'))return;
-  const req=appState.leaveRequests[leaveId];
-  if(!req){showToast('Leave request not found','error');return;}
-  if(!canCancelLeave(req)){showToast('Not authorized to cancel this request','error');return;}
-  try{
-    const now=new Date();
-    await update(ref(db,`leave_requests/${leaveId}`),{status:'Cancelled',cancelledAt:now.toISOString(),cancelledBy:appState.currentUser.fullName});
-    await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:'Cancelled leave request',timestamp:now.toISOString(),empID:req.empID,department:req.department,leaveId});
-    showToast('Leave cancelled','success');updateInbox();updateMyLeaves();
-  }catch(e){showToast('Failed to cancel leave','error');}
+  if(!confirm('Cancel this leave request?'))return;const req=appState.leaveRequests[leaveId];if(!req){showToast('Leave request not found','error');return;}if(!canCancelLeave(req)){showToast('Not authorized to cancel this request','error');return;}
+  try{const now=new Date();await update(ref(db,`leave_requests/${leaveId}`),{status:'Cancelled',cancelledAt:now.toISOString(),cancelledBy:appState.currentUser.fullName});await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:'Cancelled leave request',timestamp:now.toISOString(),empID:req.empID,department:req.department,leaveId});showToast('Leave cancelled','success');updateInbox();updateMyLeaves();}
+  catch(e){showToast('Failed to cancel leave','error');}
 }
 
 /* ── DIRECTORY ───────────────────────────────────────────────── */
 function editEmployee(empId){
-  const user=appState.users[empId];if(!user)return;
-  appState.editingEmployeeId=empId;
-  const fields={addEmpNum:user.empID||empId,addFullName:user.fullName||'',addUser:user.email||'',addPass:'',addBday:user.birthday||'',addHireDate:user.hireDate||'',addPosition:user.position||'',addContact:user.contact||'',addEmergency:user.emergency||'',addBackend:user.backendID||'',addAssets:user.assets||'',addDefaultShift:user.defaultShift||'',addSL:user.slMax||10,addVL:user.vlMax||10,addMaxConsecutive:user.maxConsecutiveLeave||30,addSalary:user.monthlySalary||0,addMeal:user.mealAllow||2000,addTranspo:user.transpoAllow||1500,addStat:user.statBenefits||1000};
+  const user=appState.users[empId];if(!user)return;appState.editingEmployeeId=empId;
+  const fields={addEmpNum:user.empID||empId,addFullName:user.fullName||'',addUser:user.email||'',addPass:'',addBday:user.birthday||'',addHireDate:user.hireDate||'',addPosition:user.position||'',addContact:user.contact||'',addEmergency:user.emergency||'',addBackend:user.backendID||'',addAssets:user.assets||'',addDefaultShift:user.defaultShift||'',addSL:user.slMax||10,addVL:user.vlMax||10,addMaxConsecutive:user.maxConsecutiveLeave||30,addSalary:user.monthlySalary||0,addTranspo:user.transpoAllow||1500,addStat:user.statBenefits||1000};
   for(const[id,val]of Object.entries(fields)){const el=document.getElementById(id);if(el)el.value=val;}
-  document.getElementById('addEmpNum').disabled=true;
-  document.getElementById('addDept').value=user.dept||'RC';
-  document.getElementById('addRole').value=user.role||'Employee';
-  document.getElementById('addEmployeeBtn').textContent='Update Employee';
-  document.getElementById('cancelEditBtn').classList.remove('hidden');
-  document.getElementById('dirFormTitle').textContent='Edit Employee';
-  document.getElementById('addEmpNum').scrollIntoView({behavior:'smooth'});
+  document.getElementById('addEmpNum').disabled=true;document.getElementById('addDept').value=user.dept||'RC';document.getElementById('addRole').value=user.role||'Employee';
+  document.getElementById('addEmployeeBtn').textContent='Update Employee';document.getElementById('cancelEditBtn').classList.remove('hidden');document.getElementById('dirFormTitle').textContent='Edit Employee';document.getElementById('addEmpNum').scrollIntoView({behavior:'smooth'});
 }
 
 function cancelEdit(){
-  appState.editingEmployeeId=null;
-  ['addFullName','addUser','addPass','addBday','addHireDate','addPosition','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  appState.editingEmployeeId=null;['addFullName','addUser','addPass','addBday','addHireDate','addPosition','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const en=document.getElementById('addEmpNum');if(en){en.value='';en.disabled=false;}
-  document.getElementById('addDept').value='RC';document.getElementById('addSL').value='10';document.getElementById('addVL').value='10';
-  document.getElementById('addRole').value='Employee';document.getElementById('addMaxConsecutive').value='30';
-  document.getElementById('addSalary').value='0';document.getElementById('addMeal').value='2000';
-  document.getElementById('addTranspo').value='1500';document.getElementById('addStat').value='1000';
-  document.getElementById('addEmployeeBtn').textContent='Add Employee';
-  document.getElementById('cancelEditBtn').classList.add('hidden');
-  document.getElementById('dirFormTitle').textContent='Add New Employee';
-  const dm=document.getElementById('dirMessage');if(dm)dm.classList.add('hidden');
+  document.getElementById('addDept').value='RC';document.getElementById('addSL').value='10';document.getElementById('addVL').value='10';document.getElementById('addRole').value='Employee';document.getElementById('addMaxConsecutive').value='30';
+  document.getElementById('addSalary').value='0';document.getElementById('addTranspo').value='1500';document.getElementById('addStat').value='1000';
+  document.getElementById('addEmployeeBtn').textContent='Add Employee';document.getElementById('cancelEditBtn').classList.add('hidden');document.getElementById('dirFormTitle').textContent='Add New Employee';const dm=document.getElementById('dirMessage');if(dm)dm.classList.add('hidden');
 }
 
 async function addEmployee(){
-  if(appState.isProcessing['emp'])return;
-  appState.isProcessing['emp']=true;
+  if(appState.isProcessing['emp'])return;appState.isProcessing['emp']=true;
   const email=document.getElementById('addUser').value.trim(),pass=document.getElementById('addPass').value,fullName=document.getElementById('addFullName').value.trim(),customId=document.getElementById('addEmpNum').value.trim();
   if(!email||!fullName){showToast('Email and full name are required','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&!pass){showToast('Password is required for new employees','error');appState.isProcessing['emp']=false;return;}
   if(!appState.editingEmployeeId&&pass.length<6){showToast('Password must be at least 6 characters','error');appState.isProcessing['emp']=false;return;}
   try{
-    let uid;
-    if(appState.editingEmployeeId){uid=appState.editingEmployeeId;}
-    else{const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);uid=cred.user.uid;try{await signOut(secondaryAuth);}catch{}}
-    const data={
-      fullName,email,empID:customId||uid,
-      dept:document.getElementById('addDept').value,role:document.getElementById('addRole').value,
-      birthday:document.getElementById('addBday').value,hireDate:document.getElementById('addHireDate').value,
-      position:document.getElementById('addPosition').value.trim(),
-      monthlySalary:Math.max(0,parseFloat(document.getElementById('addSalary').value)||0),
-      mealAllow:Math.max(0,parseFloat(document.getElementById('addMeal').value)||0),
-      transpoAllow:Math.max(0,parseFloat(document.getElementById('addTranspo').value)||0),
-      statBenefits:Math.max(0,parseFloat(document.getElementById('addStat').value)||0),
-      contact:document.getElementById('addContact').value.trim(),
-      emergency:document.getElementById('addEmergency').value.trim(),
-      backendID:document.getElementById('addBackend').value.trim(),
-      assets:document.getElementById('addAssets').value.trim(),
-      defaultShift:document.getElementById('addDefaultShift').value.trim(),
-      slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),
-      vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),
-      maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),
-      disabled:false
-    };
-    await set(ref(db,`users/${uid}`),data);
-    showToast(appState.editingEmployeeId?'Employee updated!':'Employee added!','success');
-    cancelEdit();renderDirectory();
-  }catch(e){
-    if(e.code==='auth/email-already-in-use')showToast('Email already in use','error');
-    else showToast('Failed to save: '+(e.message||''),'error');
-    try{await signOut(secondaryAuth);}catch{}
-  }finally{appState.isProcessing['emp']=false;}
+    let uid;if(appState.editingEmployeeId){uid=appState.editingEmployeeId;}else{const cred=await createUserWithEmailAndPassword(secondaryAuth,email,pass);uid=cred.user.uid;try{await signOut(secondaryAuth);}catch{}}
+    const data={fullName,email,empID:customId||uid,dept:document.getElementById('addDept').value,role:document.getElementById('addRole').value,birthday:document.getElementById('addBday').value,hireDate:document.getElementById('addHireDate').value,position:document.getElementById('addPosition').value.trim(),monthlySalary:Math.max(0,parseFloat(document.getElementById('addSalary').value)||0),transpoAllow:Math.max(0,parseFloat(document.getElementById('addTranspo').value)||0),statBenefits:Math.max(0,parseFloat(document.getElementById('addStat').value)||0),contact:document.getElementById('addContact').value.trim(),emergency:document.getElementById('addEmergency').value.trim(),backendID:document.getElementById('addBackend').value.trim(),assets:document.getElementById('addAssets').value.trim(),defaultShift:document.getElementById('addDefaultShift').value.trim(),slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),disabled:false};
+    await set(ref(db,`users/${uid}`),data);showToast(appState.editingEmployeeId?'Employee updated!':'Employee added!','success');cancelEdit();renderDirectory();
+  }catch(e){if(e.code==='auth/email-already-in-use')showToast('Email already in use','error');else showToast('Failed to save: '+(e.message||''),'error');try{await signOut(secondaryAuth);}catch{}}
+  finally{appState.isProcessing['emp']=false;}
 }
 
-function checkCurrentUserDisabled(){
-  if(!appState.currentUser)return;
-  const latest=appState.users[appState.currentUser.id];
-  if(latest&&latest.disabled){showToast('Your account has been disabled. Signing out…','error');setTimeout(()=>handleLogout(true),2000);}
-}
+function checkCurrentUserDisabled(){if(!appState.currentUser)return;const latest=appState.users[appState.currentUser.id];if(latest&&latest.disabled){showToast('Your account has been disabled. Signing out…','error');setTimeout(()=>handleLogout(true),2000);}}
 
-async function deleteEmployee(empId){
-  if(!confirm(`Disable employee ${empId}?`))return;
-  try{
-    await update(ref(db,`users/${empId}`),{disabled:true,deletedAt:new Date().toISOString()});
-    showToast('Employee disabled. Data retained.','info');renderDirectory();
-  }catch(e){showToast('Failed to disable employee','error');}
-}
+async function deleteEmployee(empId){if(!confirm(`Disable employee ${empId}?`))return;try{await update(ref(db,`users/${empId}`),{disabled:true,deletedAt:new Date().toISOString()});showToast('Employee disabled. Data retained.','info');renderDirectory();}catch(e){showToast('Failed to disable employee','error');}}
 
 function renderDirectory(){
-  const el=document.getElementById('dirTable');if(!el)return;
-  const entries=activeEmployeesSorted();
+  const el=document.getElementById('dirTable');if(!el)return;const entries=activeEmployeesSorted();
   if(!entries.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No employees found.</div>';return;}
-  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Dept</th><th>Role</th><th>Monthly Salary</th><th>Meal</th><th>Transpo</th><th>Stat</th><th>SL Bal</th><th>VL Bal</th><th>Actions</th></tr></thead><tbody>`;
+  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Dept</th><th>Role</th><th>Monthly Salary</th><th>Transpo</th><th>Stat</th><th>SL Bal</th><th>VL Bal</th><th>Actions</th></tr></thead><tbody>`;
   for(const[uid,user]of entries){
     const slU=calculateUsedLeaves(uid,'SL'),vlU=calculateUsedLeaves(uid,'VL'),slM=user.slMax||0,vlM=user.vlMax||0;
-    html+=`<tr>
-      <td><b>${esc(user.empID||uid)}</b></td><td>${esc(user.fullName)}</td>
-      <td style="font-size:11px;color:var(--muted);">${esc(user.position||user.dept||'')}</td>
-      <td><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(user.dept)}</span></td>
-      <td><span style="background:${user.role==='HR'?'#f3e8ff':user.role==='Admin'?'#dbeafe':user.role==='OPS'?'#d1fae5':'#f1f5f9'};color:${user.role==='HR'?'#7e22ce':user.role==='Admin'?'#1e40af':user.role==='OPS'?'#065f46':'var(--slate)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(user.role)}</span></td>
-      <td style="font-weight:700;color:var(--accent);">₱${(user.monthlySalary||0).toLocaleString()}</td>
-      <td style="font-size:11px;">₱${(user.mealAllow||0).toLocaleString()}</td>
-      <td style="font-size:11px;">₱${(user.transpoAllow||0).toLocaleString()}</td>
-      <td style="font-size:11px;">₱${(user.statBenefits||0).toLocaleString()}</td>
-      <td style="font-size:11px;"><b style="color:var(--green);">${Math.max(0,slM-slU)}</b><span style="color:var(--muted);">/${slM}</span></td>
-      <td style="font-size:11px;"><b style="color:var(--accent);">${Math.max(0,vlM-vlU)}</b><span style="color:var(--muted);">/${vlM}</span></td>
-      <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${uid}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteEmployee('${uid}')">Disable</button></div></td>
-    </tr>`;
+    html+=`<tr><td><b>${esc(user.empID||uid)}</b></td><td>${esc(user.fullName)}</td><td style="font-size:11px;color:var(--muted);">${esc(user.position||user.dept||'')}</td><td><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(user.dept)}</span></td><td><span style="background:${user.role==='HR'?'#f3e8ff':user.role==='Admin'?'#dbeafe':user.role==='OPS'?'#d1fae5':'#f1f5f9'};color:${user.role==='HR'?'#7e22ce':user.role==='Admin'?'#1e40af':user.role==='OPS'?'#065f46':'var(--slate)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(user.role)}</span></td><td style="font-weight:700;color:var(--accent);">₱${(user.monthlySalary||0).toLocaleString()}</td><td style="font-size:11px;">₱${(user.transpoAllow||0).toLocaleString()}</td><td style="font-size:11px;">₱${(user.statBenefits||0).toLocaleString()}</td><td style="font-size:11px;"><b style="color:var(--green);">${Math.max(0,slM-slU)}</b><span style="color:var(--muted);">/${slM}</span></td><td style="font-size:11px;"><b style="color:var(--accent);">${Math.max(0,vlM-vlU)}</b><span style="color:var(--muted);">/${vlM}</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${uid}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteEmployee('${uid}')">Disable</button></div></td></tr>`;
   }
   html+=`</tbody></table>`;el.innerHTML=html;
 }
 
-function searchEmployees(){
-  const q=document.querySelector('#sec-dir .search-input').value.toLowerCase();
-  document.querySelectorAll('#dirTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
-}
+function searchEmployees(){const q=document.querySelector('#sec-dir .search-input').value.toLowerCase();document.querySelectorAll('#dirTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── ATTENDANCE ──────────────────────────────────────────────── */
 function renderAttendance(){
   if(!isHRorAdmin()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
-  const el=document.getElementById('payTable');if(!el)return;
-  const month=parseInt(document.getElementById('pMonth').value);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const shiftF=(document.getElementById('pShiftSearch')?.value||'').trim().toLowerCase();
-  const period=document.getElementById('pPeriod').value;
-  const[pS,pEr]=period.split('-').map(Number);
-  const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pEr;
-  let html=`<table style="min-width:${600+(pE-pS+1)*52}px;"><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
-  for(let d=pS;d<=pE;d++)html+=`<th style="min-width:50px;">${d}</th>`;
-  html+=`<th style="min-width:80px;background:#fef2f2;color:#991b1b;">Lates (min)</th></tr></thead><tbody>`;
-  for(const[uid,user]of activeEmployeesSorted()){
-    const shift=user['shift_'+month]||user.defaultShift||'';
-    if(shiftF&&!shift.toLowerCase().includes(shiftF))continue;
-    html+=`<tr><td style="font-weight:600;">${esc(user.empID||uid)}</td><td>${esc(user.fullName)}</td><td>${esc(user.dept)}</td><td style="font-size:11px;color:var(--muted);">${esc(shift)}</td>`;
-    let totalLates=0;
-    for(let d=pS;d<=pE;d++){const k=`${month}_${d}`;const status=appState.attendance[uid]?.[k]||'';const late=appState.attendance[uid]?.[`${k}_late`]||0;if(late)totalLates+=parseInt(late);html+=`<td class="att-cell s-${status}" onclick="changeAttendanceStatus('${uid}','${k}')">${esc(status)}${late?`<span class="late-tag">${late}m</span>`:''}</td>`;}
-    html+=`<td class="lates-total" style="text-align:center;">${totalLates||'—'}</td></tr>`;
-  }
+  const el=document.getElementById('payTable');if(!el)return;const month=parseInt(document.getElementById('pMonth').value);const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const shiftF=(document.getElementById('pShiftSearch')?.value||'').trim().toLowerCase();const period=document.getElementById('pPeriod').value;const[pS,pEr]=period.split('-').map(Number);const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pEr;
+  let html=`<table style="min-width:${600+(pE-pS+1)*52}px;"><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;for(let d=pS;d<=pE;d++)html+=`<th style="min-width:50px;">${d}</th>`;html+=`<th style="min-width:80px;background:#fef2f2;color:#991b1b;">Lates (min)</th></tr></thead><tbody>`;
+  for(const[uid,user]of activeEmployeesSorted()){const shift=user['shift_'+month]||user.defaultShift||'';if(shiftF&&!shift.toLowerCase().includes(shiftF))continue;html+=`<tr><td style="font-weight:600;">${esc(user.empID||uid)}</td><td>${esc(user.fullName)}</td><td>${esc(user.dept)}</td><td style="font-size:11px;color:var(--muted);">${esc(shift)}</td>`;let totalLates=0;for(let d=pS;d<=pE;d++){const k=`${month}_${d}`;const status=appState.attendance[uid]?.[k]||'';const late=appState.attendance[uid]?.[`${k}_late`]||0;if(late)totalLates+=parseInt(late);html+=`<td class="att-cell s-${status}" onclick="changeAttendanceStatus('${uid}','${k}')">${esc(status)}${late?`<span class="late-tag">${late}m</span>`:''}</td>`;}html+=`<td class="lates-total" style="text-align:center;">${totalLates||'—'}</td></tr>`;}
   html+=`</tbody></table>`;el.innerHTML=html;
 }
 
-async function changeAttendanceStatus(uid,dateKey){
-  if(!isHRorAdmin()){showToast('Only Admin/HR can modify attendance','error');return;}
-  const cur=appState.attendance[uid]?.[dateKey]||'';
-  const next=STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];
-  try{await update(ref(db,`attendance/${uid}`),{[dateKey]:next});await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Changed attendance for ${uid} on ${dateKey} to ${next}`,timestamp:new Date().toISOString(),empID:uid});}
-  catch(e){showToast('Failed to update attendance','error');}
-}
-
-function searchAttendance(){
-  const q=document.getElementById('attendanceSearch')?.value?.toLowerCase()||'';
-  document.querySelectorAll('#payTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
-}
+async function changeAttendanceStatus(uid,dateKey){if(!isHRorAdmin()){showToast('Only Admin/HR can modify attendance','error');return;}const cur=appState.attendance[uid]?.[dateKey]||'';const next=STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur)+1)%STATUS_CYCLE.length];try{await update(ref(db,`attendance/${uid}`),{[dateKey]:next});await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Changed attendance for ${uid} on ${dateKey} to ${next}`,timestamp:new Date().toISOString(),empID:uid});}catch(e){showToast('Failed to update attendance','error');}}
+function searchAttendance(){const q=document.getElementById('attendanceSearch')?.value?.toLowerCase()||'';document.querySelectorAll('#payTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── SCHEDULES ───────────────────────────────────────────────── */
 function renderSchedules(){
-  const el=document.getElementById('schedTable');if(!el)return;
-  const month=parseInt(document.getElementById('sMonth').value);
-  const sorted=activeEmployeesSorted();
+  const el=document.getElementById('schedTable');if(!el)return;const month=parseInt(document.getElementById('sMonth').value);const sorted=activeEmployeesSorted();
   const dayOpts=(sel)=>['',...DAYS_OF_WEEK].map(d=>`<option value="${d}"${d===sel?' selected':''}>${d||'— none —'}</option>`).join('');
   const shiftOpts=(sel)=>['','Morning','Night'].map(s=>`<option value="${s}"${s===sel?' selected':''}>${s||'— select —'}</option>`).join('');
   let html=`<table style="min-width:900px;"><thead><tr><th>Emp ID</th><th style="text-align:left;">Name</th><th>Dept</th><th style="min-width:200px;">Time Slot</th><th style="min-width:120px;">Shift</th><th style="min-width:120px;">Rest Day 1</th><th style="min-width:120px;">Rest Day 2</th><th>Save</th></tr></thead><tbody>`;
-  for(const[empId,user]of sorted){
-    const p=(appState.scheduleChanges||{})[empId]||{};
-    const ts=p['out_'+month]!==undefined?p['out_'+month]:(user['out_'+month]||'');
-    const sh=p['shift_'+month]!==undefined?p['shift_'+month]:(user['shift_'+month]||user.defaultShift||'');
-    const o1=p['off1_'+month]!==undefined?p['off1_'+month]:(user['off1_'+month]||'');
-    const o2=p['off2_'+month]!==undefined?p['off2_'+month]:(user['off2_'+month]||'');
-    const sid=empId.replace(/'/g,"\\'");
-    html+=`<tr><td style="font-weight:600;">${esc(user.empID||empId)}</td><td style="text-align:left;">${esc(user.fullName)}</td><td>${esc(user.dept)}</td>
-      <td><input type="text" class="form-input" value="${esc(ts)}" placeholder="e.g. 8:00 AM - 5:00 PM" oninput="updateScheduleField('${sid}','out_${month}',this.value)" style="font-size:12px;padding:6px 10px;"></td>
-      <td><select class="form-select" onchange="updateScheduleField('${sid}','shift_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${shiftOpts(sh)}</select></td>
-      <td><select class="form-select" onchange="updateScheduleField('${sid}','off1_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${dayOpts(o1)}</select></td>
-      <td><select class="form-select" onchange="updateScheduleField('${sid}','off2_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${dayOpts(o2)}</select></td>
-      <td><button class="btn btn-success btn-sm" onclick="saveSchedule('${sid}',${month})">Save</button></td>
-    </tr>`;
-  }
+  for(const[empId,user]of sorted){const p=(appState.scheduleChanges||{})[empId]||{};const ts=p['out_'+month]!==undefined?p['out_'+month]:(user['out_'+month]||'');const sh=p['shift_'+month]!==undefined?p['shift_'+month]:(user['shift_'+month]||user.defaultShift||'');const o1=p['off1_'+month]!==undefined?p['off1_'+month]:(user['off1_'+month]||'');const o2=p['off2_'+month]!==undefined?p['off2_'+month]:(user['off2_'+month]||'');const sid=empId.replace(/'/g,"\\'");
+    html+=`<tr><td style="font-weight:600;">${esc(user.empID||empId)}</td><td style="text-align:left;">${esc(user.fullName)}</td><td>${esc(user.dept)}</td><td><input type="text" class="form-input" value="${esc(ts)}" placeholder="e.g. 8:00 AM - 5:00 PM" oninput="updateScheduleField('${sid}','out_${month}',this.value)" style="font-size:12px;padding:6px 10px;"></td><td><select class="form-select" onchange="updateScheduleField('${sid}','shift_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${shiftOpts(sh)}</select></td><td><select class="form-select" onchange="updateScheduleField('${sid}','off1_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${dayOpts(o1)}</select></td><td><select class="form-select" onchange="updateScheduleField('${sid}','off2_${month}',this.value)" style="font-size:12px;padding:6px 10px;">${dayOpts(o2)}</select></td><td><button class="btn btn-success btn-sm" onclick="saveSchedule('${sid}',${month})">Save</button></td></tr>`;}
   html+=`</tbody></table>`;el.innerHTML=html;
 }
 
-function updateScheduleField(empId,field,value){
-  document.getElementById('saveSchedulesBtn').classList.remove('hidden');
-  if(!appState.scheduleChanges)appState.scheduleChanges={};
-  if(!appState.scheduleChanges[empId])appState.scheduleChanges[empId]={};
-  appState.scheduleChanges[empId][field]=value;
-}
+function updateScheduleField(empId,field,value){document.getElementById('saveSchedulesBtn').classList.remove('hidden');if(!appState.scheduleChanges)appState.scheduleChanges={};if(!appState.scheduleChanges[empId])appState.scheduleChanges[empId]={};appState.scheduleChanges[empId][field]=value;}
 
 async function saveSchedule(empId,month){
-  try{
-    const p=(appState.scheduleChanges||{})[empId]||{},user=appState.users[empId]||{};
-    const updates={};
-    ['out_','shift_','off1_','off2_'].forEach(pre=>{const f=pre+month;if(f in p)updates[f]=p[f];else if(f in user)updates[f]=user[f];});
-    if(!Object.keys(updates).length){showToast('No changes to save','info');return;}
-    await update(ref(db,`users/${empId}`),updates);
-    if(appState.scheduleChanges?.[empId]){Object.keys(updates).forEach(f=>delete appState.scheduleChanges[empId][f]);if(!Object.keys(appState.scheduleChanges[empId]).length)delete appState.scheduleChanges[empId];}
-    if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length)document.getElementById('saveSchedulesBtn').classList.add('hidden');
-    showToast(`Schedule saved for ${user.fullName||empId}!`,'success');
-  }catch(e){showToast('Failed to save schedule','error');}
+  try{const p=(appState.scheduleChanges||{})[empId]||{},user=appState.users[empId]||{};const updates={};['out_','shift_','off1_','off2_'].forEach(pre=>{const f=pre+month;if(f in p)updates[f]=p[f];else if(f in user)updates[f]=user[f];});if(!Object.keys(updates).length){showToast('No changes to save','info');return;}await update(ref(db,`users/${empId}`),updates);if(appState.scheduleChanges?.[empId]){Object.keys(updates).forEach(f=>delete appState.scheduleChanges[empId][f]);if(!Object.keys(appState.scheduleChanges[empId]).length)delete appState.scheduleChanges[empId];}if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length)document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast(`Schedule saved for ${user.fullName||empId}!`,'success');}
+  catch(e){showToast('Failed to save schedule','error');}
 }
 
-async function saveAllSchedules(){
-  if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length){showToast('No pending changes','info');return;}
-  try{for(const[empId,changes]of Object.entries(appState.scheduleChanges)){if(Object.keys(changes).length>0)await update(ref(db,`users/${empId}`),changes);}appState.scheduleChanges={};document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast('All schedules published!','success');}
-  catch(e){showToast('Failed to publish','error');}
-}
-
-function searchSchedules(){
-  const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();
-  document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});
-}
+async function saveAllSchedules(){if(!appState.scheduleChanges||!Object.keys(appState.scheduleChanges).length){showToast('No pending changes','info');return;}try{for(const[empId,changes]of Object.entries(appState.scheduleChanges)){if(Object.keys(changes).length>0)await update(ref(db,`users/${empId}`),changes);}appState.scheduleChanges={};document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast('All schedules published!','success');}catch(e){showToast('Failed to publish','error');}}
+function searchSchedules(){const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── ACTIVE NOW ──────────────────────────────────────────────── */
 function renderActiveNow(){
-  const el=document.getElementById('activeTable');if(!el)return;
-  const now=new Date(),month=now.getMonth(),day=now.getDate(),todayKey=`${month}_${day}`;
-  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Time In</th><th>Shift</th><th>Status</th></tr></thead><tbody>`;
-  let count=0;
-  for(const[uid,user]of activeEmployeesSorted()){
-    const status=appState.attendance[uid]?.[todayKey],clockOut=appState.attendance[uid]?.[`${todayKey}_out`];
-    if(status==='P'&&!clockOut){
-      count++;const ti=appState.attendance[uid]?.[`${todayKey}_time`];const late=appState.attendance[uid]?.[`${todayKey}_late`]||0;
-      html+=`<tr><td style="font-weight:600;">${esc(user.empID||uid)}</td><td>${esc(user.fullName)}</td><td>${esc(user.dept)}</td><td>${ti?new Date(ti).toLocaleTimeString():'—'}${late?`<span style="font-size:10px;color:var(--red);margin-left:4px;">+${late}m</span>`:''}</td><td style="font-size:11px;color:var(--muted);">${esc(user['shift_'+month]||user.defaultShift||'—')}</td><td><span class="status-badge badge-approved">● Present</span></td></tr>`;
-    }
-  }
-  if(!count)html+=`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>`;
-  html+=`</tbody></table>`;el.innerHTML=html;
+  const el=document.getElementById('activeTable');if(!el)return;const now=new Date(),month=now.getMonth(),day=now.getDate(),todayKey=`${month}_${day}`;
+  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Time In</th><th>Shift</th><th>Status</th></tr></thead><tbody>`;let count=0;
+  for(const[uid,user]of activeEmployeesSorted()){const status=appState.attendance[uid]?.[todayKey],clockOut=appState.attendance[uid]?.[`${todayKey}_out`];if(status==='P'&&!clockOut){count++;const ti=appState.attendance[uid]?.[`${todayKey}_time`];const late=appState.attendance[uid]?.[`${todayKey}_late`]||0;html+=`<tr><td style="font-weight:600;">${esc(user.empID||uid)}</td><td>${esc(user.fullName)}</td><td>${esc(user.dept)}</td><td>${ti?new Date(ti).toLocaleTimeString():'—'}${late?`<span style="font-size:10px;color:var(--red);margin-left:4px;">+${late}m</span>`:''}</td><td style="font-size:11px;color:var(--muted);">${esc(user['shift_'+month]||user.defaultShift||'—')}</td><td><span class="status-badge badge-approved">● Present</span></td></tr>`;}}
+  if(!count)html+=`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>`;html+=`</tbody></table>`;el.innerHTML=html;
 }
 function searchActive(){const q=document.querySelector('#sec-active .search-input').value.toLowerCase();document.querySelectorAll('#activeTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── AUDIT ───────────────────────────────────────────────────── */
-function renderAudit(logs){
-  const el=document.getElementById('auditTable');if(!el||!logs)return;
-  let html=`<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>`;
-  Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(l=>{html+=`<tr><td style="color:var(--muted);font-size:11px;">${new Date(l.timestamp).toLocaleString()}</td><td>${esc(l.name||'System')}</td><td>${esc(l.action)}</td><td style="font-size:11px;">${esc(l.empID||'')}</td><td style="font-size:11px;">${esc(l.department||'')}</td></tr>`;});
-  html+=`</tbody></table>`;el.innerHTML=html;
-}
+function renderAudit(logs){const el=document.getElementById('auditTable');if(!el||!logs)return;let html=`<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>`;Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(l=>{html+=`<tr><td style="color:var(--muted);font-size:11px;">${new Date(l.timestamp).toLocaleString()}</td><td>${esc(l.name||'System')}</td><td>${esc(l.action)}</td><td style="font-size:11px;">${esc(l.empID||'')}</td><td style="font-size:11px;">${esc(l.department||'')}</td></tr>`;});html+=`</tbody></table>`;el.innerHTML=html;}
 function searchAudit(){const q=document.querySelector('#sec-audit .search-input').value.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── INBOX ───────────────────────────────────────────────────── */
 function updateInbox(){
-  if(!appState.currentUser||!isHRorAdminOrOPS())return;
-  const content=document.getElementById('inboxContent'),countEl=document.getElementById('inboxCountBadge'),dot=document.getElementById('inboxDot');
-  if(!appState.leaveRequests)return;
-  let pending=0,html='';
-  Object.entries(appState.leaveRequests).forEach(([key,req])=>{
-    if(req.status!=='Pending')return;const canApprove=canApproveLeave(req);const canCancel=canCancelLeave(req);pending++;
-    html+=`<div class="inbox-item"><div class="inbox-name">${esc(req.name)}</div><div class="inbox-detail">${LEAVE_TYPES[req.type]||req.type} · ${req.startDate}${req.endDate!==req.startDate?` → ${req.endDate}`:''} · ${req.workingDays||1} day(s)</div><div class="inbox-reason">${esc(req.reason)}</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dept: ${esc(req.department)}</div>`;
-    if(canApprove){html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-success btn-sm" onclick="approveLeave('${key}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${key}')">✕ Reject</button>`;if(canCancel)html+=`<button class="btn btn-amber btn-sm" onclick="cancelLeave('${key}')">Cancel</button>`;html+=`</div>`;}
-    else{html+=`<span style="font-size:11px;color:var(--muted);">Not authorized to approve</span>`;}
-    html+=`</div>`;
-  });
-  if(!pending)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No pending requests 🎉</div>`;
-  if(content)content.innerHTML=html;if(countEl)countEl.textContent=pending;if(dot)dot.classList.toggle('hidden',pending===0);
+  if(!appState.currentUser||!isHRorAdminOrOPS())return;const content=document.getElementById('inboxContent'),countEl=document.getElementById('inboxCountBadge'),dot=document.getElementById('inboxDot');if(!appState.leaveRequests)return;let pending=0,html='';
+  Object.entries(appState.leaveRequests).forEach(([key,req])=>{if(req.status!=='Pending')return;const canApprove=canApproveLeave(req);const canCancel=canCancelLeave(req);pending++;html+=`<div class="inbox-item"><div class="inbox-name">${esc(req.name)}</div><div class="inbox-detail">${LEAVE_TYPES[req.type]||req.type} · ${req.startDate}${req.endDate!==req.startDate?` → ${req.endDate}`:''} · ${req.workingDays||1} day(s)</div><div class="inbox-reason">${esc(req.reason)}</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dept: ${esc(req.department)}</div>`;if(canApprove){html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-success btn-sm" onclick="approveLeave('${key}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${key}')">✕ Reject</button>`;if(canCancel)html+=`<button class="btn btn-amber btn-sm" onclick="cancelLeave('${key}')">Cancel</button>`;html+=`</div>`;}else{html+=`<span style="font-size:11px;color:var(--muted);">Not authorized to approve</span>`;}html+=`</div>`;});
+  if(!pending)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No pending requests 🎉</div>`;if(content)content.innerHTML=html;if(countEl)countEl.textContent=pending;if(dot)dot.classList.toggle('hidden',pending===0);
 }
 
 async function approveLeave(leaveId){
-  try{
-    const req=appState.leaveRequests[leaveId];if(!canApproveLeave(req)){showToast('Not authorized to approve','error');return;}
-    const now=new Date(),start=parseLocalDate(req.startDate),end=req.endDate?parseLocalDate(req.endDate):new Date(start);
-    const dateUpdates={},cur=new Date(start),emp=appState.users[req.empID];
-    while(cur<=end){
-      const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];
-      const o1=emp?(emp['off1_'+m]||''):'',o2=emp?(emp['off2_'+m]||''):'';
-      if(o1!==dn&&o2!==dn)dateUpdates[`${m}_${cur.getDate()}`]=req.type;
-      cur.setDate(cur.getDate()+1);
-    }
-    await update(ref(db,`leave_requests/${leaveId}`),{status:'Approved',approvedBy:appState.currentUser.fullName,approvedAt:now.toISOString(),approvedByRole:appState.currentUser.role});
-    if(Object.keys(dateUpdates).length)await update(ref(db,`attendance/${req.empID}`),dateUpdates);
+  try{const req=appState.leaveRequests[leaveId];if(!canApproveLeave(req)){showToast('Not authorized to approve','error');return;}const now=new Date(),start=parseLocalDate(req.startDate),end=req.endDate?parseLocalDate(req.endDate):new Date(start);const dateUpdates={},cur=new Date(start),emp=appState.users[req.empID];
+    while(cur<=end){const m=cur.getMonth(),dn=DAYS_OF_WEEK[cur.getDay()];const o1=emp?(emp['off1_'+m]||''):'',o2=emp?(emp['off2_'+m]||''):'';if(o1!==dn&&o2!==dn)dateUpdates[`${m}_${cur.getDate()}`]=req.type;cur.setDate(cur.getDate()+1);}
+    await update(ref(db,`leave_requests/${leaveId}`),{status:'Approved',approvedBy:appState.currentUser.fullName,approvedAt:now.toISOString(),approvedByRole:appState.currentUser.role});if(Object.keys(dateUpdates).length)await update(ref(db,`attendance/${req.empID}`),dateUpdates);
     await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Approved',message:`Your ${LEAVE_TYPES[req.type]||req.type} from ${req.startDate} to ${req.endDate} was approved by ${appState.currentUser.fullName}.`,type:'success',timestamp:now.toISOString(),read:false});
-    await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Approved leave for ${req.name} (${req.type}: ${req.startDate} to ${req.endDate})`,timestamp:now.toISOString(),empID:req.empID,department:req.department,approverRole:appState.currentUser.role});
-    showToast('Leave approved!','success');
-  }catch(e){showToast('Failed to approve leave','error');}
+    await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Approved leave for ${req.name} (${req.type}: ${req.startDate} to ${req.endDate})`,timestamp:now.toISOString(),empID:req.empID,department:req.department,approverRole:appState.currentUser.role});showToast('Leave approved!','success');}
+  catch(e){showToast('Failed to approve leave','error');}
 }
 
 async function rejectLeave(leaveId){
-  try{
-    const req=appState.leaveRequests[leaveId];if(!canApproveLeave(req)){showToast('Not authorized','error');return;}
-    const now=new Date();
-    await update(ref(db,`leave_requests/${leaveId}`),{status:'Rejected',rejectedBy:appState.currentUser.fullName,rejectedAt:now.toISOString(),rejectedByRole:appState.currentUser.role});
-    await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Rejected',message:`Your ${LEAVE_TYPES[req.type]||req.type} request for ${req.startDate} was rejected by ${appState.currentUser.fullName}.`,type:'error',timestamp:now.toISOString(),read:false});
-    await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Rejected leave for ${req.name}`,timestamp:now.toISOString(),empID:req.empID,department:req.department});
-    showToast('Leave rejected','success');
-  }catch(e){showToast('Failed to reject','error');}
+  try{const req=appState.leaveRequests[leaveId];if(!canApproveLeave(req)){showToast('Not authorized','error');return;}const now=new Date();await update(ref(db,`leave_requests/${leaveId}`),{status:'Rejected',rejectedBy:appState.currentUser.fullName,rejectedAt:now.toISOString(),rejectedByRole:appState.currentUser.role});await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Rejected',message:`Your ${LEAVE_TYPES[req.type]||req.type} request for ${req.startDate} was rejected by ${appState.currentUser.fullName}.`,type:'error',timestamp:now.toISOString(),read:false});await push(ref(db,'audit_logs'),{name:appState.currentUser.fullName,action:`Rejected leave for ${req.name}`,timestamp:now.toISOString(),empID:req.empID,department:req.department});showToast('Leave rejected','success');}
+  catch(e){showToast('Failed to reject','error');}
 }
 
 /* ── NOTIFICATIONS ───────────────────────────────────────────── */
 function updateNotifications(){
-  if(!appState.currentUser)return;
-  const content=document.getElementById('notifContent'),dot=document.getElementById('notifDot');if(!appState.notifications)return;
-  let unread=0,html='';
+  if(!appState.currentUser)return;const content=document.getElementById('notifContent'),dot=document.getElementById('notifDot');if(!appState.notifications)return;let unread=0,html='';
   const mine=Object.entries(appState.notifications).filter(([,n])=>n.userId===appState.currentUser.id).sort(([,a],[,b])=>new Date(b.timestamp)-new Date(a.timestamp));
-  mine.forEach(([key,n])=>{
-    if(!n.read)unread++;const icon=n.type==='success'?'✅':n.type==='error'?'❌':n.type==='warning'?'⚠️':'ℹ️';
-    html+=`<div style="padding:12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;${n.read?'opacity:.65':''}" onclick="markNotificationRead('${key}')"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span>${icon}</span><strong style="font-size:12px;">${esc(n.title)}</strong>${!n.read?'<span style="margin-left:auto;font-size:9px;color:var(--accent);font-weight:700;">NEW</span>':''}</div><div style="font-size:11px;color:var(--navy3);">${esc(n.message)}</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">${new Date(n.timestamp).toLocaleString()}</div></div>`;
-  });
-  if(!mine.length)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No notifications</div>`;
-  if(content)content.innerHTML=html;if(dot)dot.classList.toggle('hidden',unread===0);
+  mine.forEach(([key,n])=>{if(!n.read)unread++;const icon=n.type==='success'?'✅':n.type==='error'?'❌':n.type==='warning'?'⚠️':'ℹ️';html+=`<div style="padding:12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;${n.read?'opacity:.65':''}" onclick="markNotificationRead('${key}')"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span>${icon}</span><strong style="font-size:12px;">${esc(n.title)}</strong>${!n.read?'<span style="margin-left:auto;font-size:9px;color:var(--accent);font-weight:700;">NEW</span>':''}</div><div style="font-size:11px;color:var(--navy3);">${esc(n.message)}</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">${new Date(n.timestamp).toLocaleString()}</div></div>`;});
+  if(!mine.length)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No notifications</div>`;if(content)content.innerHTML=html;if(dot)dot.classList.toggle('hidden',unread===0);
 }
 async function markNotificationRead(id){try{await update(ref(db,`notifications/${id}`),{read:true});}catch{}}
-
-/* ── PANELS ──────────────────────────────────────────────────── */
 function openPanel(panelId){document.getElementById('panelOverlay').classList.add('open');document.getElementById(panelId).classList.add('open');}
 function closeAllPanels(){document.getElementById('panelOverlay').classList.remove('open');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));}
 
 /* ── MY LEAVES ───────────────────────────────────────────────── */
 function updateMyLeaves(){
-  if(!appState.currentUser)return;
-  const container=document.getElementById('myLeavesContainer');if(!container)return;
-  let total=0,approved=0,pending=0,rejected=0,html='';
+  if(!appState.currentUser)return;const container=document.getElementById('myLeavesContainer');if(!container)return;let total=0,approved=0,pending=0,rejected=0,html='';
   const mine=Object.entries(appState.leaveRequests||{}).filter(([,l])=>l.empID===appState.currentUser.id).sort(([,a],[,b])=>new Date(b.submittedAt)-new Date(a.submittedAt));
-  mine.forEach(([leaveId,leave])=>{
-    total++;if(leave.status==='Approved')approved++;else if(leave.status==='Pending')pending++;else if(leave.status==='Rejected')rejected++;
-    const wd=leave.workingDays||1,statusClass=leave.status.toLowerCase();
-    html+=`<div class="leave-card ${statusClass}" data-status="${statusClass}"><div class="leave-type">${LEAVE_TYPES[leave.type]||esc(leave.type)}</div><div class="leave-dates">📅 ${leave.startDate}${leave.endDate!==leave.startDate?` → ${leave.endDate}`:''} · ${wd} working day${wd!==1?'s':''}</div><span class="status-badge badge-${statusClass}">● ${esc(leave.status)}</span><div class="leave-meta"><div style="margin-top:8px;font-size:11px;color:var(--navy3);">"${esc(leave.reason)}"</div><div style="margin-top:6px;font-size:10px;color:var(--muted);">Submitted ${new Date(leave.submittedAt).toLocaleDateString()}${leave.approvedBy?`<br>Approved by ${esc(leave.approvedBy)}`:''} ${leave.rejectedBy?`<br>Rejected by ${esc(leave.rejectedBy)}`:''} ${leave.cancelledBy?`<br>Cancelled by ${esc(leave.cancelledBy)}`:''}</div></div>${leave.status==='Pending'?`<div class="leave-actions"><button class="btn btn-amber btn-sm" onclick="cancelLeave('${leaveId}')">Cancel Request</button></div>`:''}</div>`;
-  });
-  if(!mine.length)html=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No leave requests yet. File one from your dashboard!</div>`;
-  container.innerHTML=html;
-  document.getElementById('totalLeaves').textContent=total;document.getElementById('approvedLeaves').textContent=approved;
-  document.getElementById('pendingLeaves').textContent=pending;document.getElementById('rejectedLeaves').textContent=rejected;
+  mine.forEach(([leaveId,leave])=>{total++;if(leave.status==='Approved')approved++;else if(leave.status==='Pending')pending++;else if(leave.status==='Rejected')rejected++;const wd=leave.workingDays||1,statusClass=leave.status.toLowerCase();html+=`<div class="leave-card ${statusClass}" data-status="${statusClass}"><div class="leave-type">${LEAVE_TYPES[leave.type]||esc(leave.type)}</div><div class="leave-dates">📅 ${leave.startDate}${leave.endDate!==leave.startDate?` → ${leave.endDate}`:''} · ${wd} working day${wd!==1?'s':''}</div><span class="status-badge badge-${statusClass}">● ${esc(leave.status)}</span><div class="leave-meta"><div style="margin-top:8px;font-size:11px;color:var(--navy3);">"${esc(leave.reason)}"</div><div style="margin-top:6px;font-size:10px;color:var(--muted);">Submitted ${new Date(leave.submittedAt).toLocaleDateString()}${leave.approvedBy?`<br>Approved by ${esc(leave.approvedBy)}`:''} ${leave.rejectedBy?`<br>Rejected by ${esc(leave.rejectedBy)}`:''} ${leave.cancelledBy?`<br>Cancelled by ${esc(leave.cancelledBy)}`:''}</div></div>${leave.status==='Pending'?`<div class="leave-actions"><button class="btn btn-amber btn-sm" onclick="cancelLeave('${leaveId}')">Cancel Request</button></div>`:''}</div>`;});
+  if(!mine.length)html=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No leave requests yet. File one from your dashboard!</div>`;container.innerHTML=html;
+  document.getElementById('totalLeaves').textContent=total;document.getElementById('approvedLeaves').textContent=approved;document.getElementById('pendingLeaves').textContent=pending;document.getElementById('rejectedLeaves').textContent=rejected;
 }
 
 function searchMyLeaves(){
-  const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();
-  let t=0,a=0,p=0,r=0;
-  document.querySelectorAll('#myLeavesContainer .leave-card').forEach(c=>{
-    const vis=c.textContent.toLowerCase().includes(q);c.style.display=vis?'':'none';
-    if(vis){t++;const st=c.getAttribute('data-status')||'';if(st==='approved')a++;else if(st==='pending')p++;else if(st==='rejected')r++;}
-  });
-  document.getElementById('totalLeaves').textContent=t;document.getElementById('approvedLeaves').textContent=a;
-  document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;
+  const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();let t=0,a=0,p=0,r=0;
+  document.querySelectorAll('#myLeavesContainer .leave-card').forEach(c=>{const vis=c.textContent.toLowerCase().includes(q);c.style.display=vis?'':'none';if(vis){t++;const st=c.getAttribute('data-status')||'';if(st==='approved')a++;else if(st==='pending')p++;else if(st==='rejected')r++;}});
+  document.getElementById('totalLeaves').textContent=t;document.getElementById('approvedLeaves').textContent=a;document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;
 }
 
 /* ── BULK REGISTER ───────────────────────────────────────────── */
 function toggleBulkRegister(){document.getElementById('bulkRegisterPanel').classList.toggle('hidden');}
 async function runBulkRegister(){
-  const raw=document.getElementById('bulkRegisterData').value.trim();if(!raw){showToast('No data entered','error');return;}
-  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  const prog=document.getElementById('bulkProgress');prog.classList.remove('hidden');
-  let ok=0,fail=0;
-  for(let i=0;i<lines.length;i++){
-    const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());
-    prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;
-    if(!fullName||!email||!password){fail++;continue;}
-    try{
-      const cred=await createUserWithEmailAndPassword(secondaryAuth,email,password);
-      const uid=cred.user.uid;
-      await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,mealAllow:2000,transpoAllow:1500,statBenefits:1000,disabled:false});
-      ok++;
-    }catch(e){console.error('Bulk fail',email,e);fail++;}
-    finally{try{await signOut(secondaryAuth);}catch{}}
-  }
-  prog.textContent=`✅ Done: ${ok} created, ${fail} failed.`;
-  if(ok>0){renderDirectory();showToast(`${ok} employee(s) registered!`,'success');}
-  if(fail>0)showToast(`${fail} failed — check console`,'error');
+  const raw=document.getElementById('bulkRegisterData').value.trim();if(!raw){showToast('No data entered','error');return;}const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);const prog=document.getElementById('bulkProgress');prog.classList.remove('hidden');let ok=0,fail=0;
+  for(let i=0;i<lines.length;i++){const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;if(!fullName||!email||!password){fail++;continue;}
+    try{const cred=await createUserWithEmailAndPassword(secondaryAuth,email,password);const uid=cred.user.uid;await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});ok++;}catch(e){console.error('Bulk fail',email,e);fail++;}
+    finally{try{await signOut(secondaryAuth);}catch{}}}
+  prog.textContent=`✅ Done: ${ok} created, ${fail} failed.`;if(ok>0){renderDirectory();showToast(`${ok} employee(s) registered!`,'success');}if(fail>0)showToast(`${fail} failed — check console`,'error');
 }
 
 /* ── TIMESTAMP SHEET ─────────────────────────────────────────── */
 function renderTimestamps(){
-  const el=document.getElementById('timestampTable');if(!el)return;
-  const month=parseInt(document.getElementById('tsMonth').value);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const daysInMonth=new Date(year,month+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const el=document.getElementById('timestampTable');if(!el)return;const month=parseInt(document.getElementById('tsMonth').value);const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();const daysInMonth=new Date(year,month+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   let html=`<table><thead><tr><th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:200px;">DAILY TIME RECORD<br><small>${MONTH_FULL[month].toUpperCase()} ${year}</small></th><th rowspan="3" style="background:#fffde7;min-width:80px;">POSITION</th>`;
-  for(let d=1;d<=daysInMonth;d++){const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6;html+=`<th colspan="2" style="${isW?'background:#e8f5e9':'background:#fffde7'}">${d}</th>`;}
-  html+=`</tr><tr>`;
-  for(let d=1;d<=daysInMonth;d++){const w=new Date(year,month,d).getDay(),isW=w===0||w===6;html+=`<th colspan="2" style="${isW?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e'};font-size:9px;">${DAY[w]}</th>`;}
-  html+=`</tr><tr>`;
-  for(let d=1;d<=daysInMonth;d++){const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6;html+=`<th style="${isW?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1'};font-size:9px;">IN</th><th style="${isW?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f'};font-size:9px;">OUT</th>`;}
-  html+=`</tr></thead><tbody>`;
-  for(const[uid,user]of activeEmployeesSorted()){
-    const att=appState.attendance[uid]||{};const shift=user['shift_'+month]||user.defaultShift||user.position||'';
-    const parts=(user.fullName||'').trim().split(' ');const last=parts.length>1?parts[parts.length-1].toUpperCase():(user.fullName||'').toUpperCase();const first=parts.length>1?parts.slice(0,-1).join(' ').toUpperCase():'';
-    html+=`<tr><td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">${esc(last)}</td><td style="text-align:left;padding:4px 8px;white-space:nowrap;">${esc(first)}</td><td style="text-align:center;font-size:11px;">${esc(shift)}</td>`;
-    for(let d=1;d<=daysInMonth;d++){
-      const k=`${month}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const status=att[k]||'';
-      const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6,bg=isW?'background:#f1f8e9;':'';
-      let inText='';if(tin)inText=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});else if(status&&status!=='P')inText=status;
-      html+=`<td style="${bg}font-size:10px;${late?'color:#dc2626;font-weight:700;':''}">${esc(inText)}${late?`<br><span style="font-size:8px;">+${late}m</span>`:''}</td><td style="${bg}font-size:10px;">${esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')}</td>`;
-    }
-    html+=`</tr>`;
-  }
+  for(let d=1;d<=daysInMonth;d++){const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6;html+=`<th colspan="2" style="${isW?'background:#e8f5e9':'background:#fffde7'}">${d}</th>`;}html+=`</tr><tr>`;
+  for(let d=1;d<=daysInMonth;d++){const w=new Date(year,month,d).getDay(),isW=w===0||w===6;html+=`<th colspan="2" style="${isW?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e'};font-size:9px;">${DAY[w]}</th>`;}html+=`</tr><tr>`;
+  for(let d=1;d<=daysInMonth;d++){const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6;html+=`<th style="${isW?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1'};font-size:9px;">IN</th><th style="${isW?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f'};font-size:9px;">OUT</th>`;}html+=`</tr></thead><tbody>`;
+  for(const[uid,user]of activeEmployeesSorted()){const att=appState.attendance[uid]||{};const shift=user['shift_'+month]||user.defaultShift||user.position||'';const parts=(user.fullName||'').trim().split(' ');const last=parts.length>1?parts[parts.length-1].toUpperCase():(user.fullName||'').toUpperCase();const first=parts.length>1?parts.slice(0,-1).join(' ').toUpperCase():'';html+=`<tr><td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">${esc(last)}</td><td style="text-align:left;padding:4px 8px;white-space:nowrap;">${esc(first)}</td><td style="text-align:center;font-size:11px;">${esc(shift)}</td>`;for(let d=1;d<=daysInMonth;d++){const k=`${month}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const status=att[k]||'';const isW=new Date(year,month,d).getDay()===0||new Date(year,month,d).getDay()===6,bg=isW?'background:#f1f8e9;':'';let inText='';if(tin)inText=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});else if(status&&status!=='P')inText=status;html+=`<td style="${bg}font-size:10px;${late?'color:#dc2626;font-weight:700;':''}">${esc(inText)}${late?`<br><span style="font-size:8px;">+${late}m</span>`:''}</td><td style="${bg}font-size:10px;">${esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')}</td>`;}html+=`</tr>`;}
   html+=`</tbody></table>`;el.innerHTML=html;
 }
 
 function exportTimestampsToExcel(){
-  const month=parseInt(document.getElementById('tsMonth').value);
-  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const days=new Date(year,month+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const r1=[`DTR - ${MONTH_FULL[month].toUpperCase()} ${year}`,'','POSITION'];
-  const r2=['EMPLOYEES','',''],r3=['LAST NAME','FIRST NAME',''];
+  const month=parseInt(document.getElementById('tsMonth').value);const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();const days=new Date(year,month+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const r1=[`DTR - ${MONTH_FULL[month].toUpperCase()} ${year}`,'','POSITION'],r2=['EMPLOYEES','',''],r3=['LAST NAME','FIRST NAME',''];
   for(let d=1;d<=days;d++){r1.push(`${d}/${month+1}`,'');r2.push(DAY[new Date(year,month,d).getDay()],'');r3.push('IN','OUT');}
   const data=[r1,r2,r3];
-  for(const[uid,user]of activeEmployeesSorted()){
-    const att=appState.attendance[uid]||{};const shift=user['shift_'+month]||user.defaultShift||user.dept||'';
-    const parts=(user.fullName||'').trim().split(' ');const last=parts.length>1?parts[parts.length-1].toUpperCase():(user.fullName||'').toUpperCase();const first=parts.length>1?parts.slice(0,-1).join(' ').toUpperCase():'';
-    const row=[last,first,shift];
-    for(let d=1;d<=days;d++){const k=`${month}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const status=att[k]||'';let inText='';if(tin){inText=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});if(late)inText+=` (+${late}m)`;}else if(status&&status!=='P')inText=status;row.push(inText,tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'');}
-    data.push(row);
-  }
-  const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:18},{wch:18},{wch:12},...Array(days*2).fill({wch:10})];
-  ws['!merges']=[];for(let d=0;d<days;d++){ws['!merges'].push({s:{r:0,c:3+d*2},e:{r:0,c:4+d*2}},{s:{r:1,c:3+d*2},e:{r:1,c:4+d*2}});}
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${MONTH_FULL[month]} ${year}`);
-  XLSX.writeFile(wb,`DTR_${MONTH_FULL[month]}_${year}.xlsx`);
+  for(const[uid,user]of activeEmployeesSorted()){const att=appState.attendance[uid]||{};const shift=user['shift_'+month]||user.defaultShift||user.dept||'';const parts=(user.fullName||'').trim().split(' ');const last=parts.length>1?parts[parts.length-1].toUpperCase():(user.fullName||'').toUpperCase();const first=parts.length>1?parts.slice(0,-1).join(' ').toUpperCase():'';const row=[last,first,shift];for(let d=1;d<=days;d++){const k=`${month}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const status=att[k]||'';let inText='';if(tin){inText=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});if(late)inText+=` (+${late}m)`;}else if(status&&status!=='P')inText=status;row.push(inText,tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'');}data.push(row);}
+  const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:18},{wch:18},{wch:12},...Array(days*2).fill({wch:10})];ws['!merges']=[];for(let d=0;d<days;d++){ws['!merges'].push({s:{r:0,c:3+d*2},e:{r:0,c:4+d*2}},{s:{r:1,c:3+d*2},e:{r:1,c:4+d*2}});}
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${MONTH_FULL[month]} ${year}`);XLSX.writeFile(wb,`DTR_${MONTH_FULL[month]}_${year}.xlsx`);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PAYROLL MODULE – EXACT MATCH
+   PAYROLL MODULE — EXACT MATCH TO NUEBE EXCEL FORMAT
+   ══════════════════════════════════════════════════════════════
+
+   VERIFIED FORMULAS:
+   • Meal      = pCount×₱200 + rdsCount×₱200 + hdCount×₱100
+                 (per =COUNTIF(…,"P")*1 + COUNTIF(…,"RDS")*1 + COUNTIF(…,"HD")*0.5 × ₱200)
+   • Night Diff= actualNightHrs × (daily/8) × 10%
+                 Night hours = 10PM–6AM from clock timestamps
+                 (fallback: 80h if shift label contains "night", else 0)
+   • TotalAllow= daily(colK) + meal + transpo + bday + ND + stat + regHol + specHol
+   • Net Salary= cutoff + meal + transpo + bday + ND + stat + regHol + specHol − deductions
+                 (colK daily is display-only, NOT added to net)
    ══════════════════════════════════════════════════════════════ */
 
-function getNightMinutes(clockIn, clockOut) {
-  if (!clockIn || !clockOut) return 0;
-  const toMins = d => d.getHours() * 60 + d.getMinutes();
-  let start = toMins(clockIn);
-  let end   = toMins(clockOut);
-  if (end < start) end += 24 * 60;
-  const nightStart = 22 * 60;
-  const nightEnd   = 6  * 60 + 24 * 60;
-  const oStart = Math.max(start, nightStart);
-  const oEnd   = Math.min(end,   nightEnd);
-  return Math.max(0, oEnd - oStart);
-}
+function buildPayrollRows(month,pStart,pEnd,year){
+  const rows=[];let sn=1;
+  for(const[uid,user]of activeEmployeesSorted()){
+    const att=appState.attendance[uid]||{};
+    const salary=Math.max(0,parseFloat(user.monthlySalary)||0);
+    const cutoff=salary/2,daily=salary/WD_BASIS;
 
-function computeNightHours(uid, month, pStart, pEnd) {
-  const att   = appState.attendance[uid] || {};
-  const user  = appState.users[uid] || {};
-  let totalMins = 0;
-  let hasAnyTimestamp = false;
-
-  for (let d = pStart; d <= pEnd; d++) {
-    const key    = `${month}_${d}`;
-    const status = att[key] || '';
-    const ci     = att[`${key}_time`];
-    const co     = att[`${key}_out`];
-    if ((status === 'P' || status === 'RDS') && ci && co) {
-      hasAnyTimestamp = true;
-      totalMins += getNightMinutes(new Date(ci), new Date(co));
-    }
-  }
-
-  if (!hasAnyTimestamp) {
-    const shift = (user['shift_' + month] || user.defaultShift || '').toLowerCase();
-    return shift.includes('night') ? 80 : 0;
-  }
-  return totalMins / 60;
-}
-
-function buildPayrollRows(month, pStart, pEnd, year) {
-  const rows = [];
-  let sn = 1;
-
-  for (const [uid, user] of activeEmployeesSorted()) {
-    const att    = appState.attendance[uid] || {};
-    const salary = Math.max(0, parseFloat(user.monthlySalary) || 0);
-    const cutoff = salary / 2;
-    const daily  = salary / WD_BASIS;
-
-    let pCount = 0, rdsCount = 0, hdCount = 0;
-    let absentDays = 0, lateMins = 0, undertimeHrs = 0;
-
-    for (let d = pStart; d <= pEnd; d++) {
-      const key    = `${month}_${d}`;
-      const status = att[key] || '';
-      const late   = parseInt(att[`${key}_late`] || 0);
-      lateMins += late;
-
-      switch (status) {
-        case 'P':                           pCount++;                       break;
-        case 'RDS':                         rdsCount++;                     break;
-        case 'HD':                          hdCount++;                      break;
-        case 'UT':   pCount++;  undertimeHrs += 1;                         break;
-        case 'A':
-        case 'NPL':
-        case 'NPSL':
-        case 'S':                           absentDays++;                   break;
-        default: break;
+    // Count attendance
+    let pCount=0,rdsCount=0,hdCount=0,absentDays=0,lateMins=0,undertimeHrs=0;
+    for(let d=pStart;d<=pEnd;d++){
+      const key=`${month}_${d}`,status=att[key]||'',late=parseInt(att[`${key}_late`]||0);
+      lateMins+=late;
+      switch(status){
+        case'P':pCount++;break;case'RDS':rdsCount++;break;case'HD':hdCount++;break;
+        case'UT':pCount++;undertimeHrs+=1;break;
+        case'A':case'NPL':case'NPSL':case'S':absentDays++;break;
+        // SL,VL,BL,PL,ML = paid, not absent, not counted in meal (not physically present)
       }
     }
 
-    const meal    = pCount * 200 + rdsCount * 200 + hdCount * 100;
-    const transpo = Math.max(0, parseFloat(user.transpoAllow)  || 0);
-    const stat    = Math.max(0, parseFloat(user.statBenefits)  || 0);
-    const bday    = 0;
+    // MEAL = P×200 + RDS×200 + HD×100 (EXACT formula from Excel)
+    const meal=pCount*200+rdsCount*200+hdCount*100;
 
-    const nightHrs  = computeNightHours(uid, month, pStart, pEnd);
-    const nightDiff = nightHrs * (daily / 8) * 0.10;
+    // Fixed allowances from employee record
+    const transpo=Math.max(0,parseFloat(user.transpoAllow)||0);
+    const stat=Math.max(0,parseFloat(user.statBenefits)||0);
+    const bday=0;
 
-    const regHolDays = 0, regHol  = 0;
-    const specHolDays = 0, specHol = 0;
+    // Night differential: actual 10PM-6AM hours
+    const nightHrs=computeNightHours(uid,month,pStart,pEnd);
+    const nightDiff=nightHrs*(daily/8)*0.10;
 
-    const colK = daily;
-    const totalAllow = colK + meal + transpo + bday + nightDiff + stat + regHol + specHol;
+    // Holidays — manually entered per period, default 0
+    const regHolDays=0,regHol=0,specHolDays=0,specHol=0;
 
-    const absencesAmt  = absentDays    * daily;
-    const tardinessAmt = lateMins  > 0 ? (lateMins  / 60) * (daily / 8) : 0;
-    const undertimeAmt = undertimeHrs > 0 ? undertimeHrs   * (daily / 8) : 0;
-    const totalDeduct  = absencesAmt + tardinessAmt + undertimeAmt;
+    // Column K = daily rate (shown in TotalAllow, NOT in Net)
+    const colK=daily;
+    const totalAllow=colK+meal+transpo+bday+nightDiff+stat+regHol+specHol;
 
-    const netSalary = cutoff + meal + transpo + bday + nightDiff + stat + regHol + specHol - totalDeduct;
+    // Deductions
+    const absencesAmt=absentDays*daily;
+    const tardinessAmt=lateMins>0?(lateMins/60)*(daily/8):0;
+    const undertimeAmt=undertimeHrs>0?undertimeHrs*(daily/8):0;
+    const totalDeduct=absencesAmt+tardinessAmt+undertimeAmt;
 
-    const nameParts = (user.fullName || '').trim().split(' ');
-    const lastName  = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (user.fullName || '');
-    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
+    // Net = cutoff + allowances (without colK) - deductions
+    const netSalary=cutoff+meal+transpo+bday+nightDiff+stat+regHol+specHol-totalDeduct;
 
-    rows.push({
-      sn, uid, lastName, firstName,
-      position:  user.position || user.dept || '',
-      fullName:  user.fullName || '',
-      salary, cutoff, daily, colK,
-      meal, transpo, bday,
-      nightHrs, nightDiff, stat,
-      regHolDays, regHol, specHolDays, specHol,
-      totalAllow,
-      absentDays, absencesAmt,
-      lateMins, tardinessAmt,
-      undertimeHrs, undertimeAmt,
-      totalDeduct, netSalary,
-      hireDate: user.hireDate || '',
-      empNo:    user.empID || uid,
-      pCount, rdsCount, hdCount,
-    });
+    const nameParts=(user.fullName||'').trim().split(' ');
+    const lastName=nameParts.length>1?nameParts[nameParts.length-1]:(user.fullName||'');
+    const firstName=nameParts.length>1?nameParts.slice(0,-1).join(' '):'';
+
+    rows.push({sn,uid,lastName,firstName,position:user.position||user.dept||'',fullName:user.fullName||'',salary,cutoff,daily,colK,meal,transpo,bday,nightHrs,nightDiff,stat,regHolDays,regHol,specHolDays,specHol,totalAllow,absentDays,absencesAmt,lateMins,tardinessAmt,undertimeHrs,undertimeAmt,totalDeduct,netSalary,hireDate:user.hireDate||'',empNo:user.empID||uid,pCount,rdsCount,hdCount});
     sn++;
   }
   return rows;
 }
 
-function renderPayrollPreview() {
-  if (!isHRorAdmin()) { showToast('Restricted to HR and Admin', 'error'); return; }
-  const month = parseInt(document.getElementById('pyMonth').value);
-  if (isNaN(month)) return;
-  const period = document.getElementById('pyPeriod').value;
-  const [pS, pEr] = period.split('-').map(Number);
-  const now  = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
-  const dim  = new Date(year, month + 1, 0).getDate();
-  const pE   = pEr >= 28 ? dim : pEr;
-  const rows = buildPayrollRows(month, pS, pE, year);
+function renderPayrollPreview(){
+  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
+  const month=parseInt(document.getElementById('pyMonth').value);if(isNaN(month))return;
+  const period=document.getElementById('pyPeriod').value;const[pS,pEr]=period.split('-').map(Number);
+  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,month+1,0).getDate(),pE=pEr>=28?dim:pEr;
+  const rows=buildPayrollRows(month,pS,pE,year);
+  const label=`${MONTH_FULL[month].toUpperCase()} ${pS} – ${pE}, ${year}`;
+  document.getElementById('pyPeriodLabel').textContent=label;
 
-  const label = `${MONTH_FULL[month].toUpperCase()} ${pS} – ${pE}, ${year}`;
-  document.getElementById('pyPeriodLabel').textContent = label;
+  if(!rows.length){document.getElementById('payrollPreview').innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;document.getElementById('pyStats').style.display='none';return;}
 
-  if (!rows.length) {
-    document.getElementById('payrollPreview').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;
-    document.getElementById('pyStats').style.display = 'none';
-    return;
-  }
+  const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nightDiff:a.nightDiff+r.nightDiff,stat:a.stat+r.stat,regHol:a.regHol+r.regHol,specHol:a.specHol+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absencesAmt:a.absencesAmt+r.absencesAmt,tardinessAmt:a.tardinessAmt+r.tardinessAmt,undertimeAmt:a.undertimeAmt+r.undertimeAmt,totalDeduct:a.totalDeduct+r.totalDeduct,netSalary:a.netSalary+r.netSalary}),{salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0});
 
-  const T = rows.reduce((a, r) => ({
-    salary:       a.salary       + r.salary,
-    cutoff:       a.cutoff       + r.cutoff,
-    meal:         a.meal         + r.meal,
-    transpo:      a.transpo      + r.transpo,
-    nightDiff:    a.nightDiff    + r.nightDiff,
-    stat:         a.stat         + r.stat,
-    regHol:       a.regHol       + r.regHol,
-    specHol:      a.specHol      + r.specHol,
-    totalAllow:   a.totalAllow   + r.totalAllow,
-    absencesAmt:  a.absencesAmt  + r.absencesAmt,
-    tardinessAmt: a.tardinessAmt + r.tardinessAmt,
-    undertimeAmt: a.undertimeAmt + r.undertimeAmt,
-    totalDeduct:  a.totalDeduct  + r.totalDeduct,
-    netSalary:    a.netSalary    + r.netSalary,
-  }), { salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0 });
-
-  document.getElementById('pyStats').style.display = '';
-  document.getElementById('pyStats').innerHTML = `
+  document.getElementById('pyStats').style.display='';
+  document.getElementById('pyStats').innerHTML=`
     <div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">${rows.length}</div><div class="ps-sub">${label}</div></div>
     <div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">${php(T.netSalary)}</div></div>
     <div class="py-stat amber"><div class="ps-label">Total Cut-off Basic</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div>
     <div class="py-stat purple"><div class="ps-label">Total Meal Allow</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div><div class="ps-sub">₱200/P·RDS, ₱100/HD</div></div>
     <div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">${php(T.totalDeduct)}</div></div>`;
 
-  let html = `<table>
-    <thead>
-      <tr>
-        <th rowspan="2" style="min-width:30px;">#</th>
-        <th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th>
-        <th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th>
-        <th rowspan="2" style="text-align:left;min-width:130px;">POSITION</th>
-        <th rowspan="2">MONTHLY BASIC</th>
-        <th rowspan="2">CUT-OFF BASIC</th>
-        <th rowspan="2">DAILY RATE</th>
-        <th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">NO RD ADJ<br><small style="font-size:9px;">(col K = daily)</small></th>
-        <th colspan="5" style="background:#1e40af;color:#fff;text-align:center;">ALLOWANCES</th>
-        <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
-        <th colspan="3" style="background:#991b1b;color:#fff;text-align:center;">DEDUCTIONS</th>
-        <th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th>
-      </tr>
-      <tr>
-        <th style="background:#2563eb;color:#fff;">MEAL<br><small>P/RDS=₱200<br>HD=₱100</small></th>
-        <th style="background:#2563eb;color:#fff;">TRANSPO</th>
-        <th style="background:#2563eb;color:#fff;">NIGHT HRS</th>
-        <th style="background:#2563eb;color:#fff;">NIGHT DIFF<br><small>hrs×(daily/8)×10%</small></th>
-        <th style="background:#2563eb;color:#fff;">STAT</th>
-        <th style="background:#b91c1c;color:#fff;">ABS DAYS</th>
-        <th style="background:#b91c1c;color:#fff;">ABS AMT</th>
-        <th style="background:#b91c1c;color:#fff;">TARD/UT</th>
-      </tr>
-    </thead>
-    <tbody>`;
+  let html=`<table><thead>
+    <tr>
+      <th rowspan="2">#</th><th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th><th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th><th rowspan="2" style="text-align:left;min-width:120px;">POSITION</th>
+      <th rowspan="2">MONTHLY</th><th rowspan="2">CUT-OFF</th><th rowspan="2">DAILY</th><th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">NO RD ADJ<br><small style="font-size:9px;">(col K)</small></th>
+      <th colspan="5" style="background:#1e40af;color:#fff;text-align:center;">ALLOWANCES</th>
+      <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
+      <th colspan="3" style="background:#991b1b;color:#fff;text-align:center;">DEDUCTIONS</th>
+      <th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th>
+    </tr>
+    <tr>
+      <th style="background:#2563eb;color:#fff;">MEAL<br><small>P/RDS=₱200 HD=₱100</small></th>
+      <th style="background:#2563eb;color:#fff;">TRANSPO</th>
+      <th style="background:#2563eb;color:#fff;">NIGHT HRS</th>
+      <th style="background:#2563eb;color:#fff;">NIGHT DIFF<br><small>hrs×(daily/8)×10%</small></th>
+      <th style="background:#2563eb;color:#fff;">STAT</th>
+      <th style="background:#b91c1c;color:#fff;">ABS DAYS</th>
+      <th style="background:#b91c1c;color:#fff;">ABS AMT</th>
+      <th style="background:#b91c1c;color:#fff;">TARD/UT</th>
+    </tr>
+  </thead><tbody>`;
 
-  rows.forEach(r => {
-    html += `<tr>
+  rows.forEach(r=>{
+    html+=`<tr>
       <td class="ctr" style="color:var(--muted);">${r.sn}</td>
       <td class="txt" style="font-weight:700;">${esc(r.lastName)}</td>
       <td class="txt">${esc(r.firstName)}</td>
@@ -1877,340 +1181,104 @@ function renderPayrollPreview() {
       <td class="allow-cell">${php(r.nightDiff)}</td>
       <td class="allow-cell">${php(r.stat)}</td>
       <td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td>
-      <td class="deduct-cell">${r.absentDays > 0 ? r.absentDays + ' days' : '—'}</td>
-      <td class="deduct-cell">${r.absencesAmt > 0 ? php(r.absencesAmt) : '—'}</td>
-      <td class="deduct-cell">${r.tardinessAmt > 0 || r.undertimeAmt > 0 ? php(r.tardinessAmt + r.undertimeAmt) : '—'}</td>
+      <td class="deduct-cell">${r.absentDays>0?r.absentDays+' days':'—'}</td>
+      <td class="deduct-cell">${r.absencesAmt>0?php(r.absencesAmt):'—'}</td>
+      <td class="deduct-cell">${r.tardinessAmt+r.undertimeAmt>0?php(r.tardinessAmt+r.undertimeAmt):'—'}</td>
       <td class="net-cell">${php(r.netSalary)}</td>
     </tr>`;
   });
 
-  html += `<tr class="total-row">
-    <td colspan="4" style="text-align:right;letter-spacing:1px;padding:10px 12px;">GRAND TOTALS</td>
-    <td>${php(T.salary)}</td>
-    <td>${php(T.cutoff)}</td>
-    <td colspan="2"></td>
-    <td>${php(T.meal)}</td>
-    <td>${php(T.transpo)}</td>
-    <td></td>
-    <td>${php(T.nightDiff)}</td>
-    <td>${php(T.stat)}</td>
-    <td>${php(T.totalAllow)}</td>
-    <td></td>
-    <td>${php(T.absencesAmt)}</td>
-    <td>${php(T.tardinessAmt + T.undertimeAmt)}</td>
+  html+=`<tr class="total-row">
+    <td colspan="4" style="text-align:right;padding:10px 12px;letter-spacing:1px;">GRAND TOTALS</td>
+    <td>${php(T.salary)}</td><td>${php(T.cutoff)}</td><td colspan="2"></td>
+    <td>${php(T.meal)}</td><td>${php(T.transpo)}</td><td></td><td>${php(T.nightDiff)}</td><td>${php(T.stat)}</td>
+    <td>${php(T.totalAllow)}</td><td></td><td>${php(T.absencesAmt)}</td><td>${php(T.tardinessAmt+T.undertimeAmt)}</td>
     <td style="font-size:13px;">${php(T.netSalary)}</td>
   </tr></tbody></table>`;
-
-  document.getElementById('payrollPreview').innerHTML = html;
+  document.getElementById('payrollPreview').innerHTML=html;
 }
 
-function exportPayrollExcel() {
-  if (!isHRorAdmin()) { showToast('Restricted to HR and Admin', 'error'); return; }
-  const month = parseInt(document.getElementById('pyMonth').value);
-  if (isNaN(month)) { showToast('Please select a month', 'error'); return; }
-  const period = document.getElementById('pyPeriod').value;
-  const [pS, pEr] = period.split('-').map(Number);
-  const now  = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
-  const dim  = new Date(year, month + 1, 0).getDate();
-  const pEnd = pEr >= 28 ? dim : pEr;
+/* ── PAYROLL EXCEL EXPORT ────────────────────────────────────── */
+function exportPayrollExcel(){
+  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}
+  const month=parseInt(document.getElementById('pyMonth').value);if(isNaN(month)){showToast('Please select a month','error');return;}
+  const period=document.getElementById('pyPeriod').value;const[pS,pEr]=period.split('-').map(Number);
+  const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,month+1,0).getDate(),pEnd=pEr>=28?dim:pEr;
+  const rows=buildPayrollRows(month,pS,pEnd,year);if(!rows.length){showToast('No employee data to export','error');return;}
+  const mLabel=`${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pS},${year}`,mEnd=`${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`,remark=`${MONTH_FULL[month].toUpperCase()} ${pS} TO ${pEnd}`;
+  const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nightDiff:a.nightDiff+r.nightDiff,stat:a.stat+r.stat,regHol:a.regHol+r.regHol,specHol:a.specHol+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absencesAmt:a.absencesAmt+r.absencesAmt,tardinessAmt:a.tardinessAmt+r.tardinessAmt,undertimeAmt:a.undertimeAmt+r.undertimeAmt,totalDeduct:a.totalDeduct+r.totalDeduct,netSalary:a.netSalary+r.netSalary}),{salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0});
+  const wb=XLSX.utils.book_new();
 
-  const rows = buildPayrollRows(month, pS, pEnd, year);
-  if (!rows.length) { showToast('No employee data to export', 'error'); return; }
+  /* SHEET 1: REQUEST CLAIM */
+  const sheet1=[['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],[1,new Date(),'Salary for Staff','',rows.length,T.netSalary,'AFB','AFB','All','Salary and Wages',remark,'',''],[2,new Date(),'Salary Charge Fee','',1,300,'AFB','AFB','All','Salary Charge Fee',remark,'',''],[],['','','','','',T.netSalary+300]];
+  const ws1=XLSX.utils.aoa_to_sheet(sheet1,{cellDates:true});ws1['!cols']=[{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];XLSX.utils.book_append_sheet(wb,ws1,'REQUEST CLAIM');
 
-  const mLabel = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pS},${year}`;
-  const mEnd   = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`;
-  const remark = `${MONTH_FULL[month].toUpperCase()} ${pS} TO ${pEnd}`;
+  /* SHEET 2: PAYROLL REQUEST */
+  const sheet2=[['Pay Period','','','','','BASIC',T.cutoff,...Array(26).fill('')],['Start',mLabel,'','','','OT',0],['End',mEnd,'','','','MEAL',T.meal],['','','','','TRANSPO',T.transpo],['Total Salary',T.netSalary,'','','','BIRTHDAY',0],['','','','','ND',T.nightDiff],['','','','','STAT',T.stat],['','','','','Regular Holiday',T.regHol],['','','','','Speacial Holiday',T.specHol]];
+  const r10=Array(33).fill('');r10[5]='DISCREPANCY';r10[6]=0;r10[14]='Allowances';r10[26]='Deductions';sheet2.push(r10);
+  sheet2.push(['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','','Overtime','Discrepancy','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary']);
+  const r12=Array(33).fill('');r12[3]='AFB / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;r12[18]=T.nightDiff;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;r12[24]=T.totalAllow;r12[26]=T.absencesAmt;r12[28]=T.tardinessAmt;r12[30]=T.undertimeAmt;r12[31]=T.totalDeduct;r12[32]=T.netSalary;sheet2.push(r12);
+  rows.forEach(r=>{sheet2.push([r.sn,r.lastName,r.firstName,r.position,r.fullName,r.salary,r.hireDate?new Date(r.hireDate):'',r.cutoff,r.daily,0,r.colK,0,0,0,r.meal,r.transpo,r.bday,r.nightHrs,r.nightDiff,r.stat,r.regHolDays,r.regHol,r.specHolDays,r.specHol,r.totalAllow,r.absentDays,r.absencesAmt,r.lateMins,r.tardinessAmt,r.undertimeHrs,r.undertimeAmt,r.totalDeduct,r.netSalary]);});
+  const ws2=XLSX.utils.aoa_to_sheet(sheet2,{cellDates:true});
+  ws2['!cols']=[{wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20},{wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},{wch:11},{wch:7.29},{wch:9},{wch:8},{wch:10.71},{wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},{wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},{wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},{wch:14.29},{wch:15.86},{wch:8.71}];
+  ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{r:9,c:31}}];
+  // Header row styling
+  const grayFill={patternType:'solid',fgColor:{rgb:'666666'}},whiteBold={color:{rgb:'FFFFFF'},bold:true,sz:9},greenFill={patternType:'solid',fgColor:{rgb:'92D050'}},yellowFill={patternType:'solid',fgColor:{rgb:'FFFF00'}};
+  const hRow=10,sRow=11;
+  [0,1,2,3,4,5,6,7,8,11,12,24,31,32].forEach(c=>{const a=XLSX.utils.encode_cell({r:hRow,c});if(ws2[a])ws2[a].s={fill:grayFill,font:whiteBold,alignment:{wrapText:true,vertical:'center',horizontal:'center'}};});
+  for(let c=0;c<33;c++){const a=XLSX.utils.encode_cell({r:sRow,c});if(ws2[a])ws2[a].s={fill:yellowFill};}
+  const g11=XLSX.utils.encode_cell({r:hRow,c:6});if(ws2[g11])ws2[g11].s={fill:greenFill,font:whiteBold};
+  const g1=XLSX.utils.encode_cell({r:0,c:6});if(ws2[g1])ws2[g1].s={fill:greenFill};
+  XLSX.utils.book_append_sheet(wb,ws2,'PAYROLL REQUEST');
 
-  const T = rows.reduce((a, r) => ({
-    salary:       a.salary       + r.salary,
-    cutoff:       a.cutoff       + r.cutoff,
-    meal:         a.meal         + r.meal,
-    transpo:      a.transpo      + r.transpo,
-    nightDiff:    a.nightDiff    + r.nightDiff,
-    stat:         a.stat         + r.stat,
-    regHol:       a.regHol       + r.regHol,
-    specHol:      a.specHol      + r.specHol,
-    totalAllow:   a.totalAllow   + r.totalAllow,
-    absencesAmt:  a.absencesAmt  + r.absencesAmt,
-    tardinessAmt: a.tardinessAmt + r.tardinessAmt,
-    undertimeAmt: a.undertimeAmt + r.undertimeAmt,
-    totalDeduct:  a.totalDeduct  + r.totalDeduct,
-    netSalary:    a.netSalary    + r.netSalary,
-  }), { salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0 });
-
-  const wb = XLSX.utils.book_new();
-
-  /* ── SHEET 1: REQUEST CLAIM ─────────────────────────────── */
-  const sheet1 = [
-    ['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],
-    [1, new Date(), 'Salary for Staff', '', rows.length, T.netSalary, 'AFB','AFB','All','Salary and Wages', remark, '', ''],
-    [2, new Date(), 'Salary Charge Fee', '', 1, 300, 'AFB','AFB','All','Salary Charge Fee', remark, '', ''],
-    [],
-    ['','','','','', T.netSalary + 300],
-  ];
-  const ws1 = XLSX.utils.aoa_to_sheet(sheet1, { cellDates: true });
-  ws1['!cols'] = [{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
-  XLSX.utils.book_append_sheet(wb, ws1, 'REQUEST CLAIM');
-
-  /* ── SHEET 2: PAYROLL REQUEST ────────────────────────────── */
-  const sheet2 = [
-    ['Pay Period','','','','','BASIC',      T.cutoff,    '','','','','','','','','','','','','','','','','','','','','','','','','',''],
-    ['Start',  mLabel,'','','','OT',        0],
-    ['End',    mEnd,  '','','','MEAL',      T.meal],
-    ['',       '',    '','','','TRANSPO',   T.transpo],
-    ['Total Salary', T.netSalary,'','','','BIRTHDAY', 0],
-    ['','','','','','ND',             T.nightDiff],
-    ['','','','','','STAT',           T.stat],
-    ['','','','','','Regular Holiday',T.regHol],
-    ['','','','','','Speacial Holiday',T.specHol],
-  ];
-  const r10 = Array(33).fill('');
-  r10[5] = 'DISCREPANCY'; r10[6] = 0; r10[14] = 'Allowances'; r10[26] = 'Deductions';
-  sheet2.push(r10);
-
-  sheet2.push([
-    'SN / HRID','Last Name','First Name','Position','Full Name',
-    'Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary',
-    'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','',
-    'Overtime','Discrepancy',
-    'NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)',
-    'Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour',
-    'NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS',
-    'NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday',
-    'Total Allowances',
-    'NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness',
-    'No. of Hrs','Undertime','Total Deductions','Net Salary',
-  ]);
-
-  const r12 = Array(33).fill('');
-  r12[3] = 'AFB / TMT'; r12[7] = T.cutoff; r12[11] = 0; r12[12] = 0; r12[13] = 0;
-  r12[14] = T.meal; r12[15] = T.transpo; r12[16] = 0;
-  r12[17] = 0; r12[18] = T.nightDiff; r12[19] = T.stat;
-  r12[20] = 0; r12[21] = T.regHol; r12[22] = 0; r12[23] = T.specHol;
-  r12[24] = T.totalAllow;
-  r12[25] = 0; r12[26] = T.absencesAmt;
-  r12[27] = 0; r12[28] = T.tardinessAmt;
-  r12[29] = 0; r12[30] = T.undertimeAmt;
-  r12[31] = T.totalDeduct; r12[32] = T.netSalary;
-  sheet2.push(r12);
-
-  rows.forEach(r => {
-    const hireDateVal = r.hireDate ? new Date(r.hireDate) : '';
-    sheet2.push([
-      r.sn, r.lastName, r.firstName, r.position, r.fullName,
-      r.salary, hireDateVal, r.cutoff, r.daily,
-      0, r.colK,
-      0, 0,
-      0,
-      r.meal, r.transpo, r.bday,
-      r.nightHrs, r.nightDiff, r.stat,
-      r.regHolDays, r.regHol, r.specHolDays, r.specHol,
-      r.totalAllow,
-      r.absentDays, r.absencesAmt,
-      r.lateMins, r.tardinessAmt,
-      r.undertimeHrs, r.undertimeAmt,
-      r.totalDeduct, r.netSalary,
-    ]);
+  /* SHEET 3: ATTENDANCE SHEET */
+  const attHeader=['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
+  for(let d=pS;d<=pEnd;d++)attHeader.push(new Date(year,month,d));attHeader.push('TOTAL DAYS','COST','','LEGEND:');
+  const sheet3=[attHeader];
+  rows.forEach((r,i)=>{
+    const att=appState.attendance[r.uid]||{};
+    const totalDays=r.pCount+r.rdsCount+r.hdCount*0.5;
+    const cost=r.pCount*200+r.rdsCount*200+r.hdCount*100;
+    const rowData=[r.empNo,r.lastName,r.firstName,r.position,r.hireDate?new Date(r.hireDate):'','ACTIVE'];
+    for(let d=pS;d<=pEnd;d++)rowData.push(att[`${month}_${d}`]||'');
+    rowData.push(totalDays,cost);if(i<LEGEND_ITEMS.length)rowData.push('',LEGEND_ITEMS[i][0],LEGEND_ITEMS[i][1]);sheet3.push(rowData);
   });
+  const ws3=XLSX.utils.aoa_to_sheet(sheet3,{cellDates:true});const attCols=[{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];for(let d=pS;d<=pEnd;d++)attCols.push({wch:5});attCols.push({wch:10},{wch:10},{wch:4},{wch:6},{wch:22});ws3['!cols']=attCols;
+  XLSX.utils.book_append_sheet(wb,ws3,'ATTENDANCE SHEET');
 
-  const ws2 = XLSX.utils.aoa_to_sheet(sheet2, { cellDates: true });
-  ws2['!cols'] = [
-    {wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20.0},
-    {wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},
-    {wch:11.0},{wch:7.29},{wch:9.0},{wch:8.0},{wch:10.71},
-    {wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},
-    {wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},
-    {wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},
-    {wch:14.29},{wch:15.86},{wch:8.71},
-  ];
-  ws2['!merges'] = [
-    { s:{r:9,c:14}, e:{r:9,c:24} },
-    { s:{r:9,c:26}, e:{r:9,c:31} },
-  ];
-
-  const grayFill  = { patternType:'solid', fgColor:{rgb:'666666'} };
-  const whiteBold = { color:{rgb:'FFFFFF'}, bold:true, sz:9 };
-  const greenFill = { patternType:'solid', fgColor:{rgb:'92D050'} };
-  const hRow = 10, sRow = 11;
-  [0,1,2,3,4,5,6,7,8,11,12,24,31,32].forEach(c => {
-    const a = XLSX.utils.encode_cell({r:hRow,c});
-    if (ws2[a]) ws2[a].s = { fill:grayFill, font:whiteBold, alignment:{wrapText:true,vertical:'center',horizontal:'center'} };
-  });
-  for (let c = 0; c < 33; c++) {
-    const a = XLSX.utils.encode_cell({r:sRow,c});
-    if (ws2[a]) ws2[a].s = { fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}} };
-  }
-  const g11 = XLSX.utils.encode_cell({r:hRow,c:6});
-  if (ws2[g11]) ws2[g11].s = { fill:greenFill, font:whiteBold };
-  const g1 = XLSX.utils.encode_cell({r:0,c:6});
-  if (ws2[g1]) ws2[g1].s = { fill:greenFill };
-
-  XLSX.utils.book_append_sheet(wb, ws2, 'PAYROLL REQUEST');
-
-  /* ── SHEET 3: ATTENDANCE SHEET ──────────────────────────── */
-  const attHeader = ['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
-  for (let d = pS; d <= pEnd; d++) attHeader.push(new Date(year, month, d));
-  attHeader.push('TOTAL DAYS', 'COST', '', 'LEGEND:');
-  const sheet3 = [attHeader];
-
-  rows.forEach((r, i) => {
-    const att       = appState.attendance[r.uid] || {};
-    const totalDays = r.pCount + r.rdsCount + r.hdCount * 0.5;
-    const cost      = r.pCount * 200 + r.rdsCount * 200 + r.hdCount * 100;
-
-    const rowData = [
-      r.empNo, r.lastName, r.firstName, r.position,
-      r.hireDate ? new Date(r.hireDate) : '', 'ACTIVE',
-    ];
-    for (let d = pS; d <= pEnd; d++) rowData.push(att[`${month}_${d}`] || '');
-    rowData.push(totalDays, cost);
-    if (i < LEGEND_ITEMS.length) rowData.push('', LEGEND_ITEMS[i][0], LEGEND_ITEMS[i][1]);
-    sheet3.push(rowData);
-  });
-
-  const ws3 = XLSX.utils.aoa_to_sheet(sheet3, { cellDates: true });
-  const attCols = [{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];
-  for (let d = pS; d <= pEnd; d++) attCols.push({wch:5});
-  attCols.push({wch:10},{wch:10},{wch:4},{wch:6},{wch:22});
-  ws3['!cols'] = attCols;
-  XLSX.utils.book_append_sheet(wb, ws3, 'ATTENDANCE SHEET');
-
-  const fname = `PAYROLL_${MONTH_FULL[month].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  showToast(`✅ Exported: ${fname}`, 'success');
+  const fname=`PAYROLL_${MONTH_FULL[month].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;XLSX.writeFile(wb,fname);showToast(`✅ Exported: ${fname}`,'success');
 }
 
 function exportToExcel(){
-  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
-  const month = parseInt(document.getElementById('pMonth').value);
-  const period = document.getElementById('pPeriod').value;
-  const [pS,pEr] = period.split('-').map(Number);
-  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
-  const daysInMonth = new Date(year, month + 1, 0).getDate(), pE = pEr >= 28 ? daysInMonth : pEr;
-  const data = [['Emp ID','Name','Dept','Shift']];
-  for(let d = pS; d <= pE; d++) data[0].push(`Day ${d}`);
-  data[0].push('Total Lates (min)');
-  for(const [uid, user] of activeEmployeesSorted()){
-    const row = [user.empID || uid, user.fullName, user.dept, user['shift_'+month] || user.defaultShift || ''];
-    let totalLates = 0;
-    for(let d = pS; d <= pE; d++){
-      const k = `${month}_${d}`;
-      const s = appState.attendance[uid]?.[k] || '';
-      const l = appState.attendance[uid]?.[`${k}_late`] || 0;
-      if(l) totalLates += parseInt(l);
-      row.push(l ? `${s} (${l}m late)` : s);
-    }
-    row.push(totalLates);
-    data.push(row);
-  }
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-  XLSX.writeFile(wb, `Attendance_${MONTHS[month]}_${period}_${year}.xlsx`);
+  if(!isHRorAdmin()){showToast('Restricted to HR and Admin','error');return;}const month=parseInt(document.getElementById('pMonth').value);const period=document.getElementById('pPeriod').value;const[pS,pEr]=period.split('-').map(Number);const now=new Date(),year=month>now.getMonth()?now.getFullYear()-1:now.getFullYear();const daysInMonth=new Date(year,month+1,0).getDate(),pE=pEr>=28?daysInMonth:pEr;
+  const data=[['Emp ID','Name','Dept','Shift']];for(let d=pS;d<=pE;d++)data[0].push(`Day ${d}`);data[0].push('Total Lates (min)');
+  for(const[uid,user]of activeEmployeesSorted()){const row=[user.empID||uid,user.fullName,user.dept,user['shift_'+month]||user.defaultShift||''];let totalLates=0;for(let d=pS;d<=pE;d++){const k=`${month}_${d}`;const s=appState.attendance[uid]?.[k]||'';const l=appState.attendance[uid]?.[`${k}_late`]||0;if(l)totalLates+=parseInt(l);row.push(l?`${s} (${l}m late)`:s);}row.push(totalLates);data.push(row);}
+  const ws=XLSX.utils.aoa_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Attendance');XLSX.writeFile(wb,`Attendance_${MONTHS[month]}_${period}_${year}.xlsx`);
 }
 
 /* ── TOAST ───────────────────────────────────────────────────── */
-function showToast(msg, type = 'info'){
-  const c = document.getElementById('toastContainer');
-  while(c.children.length >= 5){ c.removeChild(c.firstChild); }
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  t.textContent = `${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'} ${msg}`;
-  c.appendChild(t);
-  setTimeout(() => { if(t.parentNode) t.remove(); }, 3500);
-}
-function showFieldError(id, msg){
-  const el = document.getElementById(id);
-  if(el){ el.textContent = msg; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 5000); }
-}
-function showFieldValidation(id, msg){
-  const el = document.getElementById(id);
-  if(el){ el.textContent = msg; el.classList.remove('hidden'); }
-}
+function showToast(msg,type='info'){const c=document.getElementById('toastContainer');while(c.children.length>=5){c.removeChild(c.firstChild);}const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=`${type==='success'?'✅':type==='error'?'❌':'ℹ️'} ${msg}`;c.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3500);}
+function showFieldError(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
+function showFieldValidation(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
 
 /* ── RENDER QUEUE ────────────────────────────────────────────── */
-const _rq = new Set();
-let _rt = null;
-function qRender(...tasks){
-  tasks.forEach(t => _rq.add(t));
-  if(_rt) clearTimeout(_rt);
-  _rt = setTimeout(() => {
-    _rt = null;
-    const jobs = [..._rq]; _rq.clear();
-    if(jobs.includes('tab')) renderCurrentTab(true);
-    if(jobs.includes('inbox')) updateInbox();
-    if(jobs.includes('myLeaves')) updateMyLeaves();
-    if(jobs.includes('notifications')) updateNotifications();
-    if(jobs.includes('dashboard')) updateDashboard();
-  }, 80);
-}
+const _rq=new Set();let _rt=null;
+function qRender(...tasks){tasks.forEach(t=>_rq.add(t));if(_rt)clearTimeout(_rt);_rt=setTimeout(()=>{_rt=null;const jobs=[..._rq];_rq.clear();if(jobs.includes('tab'))renderCurrentTab(true);if(jobs.includes('inbox'))updateInbox();if(jobs.includes('myLeaves'))updateMyLeaves();if(jobs.includes('notifications'))updateNotifications();if(jobs.includes('dashboard'))updateDashboard();},80);}
 
 /* ── REALTIME LISTENERS ──────────────────────────────────────── */
 function setupRealtimeListeners(){
-  Object.values(appState.listeners).forEach(u => { if(typeof u === 'function') u(); });
-  appState.listeners.users = onValue(ref(db,'users'), snap => {
-    appState.users = snap.val() || {};
-    appState.lastRenderTime = 0;
-    checkCurrentUserDisabled();
-    qRender('tab','dashboard');
-  });
-  appState.listeners.attendance = onValue(ref(db,'attendance'), snap => {
-    appState.attendance = snap.val() || {};
-    qRender('tab','dashboard');
-  });
-  appState.listeners.leaveRequests = onValue(ref(db,'leave_requests'), snap => {
-    appState.leaveRequests = snap.val() || {};
-    qRender('inbox','myLeaves');
-  });
-  appState.listeners.notifications = onValue(ref(db,'notifications'), snap => {
-    appState.notifications = snap.val() || {};
-    qRender('notifications');
-  });
-  appState.listeners.auditLogs = onValue(ref(db,'audit_logs'), snap => {
-    renderAudit(snap.val());
-  });
+  Object.values(appState.listeners).forEach(u=>{if(typeof u==='function')u();});
+  appState.listeners.users=onValue(ref(db,'users'),snap=>{appState.users=snap.val()||{};appState.lastRenderTime=0;checkCurrentUserDisabled();qRender('tab','dashboard');});
+  appState.listeners.attendance=onValue(ref(db,'attendance'),snap=>{appState.attendance=snap.val()||{};qRender('tab','dashboard');});
+  appState.listeners.leaveRequests=onValue(ref(db,'leave_requests'),snap=>{appState.leaveRequests=snap.val()||{};qRender('inbox','myLeaves');});
+  appState.listeners.notifications=onValue(ref(db,'notifications'),snap=>{appState.notifications=snap.val()||{};qRender('notifications');});
+  appState.listeners.auditLogs=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
 }
 
 /* ── EXPORT TO WINDOW ────────────────────────────────────────── */
-function ex(name, fn){ window[name] = fn; window['__hr_' + name] = fn; }
-ex('handleLogin', handleLogin);
-ex('handleLogout', () => handleLogout(false));
-ex('userClockAction', userClockAction);
-ex('submitLeave', submitLeave);
-ex('cancelLeave', cancelLeave);
-ex('addEmployee', addEmployee);
-ex('editEmployee', editEmployee);
-ex('cancelEdit', cancelEdit);
-ex('manualClockOutNow', manualClockOutNow);
-ex('switchTab', switchTabInternal);
-ex('toggleLeaveForm', toggleLeaveForm);
-ex('renderAttendance', renderAttendance);
-ex('renderSchedules', renderSchedules);
-ex('updateLeaveBalance', updateLeaveBalance);
-ex('checkDateRange', checkDateRange);
-ex('exportToExcel', exportToExcel);
-ex('renderPayrollPreview', renderPayrollPreview);
-ex('exportPayrollExcel', exportPayrollExcel);
-ex('searchEmployees', searchEmployees);
-ex('searchActive', searchActive);
-ex('searchSchedules', searchSchedules);
-ex('searchAttendance', searchAttendance);
-ex('searchAudit', searchAudit);
-ex('searchMyLeaves', searchMyLeaves);
-ex('changeAttendanceStatus', changeAttendanceStatus);
-ex('updateScheduleField', updateScheduleField);
-ex('saveSchedule', saveSchedule);
-ex('saveAllSchedules', saveAllSchedules);
-ex('openPanel', openPanel);
-ex('closeAllPanels', closeAllPanels);
-ex('approveLeave', approveLeave);
-ex('rejectLeave', rejectLeave);
-ex('markNotificationRead', markNotificationRead);
-ex('deleteEmployee', deleteEmployee);
-ex('toggleBulkRegister', toggleBulkRegister);
-ex('runBulkRegister', runBulkRegister);
-ex('renderTimestamps', renderTimestamps);
-ex('exportTimestampsToExcel', exportTimestampsToExcel);
+function ex(name,fn){window[name]=fn;window['__hr_'+name]=fn;}
+ex('handleLogin',handleLogin);ex('handleLogout',()=>handleLogout(false));ex('userClockAction',userClockAction);ex('submitLeave',submitLeave);ex('cancelLeave',cancelLeave);ex('addEmployee',addEmployee);ex('editEmployee',editEmployee);ex('cancelEdit',cancelEdit);ex('manualClockOutNow',manualClockOutNow);ex('switchTab',switchTabInternal);ex('toggleLeaveForm',toggleLeaveForm);ex('renderAttendance',renderAttendance);ex('renderSchedules',renderSchedules);ex('updateLeaveBalance',updateLeaveBalance);ex('checkDateRange',checkDateRange);ex('exportToExcel',exportToExcel);ex('renderPayrollPreview',renderPayrollPreview);ex('exportPayrollExcel',exportPayrollExcel);ex('searchEmployees',searchEmployees);ex('searchActive',searchActive);ex('searchSchedules',searchSchedules);ex('searchAttendance',searchAttendance);ex('searchAudit',searchAudit);ex('searchMyLeaves',searchMyLeaves);ex('changeAttendanceStatus',changeAttendanceStatus);ex('updateScheduleField',updateScheduleField);ex('saveSchedule',saveSchedule);ex('saveAllSchedules',saveAllSchedules);ex('openPanel',openPanel);ex('closeAllPanels',closeAllPanels);ex('approveLeave',approveLeave);ex('rejectLeave',rejectLeave);ex('markNotificationRead',markNotificationRead);ex('deleteEmployee',deleteEmployee);ex('toggleBulkRegister',toggleBulkRegister);ex('runBulkRegister',runBulkRegister);ex('renderTimestamps',renderTimestamps);ex('exportTimestampsToExcel',exportTimestampsToExcel);
 </script>
 </body>
 </html>
