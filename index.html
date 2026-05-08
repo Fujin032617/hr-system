@@ -556,15 +556,14 @@ td.att-cell:hover{transform:scale(1.08);}
               <option value="1-15">Period: 1 – 15</option>
               <option value="16-31">Period: 16 – End</option>
             </select>
-            <button class="btn btn-navy btn-sm" onclick="exportPayrollExcel()" style="padding:9px 20px;">⬇ Export Payroll Excel (4 Sheets)</button>
+            <button class="btn btn-navy btn-sm" onclick="exportPayrollExcel()" style="padding:9px 20px;">⬇ Export Payroll Excel (3 Sheets)</button>
           </div>
 
           <div class="payroll-info-box" style="margin-top:16px;">
             📋 <strong>Exports exactly matching your payroll format:</strong><br>
             <span style="margin-right:16px;">📄 <strong>Sheet 1</strong> — Request Claim</span>
             <span style="margin-right:16px;">📊 <strong>Sheet 2</strong> — Payroll Request (all columns)</span>
-            <span style="margin-right:16px;">📅 <strong>Sheet 3</strong> — Attendance Sheet with legend</span>
-            <span>🎂 <strong>Sheet 4</strong> — 13th Month &amp; Leave Credit</span><br>
+            <span>📅 <strong>Sheet 3</strong> — Attendance Sheet with legend</span><br>
             <span style="font-size:10px;color:#64748b;">💡 Set each employee's <strong>Monthly Salary</strong>, <strong>Meal Allow</strong>, <strong>Transpo Allow</strong>, and <strong>Stat Benefits</strong> in the Directory tab for accurate payroll.</span>
           </div>
         </div>
@@ -836,32 +835,41 @@ function isHRorAdmin(){return appState.currentUser&&['HR','Admin'].includes(appS
 function isHRorAdminOrOPS(){return appState.currentUser&&['HR','Admin','OPS'].includes(appState.currentUser.role);}
 
 /* ── NIGHT HOURS (10PM-6AM) ─────────────────────────────────── */
-function getNightMinutes(clockIn, clockOut){
-  if(!clockIn||!clockOut)return 0;
-  const toMins = d => d.getHours()*60 + d.getMinutes();
+function getNightMinutes(clockIn, clockOut) {
+  if (!clockIn || !clockOut) return 0;
+  const toMins = d => d.getHours() * 60 + d.getMinutes();
   let start = toMins(clockIn);
-  let end = toMins(clockOut);
-  if(end<start) end += 24*60;
-  const nightStart = 22*60;
-  const nightEnd = 6*60 + 24*60;
-  const overlapStart = Math.max(start, nightStart);
-  const overlapEnd = Math.min(end, nightEnd);
-  return Math.max(0, overlapEnd - overlapStart);
+  let end   = toMins(clockOut);
+  if (end < start) end += 24 * 60;
+  const nightStart = 22 * 60;
+  const nightEnd   = 6  * 60 + 24 * 60;
+  const oStart = Math.max(start, nightStart);
+  const oEnd   = Math.min(end,   nightEnd);
+  return Math.max(0, oEnd - oStart);
 }
 
-function computeNightHours(uid, month, pStart, pEnd){
-  const att = appState.attendance[uid] || {};
+function computeNightHours(uid, month, pStart, pEnd) {
+  const att   = appState.attendance[uid] || {};
+  const user  = appState.users[uid] || {};
   let totalMins = 0;
-  for(let d=pStart; d<=pEnd; d++){
-    const key = `${month}_${d}`;
+  let hasAnyTimestamp = false;
+
+  for (let d = pStart; d <= pEnd; d++) {
+    const key    = `${month}_${d}`;
     const status = att[key] || '';
-    const ci = att[`${key}_time`];
-    const co = att[`${key}_out`];
-    if(status === 'P' && ci && co){
+    const ci     = att[`${key}_time`];
+    const co     = att[`${key}_out`];
+    if ((status === 'P' || status === 'RDS') && ci && co) {
+      hasAnyTimestamp = true;
       totalMins += getNightMinutes(new Date(ci), new Date(co));
     }
   }
-  return totalMins/60;
+
+  if (!hasAnyTimestamp) {
+    const shift = (user['shift_' + month] || user.defaultShift || '').toLowerCase();
+    return shift.includes('night') ? 80 : 0;
+  }
+  return totalMins / 60;
 }
 
 /* ── OFFLINE / QUEUE ─────────────────────────────────────────── */
@@ -1662,72 +1670,107 @@ function exportTimestampsToExcel(){
    PAYROLL MODULE – EXACT MATCH
    ══════════════════════════════════════════════════════════════ */
 
-function buildPayrollRows(month, pStart, pEnd, year){
+function getNightMinutes(clockIn, clockOut) {
+  if (!clockIn || !clockOut) return 0;
+  const toMins = d => d.getHours() * 60 + d.getMinutes();
+  let start = toMins(clockIn);
+  let end   = toMins(clockOut);
+  if (end < start) end += 24 * 60;
+  const nightStart = 22 * 60;
+  const nightEnd   = 6  * 60 + 24 * 60;
+  const oStart = Math.max(start, nightStart);
+  const oEnd   = Math.min(end,   nightEnd);
+  return Math.max(0, oEnd - oStart);
+}
+
+function computeNightHours(uid, month, pStart, pEnd) {
+  const att   = appState.attendance[uid] || {};
+  const user  = appState.users[uid] || {};
+  let totalMins = 0;
+  let hasAnyTimestamp = false;
+
+  for (let d = pStart; d <= pEnd; d++) {
+    const key    = `${month}_${d}`;
+    const status = att[key] || '';
+    const ci     = att[`${key}_time`];
+    const co     = att[`${key}_out`];
+    if ((status === 'P' || status === 'RDS') && ci && co) {
+      hasAnyTimestamp = true;
+      totalMins += getNightMinutes(new Date(ci), new Date(co));
+    }
+  }
+
+  if (!hasAnyTimestamp) {
+    const shift = (user['shift_' + month] || user.defaultShift || '').toLowerCase();
+    return shift.includes('night') ? 80 : 0;
+  }
+  return totalMins / 60;
+}
+
+function buildPayrollRows(month, pStart, pEnd, year) {
   const rows = [];
   let sn = 1;
-  for(const [uid, user] of activeEmployeesSorted()){
-    const att = appState.attendance[uid] || {};
+
+  for (const [uid, user] of activeEmployeesSorted()) {
+    const att    = appState.attendance[uid] || {};
     const salary = Math.max(0, parseFloat(user.monthlySalary) || 0);
     const cutoff = salary / 2;
-    const daily = salary / WD_BASIS;
+    const daily  = salary / WD_BASIS;
 
-    /* Attendance counts for meal & cost – exact Excel formula */
     let pCount = 0, rdsCount = 0, hdCount = 0;
     let absentDays = 0, lateMins = 0, undertimeHrs = 0;
-    const totalNightHrs = computeNightHours(uid, month, pStart, pEnd);
 
-    for(let d = pStart; d <= pEnd; d++){
-      const key = `${month}_${d}`;
+    for (let d = pStart; d <= pEnd; d++) {
+      const key    = `${month}_${d}`;
       const status = att[key] || '';
-      const late = parseInt(att[`${key}_late`] || 0);
+      const late   = parseInt(att[`${key}_late`] || 0);
       lateMins += late;
 
-      if(status === 'P') pCount++;
-      else if(status === 'RDS') rdsCount++;
-      else if(status === 'HD') hdCount++;
-      else if(['A','NPL','NPSL','S'].includes(status)) absentDays++;
-      else if(status === 'UT'){ pCount++; undertimeHrs += 1; }
-      /* SL, VL, BL, PL, ML are NOT counted in meal (paid but not present on site) */
+      switch (status) {
+        case 'P':                           pCount++;                       break;
+        case 'RDS':                         rdsCount++;                     break;
+        case 'HD':                          hdCount++;                      break;
+        case 'UT':   pCount++;  undertimeHrs += 1;                         break;
+        case 'A':
+        case 'NPL':
+        case 'NPSL':
+        case 'S':                           absentDays++;                   break;
+        default: break;
+      }
     }
 
-    /* Meal = (P+RDS)*200 + HD*100 */
-    const meal = (pCount + rdsCount) * 200 + hdCount * 100;
+    const meal    = pCount * 200 + rdsCount * 200 + hdCount * 100;
+    const transpo = Math.max(0, parseFloat(user.transpoAllow)  || 0);
+    const stat    = Math.max(0, parseFloat(user.statBenefits)  || 0);
+    const bday    = 0;
 
-    /* Fixed allowances from employee data */
-    const transpo = Math.max(0, parseFloat(user.transpoAllow) || 0);
-    const stat = Math.max(0, parseFloat(user.statBenefits) || 0);
-    const bday = 0;
-    const nightDiff = (cutoff / 13) / 8 * 0.1 * totalNightHrs;
-    const regHolDays = 0, regHol = 0;
+    const nightHrs  = computeNightHours(uid, month, pStart, pEnd);
+    const nightDiff = nightHrs * (daily / 8) * 0.10;
+
+    const regHolDays = 0, regHol  = 0;
     const specHolDays = 0, specHol = 0;
-    const overtime = 0, discrepancy = 0, noRdAdj1 = 0, noRdAdj2 = 0;
 
-    /* Total Allowances (column Y) */
-    const totalAllow = daily + noRdAdj1 + overtime + discrepancy + noRdAdj2 +
-                       meal + transpo + bday + nightDiff + stat + regHol + specHol;
+    const colK = daily;
+    const totalAllow = colK + meal + transpo + bday + nightDiff + stat + regHol + specHol;
 
-    /* Deductions */
-    const absencesAmt = absentDays * daily;
-    const tardinessAmt = lateMins > 0 ? (lateMins / 60) * (daily / 8) : 0;
-    const undertimeAmt = undertimeHrs > 0 ? undertimeHrs * (daily / 8) : 0;
-    const totalDeduct = absencesAmt + tardinessAmt + undertimeAmt;
+    const absencesAmt  = absentDays    * daily;
+    const tardinessAmt = lateMins  > 0 ? (lateMins  / 60) * (daily / 8) : 0;
+    const undertimeAmt = undertimeHrs > 0 ? undertimeHrs   * (daily / 8) : 0;
+    const totalDeduct  = absencesAmt + tardinessAmt + undertimeAmt;
 
-    /* Net Salary (AG) */
-    const netSalary = cutoff + overtime + discrepancy + meal + transpo +
-                      bday + nightDiff + stat + regHol + specHol - totalDeduct;
+    const netSalary = cutoff + meal + transpo + bday + nightDiff + stat + regHol + specHol - totalDeduct;
 
     const nameParts = (user.fullName || '').trim().split(' ');
-    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (user.fullName || '');
+    const lastName  = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (user.fullName || '');
     const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : '';
 
     rows.push({
       sn, uid, lastName, firstName,
-      position: user.position || user.dept || '',
-      fullName: user.fullName || '',
-      salary, cutoff, daily, noRdAdj1, noRdAdj2,
-      overtime, discrepancy,
+      position:  user.position || user.dept || '',
+      fullName:  user.fullName || '',
+      salary, cutoff, daily, colK,
       meal, transpo, bday,
-      nightHrs: totalNightHrs, nightDiff, stat,
+      nightHrs, nightDiff, stat,
       regHolDays, regHol, specHolDays, specHol,
       totalAllow,
       absentDays, absencesAmt,
@@ -1735,167 +1778,195 @@ function buildPayrollRows(month, pStart, pEnd, year){
       undertimeHrs, undertimeAmt,
       totalDeduct, netSalary,
       hireDate: user.hireDate || '',
-      empNo: user.empID || uid,
-      pCount, rdsCount, hdCount
+      empNo:    user.empID || uid,
+      pCount, rdsCount, hdCount,
     });
     sn++;
   }
   return rows;
 }
 
-function renderPayrollPreview(){
-  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
+function renderPayrollPreview() {
+  if (!isHRorAdmin()) { showToast('Restricted to HR and Admin', 'error'); return; }
   const month = parseInt(document.getElementById('pyMonth').value);
-  if(isNaN(month)) return;
+  if (isNaN(month)) return;
   const period = document.getElementById('pyPeriod').value;
   const [pS, pEr] = period.split('-').map(Number);
-  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
-  const daysInMonth = new Date(year, month + 1, 0).getDate(), pE = pEr >= 28 ? daysInMonth : pEr;
+  const now  = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+  const dim  = new Date(year, month + 1, 0).getDate();
+  const pE   = pEr >= 28 ? dim : pEr;
   const rows = buildPayrollRows(month, pS, pE, year);
 
   const label = `${MONTH_FULL[month].toUpperCase()} ${pS} – ${pE}, ${year}`;
   document.getElementById('pyPeriodLabel').textContent = label;
 
-  if(!rows.length){
-    document.getElementById('payrollPreview').innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;
+  if (!rows.length) {
+    document.getElementById('payrollPreview').innerHTML =
+      `<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found. Add employees in the Directory tab first.</div>`;
     document.getElementById('pyStats').style.display = 'none';
     return;
   }
 
-  const T = rows.reduce((acc, r) => ({
-    salary: acc.salary + r.salary,
-    cutoff: acc.cutoff + r.cutoff,
-    overtime: acc.overtime + r.overtime,
-    discrepancy: acc.discrepancy + r.discrepancy,
-    meal: acc.meal + r.meal,
-    transpo: acc.transpo + r.transpo,
-    bday: acc.bday + r.bday,
-    nightDiff: acc.nightDiff + r.nightDiff,
-    stat: acc.stat + r.stat,
-    regHol: acc.regHol + r.regHol,
-    specHol: acc.specHol + r.specHol,
-    absencesAmt: acc.absencesAmt + r.absencesAmt,
-    tardinessAmt: acc.tardinessAmt + r.tardinessAmt,
-    undertimeAmt: acc.undertimeAmt + r.undertimeAmt,
-    totalDeduct: acc.totalDeduct + r.totalDeduct,
-    netSalary: acc.netSalary + r.netSalary,
-  }), { salary:0, cutoff:0, overtime:0, discrepancy:0, meal:0, transpo:0, bday:0, nightDiff:0, stat:0, regHol:0, specHol:0, absencesAmt:0, tardinessAmt:0, undertimeAmt:0, totalDeduct:0, netSalary:0 });
+  const T = rows.reduce((a, r) => ({
+    salary:       a.salary       + r.salary,
+    cutoff:       a.cutoff       + r.cutoff,
+    meal:         a.meal         + r.meal,
+    transpo:      a.transpo      + r.transpo,
+    nightDiff:    a.nightDiff    + r.nightDiff,
+    stat:         a.stat         + r.stat,
+    regHol:       a.regHol       + r.regHol,
+    specHol:      a.specHol      + r.specHol,
+    totalAllow:   a.totalAllow   + r.totalAllow,
+    absencesAmt:  a.absencesAmt  + r.absencesAmt,
+    tardinessAmt: a.tardinessAmt + r.tardinessAmt,
+    undertimeAmt: a.undertimeAmt + r.undertimeAmt,
+    totalDeduct:  a.totalDeduct  + r.totalDeduct,
+    netSalary:    a.netSalary    + r.netSalary,
+  }), { salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0 });
 
   document.getElementById('pyStats').style.display = '';
   document.getElementById('pyStats').innerHTML = `
     <div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">${rows.length}</div><div class="ps-sub">${label}</div></div>
     <div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">${php(T.netSalary)}</div></div>
-    <div class="py-stat amber"><div class="ps-label">Total Basic (Cut-off)</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div>
-    <div class="py-stat purple"><div class="ps-label">Total Meal (P+RDS)*200+HD*100</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div></div>
+    <div class="py-stat amber"><div class="ps-label">Total Cut-off Basic</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div>
+    <div class="py-stat purple"><div class="ps-label">Total Meal Allow</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div><div class="ps-sub">₱200/P·RDS, ₱100/HD</div></div>
     <div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">${php(T.totalDeduct)}</div></div>`;
 
   let html = `<table>
     <thead>
       <tr>
-        <th rowspan="2">#</th><th rowspan="2">Last Name</th><th rowspan="2">First Name</th><th rowspan="2">Position</th>
-        <th rowspan="2">Monthly</th><th rowspan="2">Cut-off</th><th rowspan="2">Daily</th>
-        <th colspan="2">NO RD ADJ</th><th rowspan="2">OT</th><th rowspan="2">Disc</th>
-        <th rowspan="2">Meal</th><th rowspan="2">Transpo</th><th rowspan="2">Bday</th>
-        <th rowspan="2">NightHrs</th><th rowspan="2">ND</th><th rowspan="2">Stat</th>
-        <th colspan="2">RegHol</th><th colspan="2">SpecHol</th>
-        <th rowspan="2">Total Allow</th><th rowspan="2">Abs</th><th rowspan="2">$ Abs</th>
-        <th rowspan="2">Late</th><th rowspan="2">$ Late</th><th rowspan="2">UT</th><th rowspan="2">$ UT</th>
-        <th rowspan="2">Total Ded</th><th rowspan="2">Net Salary</th>
+        <th rowspan="2" style="min-width:30px;">#</th>
+        <th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th>
+        <th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th>
+        <th rowspan="2" style="text-align:left;min-width:130px;">POSITION</th>
+        <th rowspan="2">MONTHLY BASIC</th>
+        <th rowspan="2">CUT-OFF BASIC</th>
+        <th rowspan="2">DAILY RATE</th>
+        <th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">NO RD ADJ<br><small style="font-size:9px;">(col K = daily)</small></th>
+        <th colspan="5" style="background:#1e40af;color:#fff;text-align:center;">ALLOWANCES</th>
+        <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
+        <th colspan="3" style="background:#991b1b;color:#fff;text-align:center;">DEDUCTIONS</th>
+        <th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th>
       </tr>
       <tr>
-        <th>J</th><th>K</th>
-        <th>Days</th><th>$</th><th>Days</th><th>$</th>
+        <th style="background:#2563eb;color:#fff;">MEAL<br><small>P/RDS=₱200<br>HD=₱100</small></th>
+        <th style="background:#2563eb;color:#fff;">TRANSPO</th>
+        <th style="background:#2563eb;color:#fff;">NIGHT HRS</th>
+        <th style="background:#2563eb;color:#fff;">NIGHT DIFF<br><small>hrs×(daily/8)×10%</small></th>
+        <th style="background:#2563eb;color:#fff;">STAT</th>
+        <th style="background:#b91c1c;color:#fff;">ABS DAYS</th>
+        <th style="background:#b91c1c;color:#fff;">ABS AMT</th>
+        <th style="background:#b91c1c;color:#fff;">TARD/UT</th>
       </tr>
     </thead>
     <tbody>`;
+
   rows.forEach(r => {
     html += `<tr>
-      <td class="ctr">${r.sn}</td><td class="txt">${esc(r.lastName)}</td><td class="txt">${esc(r.firstName)}</td>
-      <td class="txt">${esc(r.position)}</td><td>${php(r.salary)}</td><td>${php(r.cutoff)}</td><td>${php(r.daily)}</td>
-      <td>${php(r.noRdAdj1)}</td><td>${php(r.daily)}</td><td>${php(r.overtime)}</td><td>${php(r.discrepancy)}</td>
-      <td class="allow-cell">${php(r.meal)}</td><td class="allow-cell">${php(r.transpo)}</td><td class="allow-cell">${r.bday}</td>
-      <td>${r.nightHrs.toFixed(1)}</td><td class="allow-cell">${php(r.nightDiff)}</td><td class="allow-cell">${php(r.stat)}</td>
-      <td>${r.regHolDays}</td><td class="allow-cell">${php(r.regHol)}</td><td>${r.specHolDays}</td><td class="allow-cell">${php(r.specHol)}</td>
-      <td>${php(r.totalAllow)}</td><td>${r.absentDays}</td><td class="deduct-cell">${php(r.absencesAmt)}</td>
-      <td>${r.lateMins}</td><td class="deduct-cell">${php(r.tardinessAmt)}</td><td>${r.undertimeHrs}</td><td class="deduct-cell">${php(r.undertimeAmt)}</td>
-      <td class="deduct-cell">${php(r.totalDeduct)}</td><td class="net-cell">${php(r.netSalary)}</td>
+      <td class="ctr" style="color:var(--muted);">${r.sn}</td>
+      <td class="txt" style="font-weight:700;">${esc(r.lastName)}</td>
+      <td class="txt">${esc(r.firstName)}</td>
+      <td class="txt" style="font-size:11px;color:var(--muted);">${esc(r.position)}</td>
+      <td>${php(r.salary)}</td>
+      <td style="font-weight:700;color:var(--accent);">${php(r.cutoff)}</td>
+      <td style="color:var(--muted);">${php(r.daily)}</td>
+      <td style="color:var(--muted);">${php(r.colK)}</td>
+      <td class="allow-cell" style="font-weight:600;">${php(r.meal)}<br><small style="color:var(--muted);font-size:9px;">P:${r.pCount} RDS:${r.rdsCount} HD:${r.hdCount}</small></td>
+      <td class="allow-cell">${php(r.transpo)}</td>
+      <td class="allow-cell">${r.nightHrs.toFixed(2)}h</td>
+      <td class="allow-cell">${php(r.nightDiff)}</td>
+      <td class="allow-cell">${php(r.stat)}</td>
+      <td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td>
+      <td class="deduct-cell">${r.absentDays > 0 ? r.absentDays + ' days' : '—'}</td>
+      <td class="deduct-cell">${r.absencesAmt > 0 ? php(r.absencesAmt) : '—'}</td>
+      <td class="deduct-cell">${r.tardinessAmt > 0 || r.undertimeAmt > 0 ? php(r.tardinessAmt + r.undertimeAmt) : '—'}</td>
+      <td class="net-cell">${php(r.netSalary)}</td>
     </tr>`;
   });
-  html += `</tbody></table>`;
+
+  html += `<tr class="total-row">
+    <td colspan="4" style="text-align:right;letter-spacing:1px;padding:10px 12px;">GRAND TOTALS</td>
+    <td>${php(T.salary)}</td>
+    <td>${php(T.cutoff)}</td>
+    <td colspan="2"></td>
+    <td>${php(T.meal)}</td>
+    <td>${php(T.transpo)}</td>
+    <td></td>
+    <td>${php(T.nightDiff)}</td>
+    <td>${php(T.stat)}</td>
+    <td>${php(T.totalAllow)}</td>
+    <td></td>
+    <td>${php(T.absencesAmt)}</td>
+    <td>${php(T.tardinessAmt + T.undertimeAmt)}</td>
+    <td style="font-size:13px;">${php(T.netSalary)}</td>
+  </tr></tbody></table>`;
+
   document.getElementById('payrollPreview').innerHTML = html;
 }
 
-function exportPayrollExcel(){
-  if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
+function exportPayrollExcel() {
+  if (!isHRorAdmin()) { showToast('Restricted to HR and Admin', 'error'); return; }
   const month = parseInt(document.getElementById('pyMonth').value);
-  if(isNaN(month)){ showToast('Please select a month','error'); return; }
+  if (isNaN(month)) { showToast('Please select a month', 'error'); return; }
   const period = document.getElementById('pyPeriod').value;
   const [pS, pEr] = period.split('-').map(Number);
-  const now = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const pEnd = pEr >= 28 ? daysInMonth : pEr;
+  const now  = new Date(), year = month > now.getMonth() ? now.getFullYear() - 1 : now.getFullYear();
+  const dim  = new Date(year, month + 1, 0).getDate();
+  const pEnd = pEr >= 28 ? dim : pEr;
 
   const rows = buildPayrollRows(month, pS, pEnd, year);
-  if(!rows.length){ showToast('No employee data to export','error'); return; }
+  if (!rows.length) { showToast('No employee data to export', 'error'); return; }
 
   const mLabel = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pS},${year}`;
-  const mEnd  = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`;
+  const mEnd   = `${MONTH_FULL[month].toUpperCase().slice(0,3)} ${pEnd},${year}`;
   const remark = `${MONTH_FULL[month].toUpperCase()} ${pS} TO ${pEnd}`;
 
-  const T = rows.reduce((acc, r) => ({
-    salary: acc.salary + r.salary,
-    cutoff: acc.cutoff + r.cutoff,
-    noRdAdj1: acc.noRdAdj1 + r.noRdAdj1,
-    overtime: acc.overtime + r.overtime,
-    discrepancy: acc.discrepancy + r.discrepancy,
-    noRdAdj2: acc.noRdAdj2 + r.noRdAdj2,
-    meal: acc.meal + r.meal,
-    transpo: acc.transpo + r.transpo,
-    bday: acc.bday + r.bday,
-    nightDiff: acc.nightDiff + r.nightDiff,
-    stat: acc.stat + r.stat,
-    regHol: acc.regHol + r.regHol,
-    specHol: acc.specHol + r.specHol,
-    totalAllow: acc.totalAllow + r.totalAllow,
-    absencesAmt: acc.absencesAmt + r.absencesAmt,
-    tardinessAmt: acc.tardinessAmt + r.tardinessAmt,
-    undertimeAmt: acc.undertimeAmt + r.undertimeAmt,
-    totalDeduct: acc.totalDeduct + r.totalDeduct,
-    netSalary: acc.netSalary + r.netSalary,
-  }), { salary:0, cutoff:0, noRdAdj1:0, overtime:0, discrepancy:0, noRdAdj2:0, meal:0, transpo:0, bday:0, nightDiff:0, stat:0, regHol:0, specHol:0, totalAllow:0, absencesAmt:0, tardinessAmt:0, undertimeAmt:0, totalDeduct:0, netSalary:0 });
+  const T = rows.reduce((a, r) => ({
+    salary:       a.salary       + r.salary,
+    cutoff:       a.cutoff       + r.cutoff,
+    meal:         a.meal         + r.meal,
+    transpo:      a.transpo      + r.transpo,
+    nightDiff:    a.nightDiff    + r.nightDiff,
+    stat:         a.stat         + r.stat,
+    regHol:       a.regHol       + r.regHol,
+    specHol:      a.specHol      + r.specHol,
+    totalAllow:   a.totalAllow   + r.totalAllow,
+    absencesAmt:  a.absencesAmt  + r.absencesAmt,
+    tardinessAmt: a.tardinessAmt + r.tardinessAmt,
+    undertimeAmt: a.undertimeAmt + r.undertimeAmt,
+    totalDeduct:  a.totalDeduct  + r.totalDeduct,
+    netSalary:    a.netSalary    + r.netSalary,
+  }), { salary:0,cutoff:0,meal:0,transpo:0,nightDiff:0,stat:0,regHol:0,specHol:0,totalAllow:0,absencesAmt:0,tardinessAmt:0,undertimeAmt:0,totalDeduct:0,netSalary:0 });
 
   const wb = XLSX.utils.book_new();
 
-  /* ── SHEET 1: REQUEST CLAIM ───────────────────────────────── */
+  /* ── SHEET 1: REQUEST CLAIM ─────────────────────────────── */
   const sheet1 = [
     ['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],
-    [1, new Date(),'Salary for Staff','',rows.length,T.netSalary,'AFB','AFB','All','Salary and Wages',remark],
-    [2, new Date(),'Salary Charge Fee','',1,300,'AFB','AFB','All','Salary Charge Fee',remark],
+    [1, new Date(), 'Salary for Staff', '', rows.length, T.netSalary, 'AFB','AFB','All','Salary and Wages', remark, '', ''],
+    [2, new Date(), 'Salary Charge Fee', '', 1, 300, 'AFB','AFB','All','Salary Charge Fee', remark, '', ''],
     [],
-    ['','','','',T.netSalary+300]
+    ['','','','','', T.netSalary + 300],
   ];
-  const ws1 = XLSX.utils.aoa_to_sheet(sheet1, { cellDates:true });
+  const ws1 = XLSX.utils.aoa_to_sheet(sheet1, { cellDates: true });
   ws1['!cols'] = [{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
   XLSX.utils.book_append_sheet(wb, ws1, 'REQUEST CLAIM');
 
   /* ── SHEET 2: PAYROLL REQUEST ────────────────────────────── */
-  const sheet2 = [];
-  sheet2.push(['Pay Period','','','','','BASIC',T.cutoff].concat(Array(26).fill('')));
-  sheet2.push(['Start',mLabel,'','','','OT',T.overtime]);
-  sheet2.push(['End',mEnd,'','','','MEAL',T.meal]);
-  sheet2.push(['','','','','TRANSPO',T.transpo]);
-  sheet2.push(['Total Salary',T.netSalary,'','','','BIRTHDAY',T.bday]);
-  sheet2.push(['','','','','ND',T.nightDiff]);
-  sheet2.push(['','','','','STAT',T.stat]);
-  sheet2.push(['','','','','Regular Holiday',T.regHol]);
-  sheet2.push(['','','','','Speacial Holiday',T.specHol]);
-
-  const row10 = Array(33).fill('');
-  row10[5] = 'DISCREPANCY';
-  row10[6] = T.discrepancy;
-  row10[14] = 'Allowances';
-  row10[26] = 'Deductions';
-  sheet2.push(row10);
+  const sheet2 = [
+    ['Pay Period','','','','','BASIC',      T.cutoff,    '','','','','','','','','','','','','','','','','','','','','','','','','',''],
+    ['Start',  mLabel,'','','','OT',        0],
+    ['End',    mEnd,  '','','','MEAL',      T.meal],
+    ['',       '',    '','','','TRANSPO',   T.transpo],
+    ['Total Salary', T.netSalary,'','','','BIRTHDAY', 0],
+    ['','','','','','ND',             T.nightDiff],
+    ['','','','','','STAT',           T.stat],
+    ['','','','','','Regular Holiday',T.regHol],
+    ['','','','','','Speacial Holiday',T.specHol],
+  ];
+  const r10 = Array(33).fill('');
+  r10[5] = 'DISCREPANCY'; r10[6] = 0; r10[14] = 'Allowances'; r10[26] = 'Deductions';
+  sheet2.push(r10);
 
   sheet2.push([
     'SN / HRID','Last Name','First Name','Position','Full Name',
@@ -1908,37 +1979,29 @@ function exportPayrollExcel(){
     'NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday',
     'Total Allowances',
     'NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness',
-    'No. of Hrs','Undertime','Total Deductions','Net Salary'
+    'No. of Hrs','Undertime','Total Deductions','Net Salary',
   ]);
 
-  const row12 = Array(33).fill('');
-  row12[3] = 'AFB / TMT';
-  row12[7] = T.cutoff;
-  row12[11] = T.overtime;
-  row12[12] = T.discrepancy;
-  row12[13] = T.noRdAdj2;
-  row12[14] = T.meal;
-  row12[15] = T.transpo;
-  row12[16] = T.bday;
-  row12[18] = T.nightDiff;
-  row12[19] = T.stat;
-  row12[21] = T.regHol;
-  row12[23] = T.specHol;
-  row12[24] = T.totalAllow;
-  row12[26] = T.absencesAmt;
-  row12[28] = T.tardinessAmt;
-  row12[30] = T.undertimeAmt;
-  row12[31] = T.totalDeduct;
-  row12[32] = T.netSalary;
-  sheet2.push(row12);
+  const r12 = Array(33).fill('');
+  r12[3] = 'AFB / TMT'; r12[7] = T.cutoff; r12[11] = 0; r12[12] = 0; r12[13] = 0;
+  r12[14] = T.meal; r12[15] = T.transpo; r12[16] = 0;
+  r12[17] = 0; r12[18] = T.nightDiff; r12[19] = T.stat;
+  r12[20] = 0; r12[21] = T.regHol; r12[22] = 0; r12[23] = T.specHol;
+  r12[24] = T.totalAllow;
+  r12[25] = 0; r12[26] = T.absencesAmt;
+  r12[27] = 0; r12[28] = T.tardinessAmt;
+  r12[29] = 0; r12[30] = T.undertimeAmt;
+  r12[31] = T.totalDeduct; r12[32] = T.netSalary;
+  sheet2.push(r12);
 
   rows.forEach(r => {
+    const hireDateVal = r.hireDate ? new Date(r.hireDate) : '';
     sheet2.push([
       r.sn, r.lastName, r.firstName, r.position, r.fullName,
-      r.salary, new Date(r.hireDate), r.cutoff, r.daily,
-      r.noRdAdj1, r.daily,
-      r.overtime, r.discrepancy,
-      r.noRdAdj2,
+      r.salary, hireDateVal, r.cutoff, r.daily,
+      0, r.colK,
+      0, 0,
+      0,
       r.meal, r.transpo, r.bday,
       r.nightHrs, r.nightDiff, r.stat,
       r.regHolDays, r.regHol, r.specHolDays, r.specHol,
@@ -1950,7 +2013,7 @@ function exportPayrollExcel(){
     ]);
   });
 
-  const ws2 = XLSX.utils.aoa_to_sheet(sheet2, { cellDates:true });
+  const ws2 = XLSX.utils.aoa_to_sheet(sheet2, { cellDates: true });
   ws2['!cols'] = [
     {wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20.0},
     {wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},
@@ -1958,82 +2021,65 @@ function exportPayrollExcel(){
     {wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},
     {wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},
     {wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},
-    {wch:14.29},{wch:15.86},{wch:8.71}
+    {wch:14.29},{wch:15.86},{wch:8.71},
   ];
   ws2['!merges'] = [
     { s:{r:9,c:14}, e:{r:9,c:24} },
-    { s:{r:9,c:26}, e:{r:9,c:31} }
+    { s:{r:9,c:26}, e:{r:9,c:31} },
   ];
 
-  /* Styling */
-  const darkGrayFill = { patternType:"solid", fgColor:{rgb:"666666"} };
-  const whiteFont = { color:{rgb:"FFFFFF"}, bold:true, sz:9 };
-  const headerRow = 10;
+  const grayFill  = { patternType:'solid', fgColor:{rgb:'666666'} };
+  const whiteBold = { color:{rgb:'FFFFFF'}, bold:true, sz:9 };
+  const greenFill = { patternType:'solid', fgColor:{rgb:'92D050'} };
+  const hRow = 10, sRow = 11;
   [0,1,2,3,4,5,6,7,8,11,12,24,31,32].forEach(c => {
-    const addr = XLSX.utils.encode_cell({ r:headerRow, c });
-    if(ws2[addr]) ws2[addr].s = { fill:darkGrayFill, font:whiteFont, alignment:{ wrapText:true, vertical:'center', horizontal:'center' } };
+    const a = XLSX.utils.encode_cell({r:hRow,c});
+    if (ws2[a]) ws2[a].s = { fill:grayFill, font:whiteBold, alignment:{wrapText:true,vertical:'center',horizontal:'center'} };
   });
-  ['O15','AA10'].forEach(addr => {
-    if(ws2[addr]) ws2[addr].s = { fill:darkGrayFill, font:whiteFont };
-  });
-  if(ws2['G11']) ws2['G11'].s = { fill:{ patternType:"solid", fgColor:{rgb:"92D050"} } };
+  for (let c = 0; c < 33; c++) {
+    const a = XLSX.utils.encode_cell({r:sRow,c});
+    if (ws2[a]) ws2[a].s = { fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}} };
+  }
+  const g11 = XLSX.utils.encode_cell({r:hRow,c:6});
+  if (ws2[g11]) ws2[g11].s = { fill:greenFill, font:whiteBold };
+  const g1 = XLSX.utils.encode_cell({r:0,c:6});
+  if (ws2[g1]) ws2[g1].s = { fill:greenFill };
+
   XLSX.utils.book_append_sheet(wb, ws2, 'PAYROLL REQUEST');
 
-  /* ── SHEET 3: ATTENDANCE SHEET ───────────────────────────── */
+  /* ── SHEET 3: ATTENDANCE SHEET ──────────────────────────── */
   const attHeader = ['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
-  for(let d = pS; d <= pEnd; d++) attHeader.push(new Date(year, month, d));
+  for (let d = pS; d <= pEnd; d++) attHeader.push(new Date(year, month, d));
   attHeader.push('TOTAL DAYS', 'COST', '', 'LEGEND:');
   const sheet3 = [attHeader];
-  let grandCost = 0;
 
   rows.forEach((r, i) => {
-    const att = appState.attendance[r.uid] || {};
-    const totalDays = r.pCount + r.rdsCount + r.hdCount * 0.5;   // exact formula
-    const cost = (r.pCount + r.rdsCount) * 200 + r.hdCount * 100;
-    grandCost += cost;
+    const att       = appState.attendance[r.uid] || {};
+    const totalDays = r.pCount + r.rdsCount + r.hdCount * 0.5;
+    const cost      = r.pCount * 200 + r.rdsCount * 200 + r.hdCount * 100;
 
-    const rowData = [r.empNo, r.lastName, r.firstName, r.position, new Date(r.hireDate), 'ACTIVE'];
-    for(let d = pS; d <= pEnd; d++) {
-      rowData.push(att[`${month}_${d}`] || '');
-    }
+    const rowData = [
+      r.empNo, r.lastName, r.firstName, r.position,
+      r.hireDate ? new Date(r.hireDate) : '', 'ACTIVE',
+    ];
+    for (let d = pS; d <= pEnd; d++) rowData.push(att[`${month}_${d}`] || '');
     rowData.push(totalDays, cost);
-    if(i < LEGEND_ITEMS.length) rowData.push('', LEGEND_ITEMS[i][0], LEGEND_ITEMS[i][1]);
+    if (i < LEGEND_ITEMS.length) rowData.push('', LEGEND_ITEMS[i][0], LEGEND_ITEMS[i][1]);
     sheet3.push(rowData);
   });
 
-  const ws3 = XLSX.utils.aoa_to_sheet(sheet3, { cellDates:true });
+  const ws3 = XLSX.utils.aoa_to_sheet(sheet3, { cellDates: true });
   const attCols = [{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];
-  for(let d = pS; d <= pEnd; d++) attCols.push({wch:5});
+  for (let d = pS; d <= pEnd; d++) attCols.push({wch:5});
   attCols.push({wch:10},{wch:10},{wch:4},{wch:6},{wch:22});
   ws3['!cols'] = attCols;
   XLSX.utils.book_append_sheet(wb, ws3, 'ATTENDANCE SHEET');
 
-  /* ── SHEET 4: 13TH MONTH & LEAVE CREDIT ──────────────────── */
-  const sheet4 = [
-    [null, 'LEAVE CREDITS'],
-    [null, 'COUNT','NAME','LAST NAME','START DATE','BASIC','RANK','DAILY RATE','REMAINING CREDITS','TOTAL LEAVE',null,'13TH MONTH',null,'GRAND TOTAL']
-  ];
-  rows.forEach((r, i) => {
-    const user = appState.users[r.uid] || {};
-    const slUsed = calculateUsedLeaves(r.uid, 'SL');
-    const vlUsed = calculateUsedLeaves(r.uid, 'VL');
-    const slRem = Math.max(0, (user.slMax || 0) - slUsed);
-    const vlRem = Math.max(0, (user.vlMax || 0) - vlUsed);
-    const totalCredits = slRem + vlRem;
-    const totalLeave = totalCredits * r.daily;
-    const month13 = r.salary / 12;
-    sheet4.push([null, i + 1, r.firstName, r.lastName, new Date(r.hireDate), r.salary, 0, r.daily, totalCredits, totalLeave, null, month13, null, totalLeave + month13]);
-  });
-  const ws4 = XLSX.utils.aoa_to_sheet(sheet4, { cellDates:true });
-  ws4['!cols'] = [{wch:4},{wch:6},{wch:16},{wch:16},{wch:14},{wch:12},{wch:8},{wch:12},{wch:16},{wch:14},{wch:4},{wch:14},{wch:4},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, ws4, '13TH MONTH & LEAVE CREDIT');
-
   const fname = `PAYROLL_${MONTH_FULL[month].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
   XLSX.writeFile(wb, fname);
-  showToast(`Exported: ${fname}`, 'success');
+  showToast(`✅ Exported: ${fname}`, 'success');
 }
 
-/* ── EXPORT ATTENDANCE TO EXCEL (simple) ────────────────────── */
 function exportToExcel(){
   if(!isHRorAdmin()){ showToast('Restricted to HR and Admin','error'); return; }
   const month = parseInt(document.getElementById('pMonth').value);
