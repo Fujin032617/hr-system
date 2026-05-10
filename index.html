@@ -348,7 +348,7 @@ td.att-cell:hover{transform:scale(1.08);}
         </div>
         <div id="leaveFormSection" class="card hidden" style="max-width:560px;margin-top:20px;">
           <div class="card-header"><div class="card-title">New Leave Request</div><button class="btn btn-ghost btn-sm" onclick="toggleLeaveForm()">✕ Close</button></div>
-          <div class="hierarchy-box"><strong>Approval flow:</strong> Employee → OPS (same dept) → Admin (same dept) → HR<br>Any authorized approver can action — no strict sequence required.</div>
+          <div class="hierarchy-box"><strong>Approval flow:</strong> Employee → OPS (same dept) → Admin (same dept) → HR<br>Any authorized approver can action.</div>
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="form-group"><label class="form-label">Leave Type</label><select id="lvType" class="form-select" onchange="updateLeaveBalance()"><option value="SL">Sick Leave (SL)</option><option value="VL">Vacation Leave (VL)</option></select></div>
             <div class="form-grid2">
@@ -397,7 +397,7 @@ td.att-cell:hover{transform:scale(1.08);}
             <div class="form-group"><label class="form-label">Emergency #</label><input type="tel" id="addEmergency" class="form-input"></div>
             <div class="form-group"><label class="form-label">Backend ID</label><input type="text" id="addBackend" class="form-input"></div>
             <div class="form-group"><label class="form-label">Assets</label><input type="text" id="addAssets" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Default Shift</label><input type="text" id="addDefaultShift" class="form-input" placeholder="e.g. Morning"></div>
+            <div class="form-group"><label class="form-label">Default Shift</label><input type="text" id="addDefaultShift" class="form-input" placeholder="e.g. Morning or Night"></div>
             <div class="form-group"><label class="form-label">SL Days</label><input type="number" id="addSL" class="form-input" value="10" min="0"></div>
             <div class="form-group"><label class="form-label">VL Days</label><input type="number" id="addVL" class="form-input" value="10" min="0"></div>
             <div class="form-group"><label class="form-label">Max Consecutive Leave</label><input type="number" id="addMaxConsecutive" class="form-input" value="30" min="1"></div>
@@ -453,10 +453,10 @@ td.att-cell:hover{transform:scale(1.08);}
           </div>
           <div class="payroll-info-box" style="margin-top:16px;">
             📋 <strong>Exports with full colors matching your NUEBE format:</strong><br>
-            <span style="margin-right:16px;">📄 <strong>Sheet 1</strong> — Request Claim (yellow header row)</span>
-            <span style="margin-right:16px;">📊 <strong>Sheet 2</strong> — Payroll Request (gray headers · yellow totals · green date column)</span>
-            <span>📅 <strong>Sheet 3</strong> — Attendance Sheet (dark blue header · dark red dates · colored legend)</span><br>
-            <span style="font-size:10px;color:#1e40af;">💡 <strong>Meal</strong> = P×₱200 + RDS×₱200 + HD×₱100 &nbsp;|&nbsp; <strong>Night Diff</strong> = 10PM–6AM hrs × (daily/8) × 10%</span>
+            <span style="margin-right:16px;">📄 <strong>Sheet 1</strong> — Request Claim (yellow header)</span>
+            <span style="margin-right:16px;">📊 <strong>Sheet 2</strong> — Payroll Request (gray headers · yellow totals · green summary)</span>
+            <span>📅 <strong>Sheet 3</strong> — Attendance Sheet (dark blue header · dark red dates · legend colors)</span><br>
+            <span style="font-size:10px;color:#1e40af;">💡 <strong>Meal</strong> = P×₱200 + RDS×₱200 + HD×₱100 &nbsp;|&nbsp; <strong>Night Diff</strong> = 10PM–6AM hrs × (daily/8) × 10% &nbsp;|&nbsp; Night shift employees without timestamps default to 80 hrs</span>
           </div>
         </div>
         <div id="pyStats" class="payroll-summary" style="display:none;"></div>
@@ -511,12 +511,11 @@ td.att-cell:hover{transform:scale(1.08);}
   <div class="panel-body" id="notifContent"></div>
 </div>
 
-<!-- SHIMS -->
 <script>
 (function(){
   function se(m){var b=document.getElementById('startupError'),e=document.getElementById('startupErrorMsg');if(b&&e){e.textContent=m||'Unknown error.';b.classList.remove('hidden');}}
   window.addEventListener('error',function(e){se(e.message||'A script failed to load.');});
-  window.addEventListener('unhandledrejection',function(e){var r=e.reason;se((r&&r.message)||String(r||'A startup promise failed.'));});
+  window.addEventListener('unhandledrejection',function(e){var r=e.reason;se((r&&r.message)||String(r||'A promise failed.'));});
 })();
 (function(){
   var N=['handleLogin','handleLogout','userClockAction','submitLeave','cancelLeave','addEmployee','editEmployee','cancelEdit','manualClockOutNow','switchTab','toggleLeaveForm','updateLeaveBalance','checkDateRange','exportToExcel','renderAttendance','renderSchedules','searchEmployees','searchActive','searchSchedules','searchAttendance','searchAudit','searchMyLeaves','changeAttendanceStatus','updateScheduleField','saveSchedule','saveAllSchedules','openPanel','closeAllPanels','approveLeave','rejectLeave','markNotificationRead','deleteEmployee','toggleBulkRegister','runBulkRegister','renderTimestamps','exportTimestampsToExcel','renderPayrollPreview','exportPayrollExcel'];
@@ -542,13 +541,13 @@ const SC=['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','
 const LT={SL:'Sick Leave',VL:'Vacation Leave'};
 const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const LEG=[['RD','RESTDAY'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEAREVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
-// Excel legend cell colors (RGB, from actual NUEBE file)
+// Legend colors matched exactly from NUEBE Excel (RGB)
 const LEG_CLR={RD:'',SL:'FFFF00',A:'FF0000',NPL:'1BA3B5',P:'',NPSL:'FFFF00',S:'BE424B',VL:'FFFF00',UT:'',HD:'',BL:'00FDFF',PL:'52FDC4',ML:'FC82A4'};
-const WD=26; // working days basis per month
+const WD=26;
 
 const S={users:{},attendance:{},leaveRequests:{},notifications:{},currentUser:null,listeners:{},isProcessing:{},isOnline:navigator.onLine,offlineQueue:[],autoClockOutInterval:null,forgotLogoutTimer:null,editingEmployeeId:null,scheduleChanges:null};
 
-/* ═══ HELPERS ════════════════════════════════════════════════ */
+/* ── HELPERS ── */
 function esc(t){if(t==null)return'';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML;}
 function php(n){return'₱'+(+n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function pld(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
@@ -557,7 +556,7 @@ function tmrStr(){const t=new Date();t.setDate(t.getDate()+1);return`${t.getFull
 function isAH(){return S.currentUser&&['HR','Admin'].includes(S.currentUser.role);}
 function isAOH(){return S.currentUser&&['HR','Admin','OPS'].includes(S.currentUser.role);}
 
-// Split name: last word = lastName, rest = firstName
+// Split name: everything before last word = firstName, last word = lastName
 function splitName(full){
   const p=(full||'').trim().split(' ').filter(Boolean);
   if(!p.length)return{L:'',F:''};
@@ -611,24 +610,51 @@ function overlap(uid,s,e,excl=null){
 function canAp(req){if(!S.currentUser)return false;const emp=S.users[req.empID];if(!emp)return false;const cu=S.currentUser;if(cu.role==='HR')return true;if(emp.dept!==cu.dept)return false;const rh={Employee:1,OPS:2,Admin:3,HR:4};return(rh[cu.role]||0)>(rh[emp.role]||0);}
 function canCx(req){if(!S.currentUser)return false;const cu=S.currentUser,re=S.users[req.empID];if(cu.role==='HR')return true;if(cu.role==='Admin'&&re&&re.dept===cu.dept)return true;if(cu.id===req.empID&&req.status==='Pending')return true;return false;}
 
-/* ═══ NIGHT HOURS (10PM–6AM) — defined ONCE ═════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   NIGHT HOURS — 10PM to 6AM
+   FIX: If shift=Night and NO clock timestamps exist → default 80h
+        If clock timestamps exist → compute actual 10PM-6AM minutes
+        (only returns 0 if timestamps exist but none fall in night window)
+══════════════════════════════════════════════════════════════ */
 function nightMins(ci,co){
   if(!ci||!co)return 0;
   const tm=d=>d.getHours()*60+d.getMinutes();
-  let s=tm(ci),e=tm(co);if(e<s)e+=1440;
-  // Night window: 22:00(1320) to 30:00(1800 = 06:00 next day)
+  let s=tm(ci),e=tm(co);
+  if(e<s)e+=1440; // crosses midnight
+  // Night window: 22:00 (1320) to 30:00 (1800 = 06:00 next day in extended mins)
   return Math.max(0,Math.min(e,1800)-Math.max(s,1320));
 }
-function nightHrs(uid,mon,pS,pE){
-  const att=S.attendance[uid]||{},u=S.users[uid]||{};
-  let mins=0,hasTs=false;
-  for(let d=pS;d<=pE;d++){const k=`${mon}_${d}`,st=att[k]||'',ci=att[`${k}_time`],co=att[`${k}_out`];
-    if((st==='P'||st==='RDS')&&ci&&co){hasTs=true;mins+=nightMins(new Date(ci),new Date(co));}}
-  if(!hasTs){const sh=(u['shift_'+mon]||u.defaultShift||'').toLowerCase();return sh.includes('night')?80:0;}
-  return mins/60;
+
+function computeNightHrs(uid,mon,pS,pE){
+  const att=S.attendance[uid]||{};
+  const u=S.users[uid]||{};
+  const shiftLabel=(u['shift_'+mon]||u.defaultShift||'').toLowerCase();
+  const isNightShift=shiftLabel.includes('night')||shiftLabel.includes('ns');
+
+  let totalMins=0;
+  let hasAnyClockData=false;
+
+  for(let d=pS;d<=pE;d++){
+    const k=`${mon}_${d}`;
+    const st=att[k]||'';
+    const ci=att[`${k}_time`];
+    const co=att[`${k}_out`];
+    // Only count present days with both in/out timestamps
+    if((st==='P'||st==='RDS')&&ci&&co){
+      hasAnyClockData=true;
+      totalMins+=nightMins(new Date(ci),new Date(co));
+    }
+  }
+
+  // If no clock timestamps at all AND is night shift → use 80h default (Excel behavior)
+  if(!hasAnyClockData&&isNightShift) return 80;
+  // If no clock timestamps and NOT night shift → 0
+  if(!hasAnyClockData) return 0;
+  // If has timestamps → return actual computed hours
+  return totalMins/60;
 }
 
-/* ═══ OFFLINE ════════════════════════════════════════════════ */
+/* ── OFFLINE ── */
 function qk(){return S.currentUser?`hr_offline_${S.currentUser.id}`:null;}
 function setupOffline(){
   window.addEventListener('online',()=>{S.isOnline=true;updOff();showToast('Connection restored! Syncing…','info');setTimeout(procQ,1000);});
@@ -655,23 +681,23 @@ async function execQ(type,d){
 }
 async function safeOp(fn,qType,qData){if(!S.isOnline){addQ(qType,qData);return{ok:false,q:true};}try{await fn();return{ok:true};}catch(e){if(!navigator.onLine){addQ(qType,qData);return{ok:false,q:true};}throw e;}}
 
-/* ═══ AUTO CLOCK-OUT ══════════════════════════════════════════ */
+/* ── AUTO CLOCK-OUT ── */
 async function chkAuto(){
   if(!S.currentUser)return;const now=new Date(),yest=new Date(now);yest.setDate(yest.getDate()-1);let ak=null;
-  for(const d of[now,yest]){const k=`${d.getMonth()}_${d.getDate()}`;const att=S.attendance[S.currentUser.id]||{};if(att[k]==='P'&&!att[`${k}_out`]&&att[`${k}_time`]){ak=k;break;}}
+  for(const dv of[now,yest]){const k=`${dv.getMonth()}_${dv.getDate()}`;const att=S.attendance[S.currentUser.id]||{};if(att[k]==='P'&&!att[`${k}_out`]&&att[`${k}_time`]){ak=k;break;}}
   if(!ak)return;
   const ci=new Date(S.attendance[S.currentUser.id][`${ak}_time`]),autoT=new Date(ci.getTime()+43200000),warnT=new Date(autoT.getTime()-1800000);
   if(now>=autoT){try{await doAutoOut(ak);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}catch{addQ('auto_out',buildAP(ak));}}
   else if(now>=warnT)showAutoBanner(Math.ceil((autoT-now)/60000));
 }
-function buildAP(k){const n=new Date();return{uid:S.currentUser.id,upd:{[`${k}_out`]:n.toISOString(),[`${k}_auto`]:true},al:{name:S.currentUser.fullName,action:'AUTO CLOCK OUT (12h shift)',timestamp:n.toISOString(),empID:S.currentUser.id,department:S.currentUser.dept,time:n.toLocaleTimeString(),auto:true},nt:{userId:S.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${n.toLocaleTimeString()} after 12h.`,type:'warning',timestamp:n.toISOString(),read:false}};}
+function buildAP(k){const n=new Date();return{uid:S.currentUser.id,upd:{[`${k}_out`]:n.toISOString(),[`${k}_auto`]:true},al:{name:S.currentUser.fullName,action:'AUTO CLOCK OUT',timestamp:n.toISOString(),empID:S.currentUser.id,department:S.currentUser.dept,auto:true},nt:{userId:S.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${n.toLocaleTimeString()} after 12h.`,type:'warning',timestamp:n.toISOString(),read:false}};}
 async function doAutoOut(k){const p=buildAP(k);await update(ref(db,`attendance/${p.uid}`),p.upd);await push(ref(db,'audit_logs'),p.al);await push(ref(db,'notifications'),p.nt);localStorage.removeItem('hr_lc');hideBanner();document.getElementById('btnClockIn').classList.remove('hidden');document.getElementById('btnClockOut').classList.add('hidden');}
 function showAutoBanner(m){const b=document.getElementById('autoClockoutBanner');if(!b)return;b.classList.remove('hidden');let s=m*60;document.getElementById('autoClockoutTimer').textContent=fmt(s);if(S.forgotLogoutTimer)clearInterval(S.forgotLogoutTimer);S.forgotLogoutTimer=setInterval(()=>{s--;if(s<=0){clearInterval(S.forgotLogoutTimer);hideBanner();}else document.getElementById('autoClockoutTimer').textContent=fmt(s);},1000);}
 function hideBanner(){const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');if(S.forgotLogoutTimer){clearInterval(S.forgotLogoutTimer);S.forgotLogoutTimer=null;}}
 function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
 function manualClockOutNow(){userClockAction('OUT');}
 
-/* ═══ CLOCK IN/OUT ═══════════════════════════════════════════ */
+/* ── CLOCK IN/OUT ── */
 async function userClockAction(type){
   if(S.isProcessing['clock'])return;
   const now=new Date(),mon=now.getMonth(),day=now.getDate(),key=`${mon}_${day}`,uid=S.currentUser.id;
@@ -697,7 +723,7 @@ async function userClockAction(type){
   finally{S.isProcessing['clock']=false;}
 }
 
-/* ═══ AUTH ═══════════════════════════════════════════════════ */
+/* ── AUTH ── */
 onAuthStateChanged(auth,async(user)=>{
   if(user){if(!S.currentUser){try{const snap=await get(ref(db,`users/${user.uid}`));if(snap.exists()){const data=snap.val();if(data.disabled){await signOut(auth);showFE('loginError','Account disabled. Contact admin.');return;}S.currentUser={id:user.uid,...data};const k=qk();if(k){try{const q=localStorage.getItem(k);if(q)S.offlineQueue=JSON.parse(q);}catch{}}showApp();setupListeners();}else{await signOut(auth);showFE('loginError','No employee profile found.');}}catch(e){await signOut(auth);showFE('loginError',e?.code==='PERMISSION_DENIED'?'Database access denied.':'Could not load profile.');}}}
   else{if(S.currentUser)doLogout();}
@@ -772,7 +798,7 @@ function renderTab(){
   else if(t==='leaves')updMyLeaves();else if(t==='timestamps')renderTimestamps();
 }
 
-/* ═══ DASHBOARD ══════════════════════════════════════════════ */
+/* ── DASHBOARD ── */
 function updDash(){
   if(!S.currentUser)return;const now=new Date(),mon=now.getMonth(),uid=S.currentUser.id;
   const u=guc(uid)||S.currentUser;const slU=usedLv(uid,'SL'),vlU=usedLv(uid,'VL'),slM=u.slMax||0,vlM=u.vlMax||0;
@@ -788,10 +814,10 @@ function updDash(){
   document.getElementById('btnClockIn').classList.toggle('hidden',ci);document.getElementById('btnClockOut').classList.toggle('hidden',!ci);updateClock();
 }
 
-/* ═══ LEAVE FORM ═════════════════════════════════════════════ */
+/* ── LEAVE FORM ── */
 function toggleLeaveForm(){
   const lf=document.getElementById('leaveFormSection');lf.classList.toggle('hidden');
-  if(!lf.classList.contains('hidden')){const ts=tmrStr();const s=document.getElementById('lvStartDate'),e=document.getElementById('lvEndDate');s.min=ts;e.min=ts;if(!s.value||s.value<ts){s.value=ts;e.value=ts;}['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));updateLeaveBalance();checkDateRange();}
+  if(!lf.classList.contains('hidden')){const ts=tmrStr();const sv=document.getElementById('lvStartDate'),ev=document.getElementById('lvEndDate');sv.min=ts;ev.min=ts;if(!sv.value||sv.value<ts){sv.value=ts;ev.value=ts;}['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));updateLeaveBalance();checkDateRange();}
 }
 
 function checkDateRange(){
@@ -841,7 +867,7 @@ async function cancelLeave(id){
   catch{showToast('Failed to cancel leave','error');}
 }
 
-/* ═══ DIRECTORY ══════════════════════════════════════════════ */
+/* ── DIRECTORY ── */
 function editEmployee(uid){
   const u=S.users[uid];if(!u)return;S.editingEmployeeId=uid;
   const flds={addEmpNum:u.empID||uid,addFullName:u.fullName||'',addUser:u.email||'',addPass:'',addBday:u.birthday||'',addHireDate:u.hireDate||'',addPosition:u.position||'',addContact:u.contact||'',addEmergency:u.emergency||'',addBackend:u.backendID||'',addAssets:u.assets||'',addDefaultShift:u.defaultShift||'',addSL:u.slMax||10,addVL:u.vlMax||10,addMaxConsecutive:u.maxConsecutiveLeave||30,addSalary:u.monthlySalary||0,addTranspo:u.transpoAllow||1500,addStat:u.statBenefits||1000};
@@ -866,7 +892,9 @@ async function addEmployee(){
   if(!S.editingEmployeeId&&pass.length<6){showToast('Password must be at least 6 characters','error');S.isProcessing['emp']=false;return;}
   try{
     let uid;if(S.editingEmployeeId){uid=S.editingEmployeeId;}else{const cr=await createUserWithEmailAndPassword(secAuth,email,pass);uid=cr.user.uid;try{await signOut(secAuth);}catch{}}
-    const data={fullName,email,empID:cid||uid,dept:document.getElementById('addDept').value,role:document.getElementById('addRole').value,birthday:document.getElementById('addBday').value,hireDate:document.getElementById('addHireDate').value,position:document.getElementById('addPosition').value.trim(),monthlySalary:Math.max(0,parseFloat(document.getElementById('addSalary').value)||0),transpoAllow:Math.max(0,parseFloat(document.getElementById('addTranspo').value)||0),statBenefits:Math.max(0,parseFloat(document.getElementById('addStat').value)||0),contact:document.getElementById('addContact').value.trim(),emergency:document.getElementById('addEmergency').value.trim(),backendID:document.getElementById('addBackend').value.trim(),assets:document.getElementById('addAssets').value.trim(),defaultShift:document.getElementById('addDefaultShift').value.trim(),slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),disabled:false};
+    // empID: use the custom ID if provided, else use Firebase UID — stored so exports always show correct empNo
+    const empID=cid||uid;
+    const data={fullName,email,empID,dept:document.getElementById('addDept').value,role:document.getElementById('addRole').value,birthday:document.getElementById('addBday').value,hireDate:document.getElementById('addHireDate').value,position:document.getElementById('addPosition').value.trim(),monthlySalary:Math.max(0,parseFloat(document.getElementById('addSalary').value)||0),transpoAllow:Math.max(0,parseFloat(document.getElementById('addTranspo').value)||0),statBenefits:Math.max(0,parseFloat(document.getElementById('addStat').value)||0),contact:document.getElementById('addContact').value.trim(),emergency:document.getElementById('addEmergency').value.trim(),backendID:document.getElementById('addBackend').value.trim(),assets:document.getElementById('addAssets').value.trim(),defaultShift:document.getElementById('addDefaultShift').value.trim(),slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),disabled:false};
     await set(ref(db,`users/${uid}`),data);showToast(S.editingEmployeeId?'Employee updated!':'Employee added!','success');cancelEdit();renderDir();
   }catch(e){if(e.code==='auth/email-already-in-use')showToast('Email already in use','error');else showToast('Failed to save: '+(e.message||''),'error');try{await signOut(secAuth);}catch{}}
   finally{S.isProcessing['emp']=false;}
@@ -878,14 +906,14 @@ async function deleteEmployee(uid){if(!confirm(`Disable employee ${uid}?`))retur
 function renderDir(){
   const el=document.getElementById('dirTable');if(!el)return;const entries=aes();
   if(!entries.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No employees found.</div>';return;}
-  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Dept</th><th>Role</th><th>Monthly Salary</th><th>Transpo</th><th>Stat</th><th>SL Bal</th><th>VL Bal</th><th>Actions</th></tr></thead><tbody>`;
+  let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Position</th><th>Dept</th><th>Role</th><th>Monthly Salary</th><th>Shift</th><th>Transpo</th><th>Stat</th><th>SL Bal</th><th>VL Bal</th><th>Actions</th></tr></thead><tbody>`;
   for(const[uid,u]of entries){const slU=usedLv(uid,'SL'),vlU=usedLv(uid,'VL'),slM=u.slMax||0,vlM=u.vlMax||0;
-    html+=`<tr><td><b>${esc(u.empID||uid)}</b></td><td>${esc(u.fullName)}</td><td style="font-size:11px;color:var(--muted);">${esc(u.position||u.dept||'')}</td><td><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(u.dept)}</span></td><td><span style="background:${u.role==='HR'?'#f3e8ff':u.role==='Admin'?'#dbeafe':u.role==='OPS'?'#d1fae5':'#f1f5f9'};color:${u.role==='HR'?'#7e22ce':u.role==='Admin'?'#1e40af':u.role==='OPS'?'#065f46':'var(--slate)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(u.role)}</span></td><td style="font-weight:700;color:var(--accent);">₱${(u.monthlySalary||0).toLocaleString()}</td><td>₱${(u.transpoAllow||0).toLocaleString()}</td><td>₱${(u.statBenefits||0).toLocaleString()}</td><td><b style="color:var(--green);">${Math.max(0,slM-slU)}</b><span style="color:var(--muted);">/${slM}</span></td><td><b style="color:var(--accent);">${Math.max(0,vlM-vlU)}</b><span style="color:var(--muted);">/${vlM}</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${uid}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteEmployee('${uid}')">Disable</button></div></td></tr>`;}
+    html+=`<tr><td><b>${esc(u.empID||uid)}</b></td><td>${esc(u.fullName)}</td><td style="font-size:11px;color:var(--muted);">${esc(u.position||u.dept||'')}</td><td><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(u.dept)}</span></td><td><span style="background:${u.role==='HR'?'#f3e8ff':u.role==='Admin'?'#dbeafe':u.role==='OPS'?'#d1fae5':'#f1f5f9'};color:${u.role==='HR'?'#7e22ce':u.role==='Admin'?'#1e40af':u.role==='OPS'?'#065f46':'var(--slate)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(u.role)}</span></td><td style="font-weight:700;color:var(--accent);">₱${(u.monthlySalary||0).toLocaleString()}</td><td style="font-size:11px;">${esc(u.defaultShift||'—')}</td><td>₱${(u.transpoAllow||0).toLocaleString()}</td><td>₱${(u.statBenefits||0).toLocaleString()}</td><td><b style="color:var(--green);">${Math.max(0,slM-slU)}</b><span style="color:var(--muted);">/${slM}</span></td><td><b style="color:var(--accent);">${Math.max(0,vlM-vlU)}</b><span style="color:var(--muted);">/${vlM}</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${uid}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteEmployee('${uid}')">Disable</button></div></td></tr>`;}
   html+=`</tbody></table>`;el.innerHTML=html;
 }
 function searchEmployees(){const q=document.querySelector('#sec-dir .search-input').value.toLowerCase();document.querySelectorAll('#dirTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-/* ═══ ATTENDANCE ═════════════════════════════════════════════ */
+/* ── ATTENDANCE ── */
 function renderAttendance(){
   if(!isAH()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
   const el=document.getElementById('payTable');if(!el)return;
@@ -902,7 +930,7 @@ function renderAttendance(){
 async function changeAttendanceStatus(uid,key){if(!isAH()){showToast('Only Admin/HR can modify attendance','error');return;}const att=S.attendance[uid]||{};const cur=att[key]||'';const next=SC[(SC.indexOf(cur)+1)%SC.length];try{await update(ref(db,`attendance/${uid}`),{[key]:next});await push(ref(db,'audit_logs'),{name:S.currentUser.fullName,action:`Changed attendance for ${uid} on ${key} to ${next}`,timestamp:new Date().toISOString(),empID:uid});}catch{showToast('Failed to update attendance','error');}}
 function searchAttendance(){const q=document.getElementById('attendanceSearch')?.value?.toLowerCase()||'';document.querySelectorAll('#payTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-/* ═══ SCHEDULES ══════════════════════════════════════════════ */
+/* ── SCHEDULES ── */
 function renderSchedules(){
   const el=document.getElementById('schedTable');if(!el)return;const mon=parseInt(document.getElementById('sMonth').value);
   const dO=sel=>['',...DOW].map(d=>`<option value="${d}"${d===sel?' selected':''}>${d||'— none —'}</option>`).join('');
@@ -917,7 +945,7 @@ async function saveSchedule(eid,mon){try{const p=(S.scheduleChanges||{})[eid]||{
 async function saveAllSchedules(){if(!S.scheduleChanges||!Object.keys(S.scheduleChanges).length){showToast('No pending changes','info');return;}try{for(const[eid,ch]of Object.entries(S.scheduleChanges)){if(Object.keys(ch).length>0)await update(ref(db,`users/${eid}`),ch);}S.scheduleChanges={};document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast('All schedules published!','success');}catch{showToast('Failed to publish','error');}}
 function searchSchedules(){const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-/* ═══ ACTIVE NOW ══════════════════════════════════════════════ */
+/* ── ACTIVE NOW ── */
 function renderActive(){
   const el=document.getElementById('activeTable');if(!el)return;const now=new Date(),mon=now.getMonth(),day=now.getDate(),tk=`${mon}_${day}`;
   let html=`<table><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Time In</th><th>Shift</th><th>Status</th></tr></thead><tbody>`;let cnt=0;
@@ -926,11 +954,11 @@ function renderActive(){
 }
 function searchActive(){const q=document.querySelector('#sec-active .search-input').value.toLowerCase();document.querySelectorAll('#activeTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-/* ═══ AUDIT ══════════════════════════════════════════════════ */
+/* ── AUDIT ── */
 function renderAudit(logs){const el=document.getElementById('auditTable');if(!el||!logs)return;let html=`<table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>`;Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(l=>{html+=`<tr><td style="color:var(--muted);font-size:11px;">${new Date(l.timestamp).toLocaleString()}</td><td>${esc(l.name||'System')}</td><td>${esc(l.action)}</td><td style="font-size:11px;">${esc(l.empID||'')}</td><td style="font-size:11px;">${esc(l.department||'')}</td></tr>`;});html+=`</tbody></table>`;el.innerHTML=html;}
 function searchAudit(){const q=document.querySelector('#sec-audit .search-input').value.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
-/* ═══ INBOX ══════════════════════════════════════════════════ */
+/* ── INBOX ── */
 function updInbox(){
   if(!S.currentUser||!isAOH())return;const content=document.getElementById('inboxContent'),cnt=document.getElementById('inboxCountBadge'),dot=document.getElementById('inboxDot');if(!S.leaveRequests)return;let pending=0,html='';
   Object.entries(S.leaveRequests).forEach(([key,req])=>{if(req.status!=='Pending')return;const ca=canAp(req);const cx=canCx(req);pending++;
@@ -953,7 +981,7 @@ async function rejectLeave(lid){
   catch{showToast('Failed to reject','error');}
 }
 
-/* ═══ NOTIFICATIONS ══════════════════════════════════════════ */
+/* ── NOTIFICATIONS ── */
 function updNotifs(){
   if(!S.currentUser)return;const content=document.getElementById('notifContent'),dot=document.getElementById('notifDot');if(!S.notifications)return;let unread=0,html='';
   const mine=Object.entries(S.notifications).filter(([,n])=>n.userId===S.currentUser.id).sort(([,a],[,b])=>new Date(b.timestamp)-new Date(a.timestamp));
@@ -964,7 +992,7 @@ async function markNotificationRead(id){try{await update(ref(db,`notifications/$
 function openPanel(id){document.getElementById('panelOverlay').classList.add('open');document.getElementById(id).classList.add('open');}
 function closeAllPanels(){document.getElementById('panelOverlay').classList.remove('open');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));}
 
-/* ═══ MY LEAVES ══════════════════════════════════════════════ */
+/* ── MY LEAVES ── */
 function updMyLeaves(){
   if(!S.currentUser)return;const c=document.getElementById('myLeavesContainer');if(!c)return;let total=0,app=0,pend=0,rej=0,html='';
   const mine=Object.entries(S.leaveRequests||{}).filter(([,l])=>l.empID===S.currentUser.id).sort(([,a],[,b])=>new Date(b.submittedAt)-new Date(a.submittedAt));
@@ -975,17 +1003,19 @@ function updMyLeaves(){
 }
 function searchMyLeaves(){const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();let t=0,a=0,p=0,r=0;document.querySelectorAll('#myLeavesContainer .leave-card').forEach(c=>{const v=c.textContent.toLowerCase().includes(q);c.style.display=v?'':'none';if(v){t++;const st=c.getAttribute('data-status')||'';if(st==='approved')a++;else if(st==='pending')p++;else if(st==='rejected')r++;}});document.getElementById('totalLeaves').textContent=t;document.getElementById('approvedLeaves').textContent=a;document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;}
 
-/* ═══ BULK REGISTER ══════════════════════════════════════════ */
+/* ── BULK REGISTER ── */
 function toggleBulkRegister(){document.getElementById('bulkRegisterPanel').classList.toggle('hidden');}
 async function runBulkRegister(){
   const raw=document.getElementById('bulkRegisterData').value.trim();if(!raw){showToast('No data entered','error');return;}
   const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);const prog=document.getElementById('bulkProgress');prog.classList.remove('hidden');let ok=0,fail=0;
   for(let i=0;i<lines.length;i++){const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;if(!fullName||!email||!password){fail++;continue;}
-    try{const cr=await createUserWithEmailAndPassword(secAuth,email,password);const uid=cr.user.uid;await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});ok++;}catch(e){console.error('Bulk fail',email,e);fail++;}finally{try{await signOut(secAuth);}catch{}}}
+    try{const cr=await createUserWithEmailAndPassword(secAuth,email,password);const uid=cr.user.uid;
+      // Always set empID = uid so exports show consistent IDs
+      await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});ok++;}catch(e){console.error('Bulk fail',email,e);fail++;}finally{try{await signOut(secAuth);}catch{}}}
   prog.textContent=`✅ Done: ${ok} created, ${fail} failed.`;if(ok>0){renderDir();showToast(`${ok} employee(s) registered!`,'success');}if(fail>0)showToast(`${fail} failed — check console`,'error');
 }
 
-/* ═══ TIMESTAMP SHEET ════════════════════════════════════════ */
+/* ── TIMESTAMP SHEET ── */
 function renderTimestamps(){
   const el=document.getElementById('timestampTable');if(!el)return;const mon=parseInt(document.getElementById('tsMonth').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const dim=new Date(year,mon+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   let html=`<table><thead><tr><th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:200px;">DAILY TIME RECORD<br><small>${MF[mon].toUpperCase()} ${year}</small></th><th rowspan="3" style="background:#fffde7;min-width:80px;">POSITION</th>`;
@@ -1009,41 +1039,72 @@ function exportTimestampsToExcel(){
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${MF[mon]} ${year}`);XLSX.writeFile(wb,`DTR_${MF[mon]}_${year}.xlsx`);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PAYROLL MODULE
-   EXACT MATCH TO NUEBE FORMAT WITH FULL COLORS
+/* ══════════════════════════════════════════════════════════════
+   PAYROLL MODULE — EXACT MATCH TO NUEBE EXCEL FORMAT
 
-   FORMULAS (verified from actual Excel file):
-   • Meal       = P×₱200 + RDS×₱200 + HD×₱100
-   • Night Diff = nightHrs(10PM–6AM) × (daily/8) × 10%
-   • TotalAllow = colK(daily) + meal + transpo + bday + ND + stat + regHol + specHol
-   • Net        = cutoff + meal + transpo + bday + ND + stat + regHol + specHol − deductions
-   • colK is display only (in totalAllow) — NOT in net
-═══════════════════════════════════════════════════════════════ */
+   FIXES IN THIS VERSION:
+   ✅ empNo = u.empID (always stored, never falls back to UID in exports)
+   ✅ Night Diff: isNightShift + no timestamps → 80h default
+                  isNightShift + has timestamps → compute actual 10PM-6AM
+                  not night shift → 0 (or actual if timestamps exist)
+   ✅ BASIC summary in G column shows actual T.cutoff (not 0)
+   ✅ Meal = P×₱200 + RDS×₱200 + HD×₱100 (verified from Excel)
+   ✅ Net = cutoff + allowances - deductions (colK display only)
+══════════════════════════════════════════════════════════════ */
 
 function buildRows(mon,pS,pE,year){
   const rows=[];let sn=1;
   for(const[uid,u]of aes()){
     const att=S.attendance[uid]||{};
     const salary=Math.max(0,parseFloat(u.monthlySalary)||0);
-    const cutoff=salary/2,daily=salary/WD;
+    const cutoff=salary/2;
+    const daily=salary/WD;
+
+    // Count attendance statuses
     let pCnt=0,rdsCnt=0,hdCnt=0,absDays=0,lMin=0,utHrs=0;
-    for(let d=pS;d<=pE;d++){const k=`${mon}_${d}`,st=att[k]||'',late=parseInt(att[`${k}_late`]||0);lMin+=late;
-      switch(st){case'P':pCnt++;break;case'RDS':rdsCnt++;break;case'HD':hdCnt++;break;case'UT':pCnt++;utHrs++;break;case'A':case'NPL':case'NPSL':case'S':absDays++;break;}}
-    // MEAL: P×200 + RDS×200 + HD×100
+    for(let d=pS;d<=pE;d++){
+      const k=`${mon}_${d}`,st=att[k]||'',late=parseInt(att[`${k}_late`]||0);
+      lMin+=late;
+      switch(st){
+        case'P': pCnt++; break;
+        case'RDS': rdsCnt++; break;
+        case'HD': hdCnt++; break;
+        case'UT': pCnt++; utHrs++; break;
+        case'A': case'NPL': case'NPSL': case'S': absDays++; break;
+        // SL, VL, BL, PL, ML = paid leave, not absent, not in meal
+      }
+    }
+
+    // Meal: P×200 + RDS×200 + HD×100
     const meal=pCnt*200+rdsCnt*200+hdCnt*100;
+
+    // Fixed allowances
     const transpo=Math.max(0,parseFloat(u.transpoAllow)||0);
     const stat=Math.max(0,parseFloat(u.statBenefits)||0);
     const bday=0,regHolDays=0,regHol=0,specHolDays=0,specHol=0;
-    const nh=nightHrs(uid,mon,pS,pE);
+
+    // Night Differential — computed from actual timestamps OR default 80h for night shift
+    const nh=computeNightHrs(uid,mon,pS,pE);
     const nd=nh*(daily/8)*0.10;
+
+    // Column K = daily (display in TotalAllow, NOT in Net)
     const colK=daily;
     const totalAllow=colK+meal+transpo+bday+nd+stat+regHol+specHol;
-    const absAmt=absDays*daily,tardAmt=lMin>0?(lMin/60)*(daily/8):0,utAmt=utHrs>0?utHrs*(daily/8):0;
+
+    // Deductions
+    const absAmt=absDays*daily;
+    const tardAmt=lMin>0?(lMin/60)*(daily/8):0;
+    const utAmt=utHrs>0?utHrs*(daily/8):0;
     const totalDeduct=absAmt+tardAmt+utAmt;
+
+    // Net = cutoff + allowances (excl colK) - deductions
     const net=cutoff+meal+transpo+bday+nd+stat+regHol+specHol-totalDeduct;
+
     const{L,F}=splitName(u.fullName);
-    rows.push({sn,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',salary,cutoff,daily,colK,meal,transpo,bday,nh,nd,stat,regHolDays,regHol,specHolDays,specHol,totalAllow,absDays,absAmt,lMin,tardAmt,utHrs,utAmt,totalDeduct,net,hd:u.hireDate||'',empNo:u.empID||uid,pCnt,rdsCnt,hdCnt});
+    // empNo: always use stored empID (set on create/edit), NEVER the Firebase UID key
+    const empNo=u.empID||uid;
+
+    rows.push({sn,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',salary,cutoff,daily,colK,meal,transpo,bday,nh,nd,stat,regHolDays,regHol,specHolDays,specHol,totalAllow,absDays,absAmt,lMin,tardAmt,utHrs,utAmt,totalDeduct,net,hd:u.hireDate||'',empNo,pCnt,rdsCnt,hdCnt});
     sn++;
   }
   return rows;
@@ -1062,32 +1123,61 @@ function renderPayrollPreview(){
   const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
   document.getElementById('pyStats').style.display='';
   document.getElementById('pyStats').innerHTML=`<div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">${rows.length}</div><div class="ps-sub">${label}</div></div><div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">${php(T.net)}</div></div><div class="py-stat amber"><div class="ps-label">Total Cut-off</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div><div class="py-stat purple"><div class="ps-label">Total Meal</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div><div class="ps-sub">P/RDS=₱200 HD=₱100</div></div><div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">${php(T.totalDeduct)}</div></div>`;
-  let html=`<table><thead><tr><th rowspan="2">#</th><th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th><th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th><th rowspan="2" style="text-align:left;min-width:110px;">POSITION</th><th rowspan="2">MONTHLY</th><th rowspan="2">CUT-OFF</th><th rowspan="2">DAILY</th><th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">COL K<br><small>(daily)</small></th><th colspan="5" style="background:#1e40af;color:#fff;">ALLOWANCES</th><th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th><th colspan="3" style="background:#991b1b;color:#fff;">DEDUCTIONS</th><th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th></tr><tr><th style="background:#2563eb;color:#fff;">MEAL<br><small>P/RDS=₱200 HD=₱100</small></th><th style="background:#2563eb;color:#fff;">TRANSPO</th><th style="background:#2563eb;color:#fff;">NIGHT HRS</th><th style="background:#2563eb;color:#fff;">NIGHT DIFF</th><th style="background:#2563eb;color:#fff;">STAT</th><th style="background:#b91c1c;color:#fff;">ABS DAYS</th><th style="background:#b91c1c;color:#fff;">ABS AMT</th><th style="background:#b91c1c;color:#fff;">TARD/UT</th></tr></thead><tbody>`;
-  rows.forEach(r=>{html+=`<tr><td class="ctr" style="color:var(--muted);">${r.sn}</td><td class="txt" style="font-weight:700;">${esc(r.L)}</td><td class="txt">${esc(r.F)}</td><td class="txt" style="font-size:11px;color:var(--muted);">${esc(r.pos)}</td><td>${php(r.salary)}</td><td style="font-weight:700;color:var(--accent);">${php(r.cutoff)}</td><td style="color:var(--muted);">${php(r.daily)}</td><td style="color:var(--muted);">${php(r.colK)}</td><td class="allow-cell" style="font-weight:600;">${php(r.meal)}<br><small style="color:var(--muted);font-size:9px;">P:${r.pCnt} RDS:${r.rdsCnt} HD:${r.hdCnt}</small></td><td class="allow-cell">${php(r.transpo)}</td><td class="allow-cell">${r.nh.toFixed(2)}h</td><td class="allow-cell">${php(r.nd)}</td><td class="allow-cell">${php(r.stat)}</td><td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td><td class="deduct-cell">${r.absDays>0?r.absDays+' days':'—'}</td><td class="deduct-cell">${r.absAmt>0?php(r.absAmt):'—'}</td><td class="deduct-cell">${r.tardAmt+r.utAmt>0?php(r.tardAmt+r.utAmt):'—'}</td><td class="net-cell">${php(r.net)}</td></tr>`;});
+  let html=`<table><thead><tr>
+    <th rowspan="2">#</th><th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th><th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th>
+    <th rowspan="2" style="text-align:left;min-width:110px;">POSITION</th><th rowspan="2">MONTHLY</th><th rowspan="2">CUT-OFF</th><th rowspan="2">DAILY</th>
+    <th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">COL K</th>
+    <th colspan="5" style="background:#1e40af;color:#fff;">ALLOWANCES</th>
+    <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
+    <th colspan="3" style="background:#991b1b;color:#fff;">DEDUCTIONS</th>
+    <th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th>
+  </tr><tr>
+    <th style="background:#2563eb;color:#fff;">MEAL<br><small>P/RDS=₱200 HD=₱100</small></th>
+    <th style="background:#2563eb;color:#fff;">TRANSPO</th>
+    <th style="background:#2563eb;color:#fff;">NIGHT HRS<br><small>auto/80h default</small></th>
+    <th style="background:#2563eb;color:#fff;">NIGHT DIFF<br><small>hrs×(daily/8)×10%</small></th>
+    <th style="background:#2563eb;color:#fff;">STAT</th>
+    <th style="background:#b91c1c;color:#fff;">ABS DAYS</th>
+    <th style="background:#b91c1c;color:#fff;">ABS AMT</th>
+    <th style="background:#b91c1c;color:#fff;">TARD/UT</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{html+=`<tr>
+    <td class="ctr" style="color:var(--muted);">${r.sn}</td>
+    <td class="txt" style="font-weight:700;">${esc(r.L)}</td><td class="txt">${esc(r.F)}</td>
+    <td class="txt" style="font-size:11px;color:var(--muted);">${esc(r.pos)}</td>
+    <td>${php(r.salary)}</td><td style="font-weight:700;color:var(--accent);">${php(r.cutoff)}</td>
+    <td style="color:var(--muted);">${php(r.daily)}</td><td style="color:var(--muted);">${php(r.colK)}</td>
+    <td class="allow-cell" style="font-weight:600;">${php(r.meal)}<br><small style="color:var(--muted);font-size:9px;">P:${r.pCnt} RDS:${r.rdsCnt} HD:${r.hdCnt}</small></td>
+    <td class="allow-cell">${php(r.transpo)}</td>
+    <td class="allow-cell">${r.nh.toFixed(2)}h${r.nh===80?'<br><small style="color:var(--amber);">default</small>':''}</td>
+    <td class="allow-cell">${php(r.nd)}</td><td class="allow-cell">${php(r.stat)}</td>
+    <td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td>
+    <td class="deduct-cell">${r.absDays>0?r.absDays+' days':'—'}</td>
+    <td class="deduct-cell">${r.absAmt>0?php(r.absAmt):'—'}</td>
+    <td class="deduct-cell">${r.tardAmt+r.utAmt>0?php(r.tardAmt+r.utAmt):'—'}</td>
+    <td class="net-cell">${php(r.net)}</td>
+  </tr>`;});
   html+=`<tr class="total-row"><td colspan="4" style="text-align:right;padding:10px 12px;">GRAND TOTALS</td><td>${php(T.salary)}</td><td>${php(T.cutoff)}</td><td colspan="2"></td><td>${php(T.meal)}</td><td>${php(T.transpo)}</td><td></td><td>${php(T.nd)}</td><td>${php(T.stat)}</td><td>${php(T.totalAllow)}</td><td></td><td>${php(T.absAmt)}</td><td>${php(T.tardAmt+T.utAmt)}</td><td style="font-size:13px;">${php(T.net)}</td></tr></tbody></table>`;
   document.getElementById('payrollPreview').innerHTML=html;
 }
 
-/* ═══ EXCEL STYLE HELPERS ════════════════════════════════════ */
-// Apply a style object to a specific cell (creates cell if missing)
-function sc(ws,r,c,style,val=''){
-  const addr=XLSX.utils.encode_cell({r,c});
-  if(!ws[addr]){const v=val!==''?val:'';ws[addr]={v,t:typeof v==='number'?'n':v instanceof Date?'d':'s'};}
-  ws[addr].s=style;
-}
-function applyRangeStyle(ws,r1,c1,r2,c2,style){for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)sc(ws,r,c,style);}
-
-// Style definitions matching actual NUEBE Excel colors
-const ST={
-  YELLOW:{fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center'}},
-  GRAY:{fill:{patternType:'solid',fgColor:{rgb:'595959'}},font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
-  GREEN:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{bold:true,sz:10},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
-  GREEN_VAL:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{bold:false,sz:10}},
+/* ── EXCEL EXPORT ── */
+// Styles matching exact NUEBE Excel colors
+const XST={
+  YELLOW_HDR:{fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+  GRAY_HDR:{fill:{patternType:'solid',fgColor:{rgb:'595959'}},font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
+  GREEN_VAL:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{sz:10},alignment:{horizontal:'right',vertical:'center'}},
+  GREEN_HDR:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{bold:true,sz:9,color:{rgb:'000000'}},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
   DARK_BLUE:{fill:{patternType:'solid',fgColor:{rgb:'1C4587'}},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
   DARK_RED:{fill:{patternType:'solid',fgColor:{rgb:'85200C'}},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},alignment:{horizontal:'center',vertical:'center'}},
   YELLOW_ROW:{fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}}},
-  WHITE:{fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},alignment:{horizontal:'center',vertical:'center'}},
 };
+
+function xsc(ws,r,c,s){
+  const addr=XLSX.utils.encode_cell({r,c});
+  if(!ws[addr]){ws[addr]={v:'',t:'s'};}
+  ws[addr].s=s;
+}
 
 function exportPayrollExcel(){
   if(!isAH()){showToast('Restricted to HR and Admin','error');return;}
@@ -1096,11 +1186,16 @@ function exportPayrollExcel(){
   const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
   const dim=new Date(year,mon+1,0).getDate(),pEnd=pEr>=28?dim:pEr;
   const rows=buildRows(mon,pS,pEnd,year);if(!rows.length){showToast('No employee data to export','error');return;}
-  const mL=`${MF[mon].toUpperCase().slice(0,3)} ${pS},${year}`,mE=`${MF[mon].toUpperCase().slice(0,3)} ${pEnd},${year}`,rem=`${MF[mon].toUpperCase()} ${pS} TO ${pEnd}`;
+
+  const mL=`${MF[mon].toUpperCase().slice(0,3)} ${pS},${year}`;
+  const mE=`${MF[mon].toUpperCase().slice(0,3)} ${pEnd},${year}`;
+  const rem=`${MF[mon].toUpperCase()} ${pS} TO ${pEnd}`;
+
   const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,regHol:a.regHol+r.regHol,specHol:a.specHol+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
+
   const wb=XLSX.utils.book_new();
 
-  /* ═══ SHEET 1: REQUEST CLAIM ════════════════════════════════ */
+  /* ═══ SHEET 1: REQUEST CLAIM ════════════════ */
   const s1=[
     ['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],
     [1,new Date(),'Salary for Staff','',rows.length,T.net,'AFB','AFB','All','Salary and Wages',rem,'',''],
@@ -1110,53 +1205,59 @@ function exportPayrollExcel(){
   ];
   const ws1=XLSX.utils.aoa_to_sheet(s1,{cellDates:true});
   ws1['!cols']=[{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
-  // Yellow header row
-  for(let c=0;c<13;c++){const a=XLSX.utils.encode_cell({r:0,c});if(ws1[a])ws1[a].s=ST.YELLOW;}
+  for(let c=0;c<13;c++)xsc(ws1,0,c,XST.YELLOW_HDR);
   XLSX.utils.book_append_sheet(wb,ws1,'REQUEST CLAIM');
 
-  /* ═══ SHEET 2: PAYROLL REQUEST ══════════════════════════════ */
-  const s2=[];
+  /* ═══ SHEET 2: PAYROLL REQUEST ════════════════ */
   // Header block rows 1-10
-  s2.push(['Pay Period','','','','','BASIC',T.cutoff,...Array(26).fill('')]);
-  s2.push(['Start',mL,'','','','OT',0]);
-  s2.push(['End',mE,'','','','MEAL',T.meal]);
-  s2.push(['','','','','','TRANSPO',T.transpo]);
-  s2.push(['Total Salary',T.net,'','','','BIRTHDAY',0]);
-  s2.push(['','','','','','ND',T.nd]);
-  s2.push(['','','','','','STAT',T.stat]);
-  s2.push(['','','','','','Regular Holiday',T.regHol]);
-  s2.push(['','','','','','Speacial Holiday',T.specHol]);
+  // FIX: G column (index 6) must show actual totals, not 0
+  const s2=[
+    ['Pay Period','','','','','BASIC',    T.cutoff,...Array(26).fill('')], // row 1: BASIC total
+    ['Start',mL, '','','','OT',         0],
+    ['End',  mE, '','','','MEAL',       T.meal],
+    ['',     '',  '','','','TRANSPO',   T.transpo],
+    ['Total Salary',T.net,'','','','BIRTHDAY', 0],
+    ['',     '',  '','','','ND',        T.nd],
+    ['',     '',  '','','','STAT',      T.stat],
+    ['',     '',  '','','','Regular Holiday',T.regHol],
+    ['',     '',  '','','','Speacial Holiday',T.specHol],
+  ];
+  // Row 10: merged Allowances/Deductions labels
   const r10=Array(33).fill('');r10[5]='DISCREPANCY';r10[6]=0;r10[14]='Allowances';r10[26]='Deductions';s2.push(r10);
-  // Column headers row 11
+  // Row 11: column headers
   s2.push(['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','','Overtime','Discrepancy','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary']);
-  // Dept totals row 12
-  const r12=Array(33).fill('');r12[3]='AFB / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;r12[18]=T.nd;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;r12[24]=T.totalAllow;r12[26]=T.absAmt;r12[28]=T.tardAmt;r12[30]=T.utAmt;r12[31]=T.totalDeduct;r12[32]=T.net;s2.push(r12);
+  // Row 12: dept totals (yellow)
+  const r12=Array(33).fill('');
+  r12[3]='AFB / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;
+  r12[18]=T.nd;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;
+  r12[24]=T.totalAllow;r12[26]=T.absAmt;r12[28]=T.tardAmt;
+  r12[30]=T.utAmt;r12[31]=T.totalDeduct;r12[32]=T.net;
+  s2.push(r12);
   // Employee rows
-  rows.forEach(r=>{const hd=r.hd?new Date(r.hd):'';s2.push([r.sn,r.L,r.F,r.pos,r.full,r.salary,hd,r.cutoff,r.daily,0,r.colK,0,0,0,r.meal,r.transpo,r.bday,r.nh,r.nd,r.stat,r.regHolDays,r.regHol,r.specHolDays,r.specHol,r.totalAllow,r.absDays,r.absAmt,r.lMin,r.tardAmt,r.utHrs,r.utAmt,r.totalDeduct,r.net]);});
+  rows.forEach(r=>{
+    s2.push([r.sn,r.L,r.F,r.pos,r.full,r.salary,r.hd?new Date(r.hd):'',r.cutoff,r.daily,0,r.colK,0,0,0,r.meal,r.transpo,r.bday,r.nh,r.nd,r.stat,r.regHolDays,r.regHol,r.specHolDays,r.specHol,r.totalAllow,r.absDays,r.absAmt,r.lMin,r.tardAmt,r.utHrs,r.utAmt,r.totalDeduct,r.net]);
+  });
 
   const ws2=XLSX.utils.aoa_to_sheet(s2,{cellDates:true});
   ws2['!cols']=[{wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20},{wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},{wch:11},{wch:7.29},{wch:9},{wch:8},{wch:10.71},{wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},{wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},{wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},{wch:14.29},{wch:15.86},{wch:8.71}];
-  ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{s:{r:9,c:26},e:{r:9,c:31}}.e}];
-  // Fix merges
   ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{r:9,c:31}}];
 
-  // Green fill for summary value column (col G = index 6, rows 1-9)
-  for(let r=0;r<=8;r++){const a=XLSX.utils.encode_cell({r,c:6});if(ws2[a])ws2[a].s=ST.GREEN_VAL;else{ws2[a]={v:s2[r][6]||0,t:'n',s:ST.GREEN_VAL};}}
+  // Apply GREEN fill to G column (index 6) rows 1-9 (summary values)
+  for(let r=0;r<=8;r++)xsc(ws2,r,6,XST.GREEN_VAL);
 
-  // Gray fill for column header row (row 11 = index 10)
-  const gCols=[0,1,2,3,4,5,6,7,8,11,12,24,31,32];
-  gCols.forEach(c=>{const a=XLSX.utils.encode_cell({r:10,c});if(ws2[a])ws2[a].s=ST.GRAY;});
-  // Allowances/Deductions merged headers in row 10 (index 9)
-  [14,26].forEach(c=>{const a=XLSX.utils.encode_cell({r:9,c});if(ws2[a])ws2[a].s=ST.GRAY;});
-  // Date Started header = green
-  const g11=XLSX.utils.encode_cell({r:10,c:6});if(ws2[g11])ws2[g11].s=ST.GREEN;
+  // Apply GRAY fill to header row (row index 10 = spreadsheet row 11)
+  [0,1,2,3,4,5,7,8,11,12,24,31,32].forEach(c=>xsc(ws2,10,c,XST.GRAY_HDR));
+  // Date Started col header = GREEN
+  xsc(ws2,10,6,XST.GREEN_HDR);
+  // Allowances/Deductions merged cell headers
+  xsc(ws2,9,14,XST.GRAY_HDR);xsc(ws2,9,26,XST.GRAY_HDR);
 
-  // Yellow for dept totals row (row 12 = index 11)
-  for(let c=0;c<33;c++){const a=XLSX.utils.encode_cell({r:11,c});if(ws2[a])ws2[a].s=ST.YELLOW_ROW;else{ws2[a]={v:r12[c]===null||r12[c]===undefined?'':r12[c],t:typeof r12[c]==='number'?'n':'s',s:ST.YELLOW_ROW};}}
+  // Apply YELLOW fill to dept totals row (row index 11 = spreadsheet row 12)
+  for(let c=0;c<33;c++)xsc(ws2,11,c,XST.YELLOW_ROW);
 
   XLSX.utils.book_append_sheet(wb,ws2,'PAYROLL REQUEST');
 
-  /* ═══ SHEET 3: ATTENDANCE SHEET ═════════════════════════════ */
+  /* ═══ SHEET 3: ATTENDANCE SHEET ════════════════ */
   const nD=pEnd-pS+1;
   const attHdr=['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
   for(let d=pS;d<=pEnd;d++)attHdr.push(new Date(year,mon,d));
@@ -1167,8 +1268,8 @@ function exportPayrollExcel(){
     const att=S.attendance[r.uid]||{};
     const totalDays=r.pCnt+r.rdsCnt+r.hdCnt*0.5;
     const cost=r.pCnt*200+r.rdsCnt*200+r.hdCnt*100;
-    const hd=r.hd?new Date(r.hd):'';
-    const rowData=[r.empNo,r.L,r.F,r.pos,hd,'ACTIVE'];
+    // FIX: use r.empNo (already resolved from u.empID), never raw Firebase UID
+    const rowData=[r.empNo,r.L,r.F,r.pos,r.hd?new Date(r.hd):'','ACTIVE'];
     for(let d=pS;d<=pEnd;d++)rowData.push(att[`${mon}_${d}`]||'');
     rowData.push(totalDays,cost);
     if(i<LEG.length)rowData.push('',LEG[i][0],LEG[i][1]);
@@ -1181,18 +1282,20 @@ function exportPayrollExcel(){
   attCols.push({wch:11},{wch:10},{wch:4},{wch:6},{wch:22});
   ws3['!cols']=attCols;
 
-  // Header row styles
-  for(let c=0;c<6;c++){const a=XLSX.utils.encode_cell({r:0,c});if(ws3[a])ws3[a].s=ST.DARK_BLUE;}
-  for(let c=6;c<6+nD;c++){const a=XLSX.utils.encode_cell({r:0,c});if(ws3[a])ws3[a].s=ST.DARK_RED;}
-  // TOTAL DAYS and COST headers
-  for(let c=6+nD;c<6+nD+2;c++){const a=XLSX.utils.encode_cell({r:0,c});if(ws3[a])ws3[a].s=ST.DARK_BLUE;}
+  // Header row: first 6 cols = dark blue, date cols = dark red, totals = dark blue
+  for(let c=0;c<6;c++)xsc(ws3,0,c,XST.DARK_BLUE);
+  for(let c=6;c<6+nD;c++)xsc(ws3,0,c,XST.DARK_RED);
+  for(let c=6+nD;c<6+nD+2;c++)xsc(ws3,0,c,XST.DARK_BLUE);
 
   // Legend cell colors
   rows.forEach((r,i)=>{
     if(i>=LEG.length)return;
-    const rowIdx=1+i;const code=LEG[i][0];const clr=LEG_CLR[code];
-    const legCol=6+nD+1;// legend code column
-    if(clr){const a=XLSX.utils.encode_cell({r:rowIdx,c:legCol});if(ws3[a])ws3[a].s={fill:{patternType:'solid',fgColor:{rgb:clr}},alignment:{horizontal:'center',vertical:'center'}};}
+    const code=LEG[i][0];const clr=LEG_CLR[code];
+    if(clr){
+      const legCol=6+nD+1;// legend code column (Y in the sheet)
+      const addr=XLSX.utils.encode_cell({r:1+i,c:legCol});
+      if(ws3[addr])ws3[addr].s={fill:{patternType:'solid',fgColor:{rgb:clr}},alignment:{horizontal:'center',vertical:'center'}};
+    }
   });
 
   XLSX.utils.book_append_sheet(wb,ws3,'ATTENDANCE SHEET');
@@ -1210,16 +1313,16 @@ function exportToExcel(){
   const ws=XLSX.utils.aoa_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Attendance');XLSX.writeFile(wb,`Attendance_${MONTHS[mon]}_${per}_${year}.xlsx`);
 }
 
-/* ═══ TOAST ══════════════════════════════════════════════════ */
+/* ── TOAST ── */
 function showToast(msg,type='info'){const c=document.getElementById('toastContainer');while(c.children.length>=5)c.removeChild(c.firstChild);const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=`${type==='success'?'✅':type==='error'?'❌':'ℹ️'} ${msg}`;c.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3500);}
 function showFE(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
 function showFV(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
 
-/* ═══ RENDER QUEUE ═══════════════════════════════════════════ */
+/* ── RENDER QUEUE ── */
 const _rq=new Set();let _rt=null;
 function qR(...tasks){tasks.forEach(t=>_rq.add(t));if(_rt)clearTimeout(_rt);_rt=setTimeout(()=>{_rt=null;const j=[..._rq];_rq.clear();if(j.includes('tab'))renderTab();if(j.includes('inbox'))updInbox();if(j.includes('myLeaves'))updMyLeaves();if(j.includes('notifications'))updNotifs();if(j.includes('dashboard'))updDash();},80);}
 
-/* ═══ REALTIME LISTENERS ═════════════════════════════════════ */
+/* ── REALTIME LISTENERS ── */
 function setupListeners(){
   Object.values(S.listeners).forEach(f=>{if(typeof f==='function')f();});
   S.listeners.users=onValue(ref(db,'users'),snap=>{S.users=snap.val()||{};chkDisabled();qR('tab','dashboard');});
@@ -1229,7 +1332,7 @@ function setupListeners(){
   S.listeners.auditLogs=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
 }
 
-/* ═══ EXPORT TO WINDOW ═══════════════════════════════════════ */
+/* ── EXPORT TO WINDOW ── */
 function ex(n,f){window[n]=f;window['__hr_'+n]=f;}
 ex('handleLogin',handleLogin);ex('handleLogout',()=>handleLogout(false));ex('userClockAction',userClockAction);ex('submitLeave',submitLeave);ex('cancelLeave',cancelLeave);ex('addEmployee',addEmployee);ex('editEmployee',editEmployee);ex('cancelEdit',cancelEdit);ex('manualClockOutNow',manualClockOutNow);ex('switchTab',switchTabI);ex('toggleLeaveForm',toggleLeaveForm);ex('renderAttendance',renderAttendance);ex('renderSchedules',renderSchedules);ex('updateLeaveBalance',updateLeaveBalance);ex('checkDateRange',checkDateRange);ex('exportToExcel',exportToExcel);ex('renderPayrollPreview',renderPayrollPreview);ex('exportPayrollExcel',exportPayrollExcel);ex('searchEmployees',searchEmployees);ex('searchActive',searchActive);ex('searchSchedules',searchSchedules);ex('searchAttendance',searchAttendance);ex('searchAudit',searchAudit);ex('searchMyLeaves',searchMyLeaves);ex('changeAttendanceStatus',changeAttendanceStatus);ex('updateScheduleField',updateScheduleField);ex('saveSchedule',saveSchedule);ex('saveAllSchedules',saveAllSchedules);ex('openPanel',openPanel);ex('closeAllPanels',closeAllPanels);ex('approveLeave',approveLeave);ex('rejectLeave',rejectLeave);ex('markNotificationRead',markNotificationRead);ex('deleteEmployee',deleteEmployee);ex('toggleBulkRegister',toggleBulkRegister);ex('runBulkRegister',runBulkRegister);ex('renderTimestamps',renderTimestamps);ex('exportTimestampsToExcel',exportTimestampsToExcel);
 </script>
