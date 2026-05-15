@@ -7,786 +7,1383 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-/* … CSS unchanged … (same as original) */
 :root{--navy:#1c1e21;--navy2:#242526;--navy3:#3a3b3c;--slate:#65676b;--muted:#8a8d91;--border:#dadde1;--bg:#f0f2f5;--card:#ffffff;--accent:#1877f2;--accent2:#166fe5;--green:#42b72a;--red:#fa383e;--amber:#f7b928;--purple:#9360f7;--shadow:0 1px 2px rgba(0,0,0,.12);--shadow2:0 12px 28px rgba(0,0,0,.18);--r:10px;--r2:12px;--sidebar-w:240px;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);font-size:13px;line-height:1.6;min-height:100vh;}
-/* … rest of CSS … */
+#appShell{display:flex;min-height:100vh;}
+#sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s;}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.sidebar-logo .brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);}
+.sidebar-logo .sub{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.sidebar-user{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-info .name{color:var(--navy);font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.user-info .role-pill{display:inline-block;font-size:9px;font-weight:600;text-transform:uppercase;padding:1px 7px;border-radius:20px;margin-top:2px;background:#e7f3ff;color:var(--accent);}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 0;}
+.nav-section{padding:0 12px;margin-bottom:4px;}
+.nav-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 8px 4px;font-weight:700;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--navy3);font-size:13px;font-weight:600;transition:all .15s;position:relative;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{background:var(--bg);color:var(--navy);}
+.nav-item.active{background:#e7f3ff;color:var(--accent);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;border-radius:0 3px 3px 0;background:var(--accent);}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-footer{padding:16px 12px;border-top:1px solid var(--border);}
+.logout-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;border:none;background:#ffe3e5;color:#c40011;font-size:12px;font-weight:600;cursor:pointer;}
+.logout-btn:hover{background:#ffd6d9;}
+#mainContent{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.top-bar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.top-bar-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--navy);}
+.top-bar-actions{display:flex;align-items:center;gap:12px;}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;}
+.icon-btn:hover{background:#e4e6eb;}
+.icon-btn .dot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid #fff;}
+.page-content{padding:24px 28px;flex:1;}
+.card{background:var(--card);border-radius:var(--r2);border:none;box-shadow:var(--shadow);padding:24px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--navy);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:none;border-radius:var(--r2);padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.stat-card.blue::after{background:var(--accent);}
+.stat-card.green::after{background:var(--green);}
+.stat-card.amber::after{background:var(--amber);}
+.stat-card.red::after{background:var(--red);}
+.stat-card.purple::after{background:var(--purple);}
+.stat-icon{font-size:22px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--navy);line-height:1;}
+.stat-label{font-size:11px;color:var(--muted);font-weight:500;}
+.balance-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.bal-card{border-radius:var(--r2);padding:20px;border:1px solid transparent;}
+.bal-card.sl{background:#fffbeb;border-color:#fde68a;}
+.bal-card.vl{background:#eff6ff;border-color:#bfdbfe;}
+.bal-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1;margin:8px 0 4px;}
+.bal-card.sl .bal-num{color:#d97706;}
+.bal-card.vl .bal-num{color:#2563eb;}
+.bal-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.bal-card.sl .bal-label{color:#92400e;}
+.bal-card.vl .bal-label{color:#1e40af;}
+.bal-bar{height:5px;background:rgba(0,0,0,.08);border-radius:3px;margin-top:10px;overflow:hidden;}
+.bal-bar-fill{height:100%;border-radius:3px;transition:width .4s ease;}
+.bal-card.sl .bal-bar-fill{background:linear-gradient(90deg,#fbbf24,#d97706);}
+.bal-card.vl .bal-bar-fill{background:linear-gradient(90deg,#60a5fa,#2563eb);}
+.bal-meta{display:flex;justify-content:space-between;font-size:10px;margin-top:6px;}
+.bal-card.sl .bal-meta{color:#92400e;}
+.bal-card.vl .bal-meta{color:#1e40af;}
+.clock-widget{background:var(--accent);border-radius:var(--r2);padding:28px 24px;color:#fff;text-align:center;margin-bottom:16px;}
+.clock-time{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:#fff;}
+.clock-date{font-size:12px;color:rgba(255,255,255,.85);margin-top:4px;margin-bottom:20px;}
+.clock-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.clock-btn.in{background:#fff;color:var(--accent);}
+.clock-btn.out{background:var(--red);color:#fff;}
+.clock-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.sched-grid{display:grid;gap:10px;}
+.sched-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.sched-row:last-child{border-bottom:none;}
+.sched-key{font-size:11px;color:var(--muted);}
+.sched-val{font-size:12px;font-weight:600;color:var(--navy);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-success:hover{filter:brightness(.9);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-ghost{background:#e4e6eb;color:var(--navy3);}
+.btn-ghost:hover{background:#d8dadf;}
+.btn-sm{padding:5px 11px;font-size:11px;}
+.btn-full{width:100%;}
+.btn-amber{background:var(--amber);color:#fff;}
+.btn-purple{background:var(--purple);color:#fff;}
+.btn-navy{background:var(--navy);color:#fff;}
+.btn-navy:hover{background:var(--navy2);}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:11px;font-weight:600;color:var(--navy3);text-transform:uppercase;letter-spacing:.4px;}
+.form-input,.form-select,.form-textarea{padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--navy);background:#fff;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,119,242,.14);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.alert{padding:10px 14px;border-radius:8px;font-size:12px;display:flex;align-items:flex-start;gap:8px;}
+.alert-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+.alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+.alert.hidden{display:none!important;}
+.search-wrap{position:relative;margin-bottom:16px;}
+.search-input{width:100%;padding:9px 14px 9px 38px;border:none;border-radius:20px;background:var(--bg);font-family:'DM Sans',sans-serif;font-size:13px;}
+.search-input:focus{outline:none;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none;}
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f0f2f5;padding:11px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border);white-space:nowrap;}
+thead th.txt-left{text-align:left;}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--navy2);vertical-align:middle;text-align:center;}
+tbody td.txt{text-align:left;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#f7f8fa;}
+td.att-cell{cursor:pointer;min-width:46px;text-align:center;font-size:10px;font-weight:700;border-radius:5px;padding:4px 2px;transition:transform .1s;}
+td.att-cell:hover{transform:scale(1.08);}
+.s-P{background:#dcfce7!important;color:#166534!important;}
+.s-RD{background:#fed7aa!important;color:#9a3412!important;}
+.s-RDS{background:#c8e6c9!important;color:#1b5e20!important;}
+.s-SL{background:#fef9c3!important;color:#713f12!important;}
+.s-A{background:#fee2e2!important;color:#991b1b!important;}
+.s-NPL{background:#cffafe!important;color:#164e63!important;}
+.s-VL{background:#dbeafe!important;color:#1e3a8a!important;}
+.s-NPSL{background:#ffedd5!important;color:#9a3412!important;}
+.s-S{background:#fecaca!important;color:#7f1d1d!important;}
+.s-UT{background:#e0e7ff!important;color:#3730a3!important;}
+.s-HD{background:#ede9fe!important;color:#4c1d95!important;}
+.s-BL{background:#a5f3fc!important;color:#164e63!important;}
+.s-PL{background:#bbf7d0!important;color:#14532d!important;}
+.s-ML{background:#fce7f3!important;color:#831843!important;}
+.s-{background:transparent!important;color:transparent!important;}
+.late-tag{display:block;font-size:8px;background:rgba(0,0,0,.15);border-radius:3px;margin-top:2px;padding:0 2px;}
+.lates-total{font-weight:800;color:#991b1b;background:#fef2f2;text-align:center;}
+.leave-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.leave-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:18px;border-left-width:4px;box-shadow:var(--shadow);}
+.leave-card.pending{border-left-color:var(--amber);}
+.leave-card.approved{border-left-color:var(--green);}
+.leave-card.rejected{border-left-color:var(--red);}
+.leave-card.cancelled{border-left-color:var(--muted);}
+.leave-type{font-weight:700;font-size:13px;color:var(--navy);}
+.leave-dates{font-size:11px;color:var(--muted);margin:4px 0 8px;}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;}
+.badge-pending{background:#fef3c7;color:#92400e;}
+.badge-approved{background:#d1fae5;color:#064e3b;}
+.badge-rejected{background:#fee2e2;color:#7f1d1d;}
+.badge-cancelled{background:#f1f5f9;color:var(--slate);}
+.leave-actions{display:flex;gap:6px;margin-top:12px;}
+.panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:400;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s;}
+.panel-overlay.open{opacity:1;pointer-events:all;}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:380px;background:var(--card);z-index:500;box-shadow:var(--shadow2);transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;}
+.slide-panel.open{transform:translateX(0);}
+.panel-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;}
+.panel-close{cursor:pointer;font-size:20px;color:var(--muted);background:none;border:none;}
+.panel-body{flex:1;overflow-y:auto;padding:16px 24px;}
+.inbox-item{padding:14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;}
+.inbox-name{font-weight:700;font-size:13px;color:var(--navy);}
+.inbox-detail{font-size:11px;color:var(--muted);margin:3px 0 6px;}
+.inbox-reason{font-size:11px;color:var(--navy3);background:var(--bg);padding:6px 10px;border-radius:6px;margin-bottom:8px;}
+#toastContainer{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:var(--shadow2);animation:slideUp .25s ease;min-width:240px;}
+.toast-success{background:#fff;color:#166534;border:1px solid #bbf7d0;border-left:4px solid var(--green);}
+.toast-error{background:#fff;color:#991b1b;border:1px solid #fecaca;border-left:4px solid var(--red);}
+.toast-info{background:#fff;color:#1e40af;border:1px solid #bfdbfe;border-left:4px solid var(--accent);}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+#autoClockoutBanner{position:fixed;bottom:80px;right:24px;background:#fff;border:1px solid #fde68a;border-left:4px solid var(--amber);border-radius:var(--r);padding:14px 18px;z-index:9998;box-shadow:var(--shadow2);width:280px;}
+.autoClockout-title{font-weight:700;color:#92400e;font-size:12px;margin-bottom:4px;}
+.autoClockout-sub{font-size:11px;color:var(--muted);margin-bottom:10px;}
+#offlineBanner{display:none;background:var(--amber);color:#fff;text-align:center;padding:6px 16px;font-size:11px;font-weight:600;}
+#loginSection{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.login-box{background:#fff;border-radius:20px;padding:40px;width:380px;box-shadow:var(--shadow2);}
+.login-logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);margin-bottom:6px;}
+.login-tagline{font-size:12px;color:var(--muted);margin-bottom:28px;}
+#schedTable table{min-width:900px;}
+#schedTable td{padding:8px 10px;text-align:center;}
+#schedTable td.txt{text-align:left;}
+#timestampTable table{border-collapse:collapse;}
+#timestampTable thead th{position:sticky;top:0;z-index:5;text-align:center;}
+#timestampTable td{text-align:center;white-space:nowrap;font-size:11px;padding:6px 5px;border:1px solid var(--border);}
+#timestampTable thead th{border:1px solid var(--border);}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.toolbar-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);background:#fff;cursor:pointer;}
+.notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:11px;color:#1e40af;margin-bottom:14px;}
+.section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.hierarchy-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--navy3);margin-bottom:14px;}
+.payroll-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.py-stat{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);border-bottom:3px solid transparent;}
+.py-stat.blue{border-bottom-color:var(--accent);}
+.py-stat.green{border-bottom-color:var(--green);}
+.py-stat.amber{border-bottom-color:var(--amber);}
+.py-stat.red{border-bottom-color:var(--red);}
+.py-stat.purple{border-bottom-color:var(--purple);}
+.py-stat .ps-label{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.py-stat .ps-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-top:4px;color:var(--navy);}
+.py-stat .ps-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+#payrollPreview{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+#payrollPreview table{border-collapse:collapse;width:100%;min-width:1400px;font-size:11px;}
+#payrollPreview thead tr:first-child th{background:#1c1e21;color:#fff;padding:10px 8px;text-align:center;border:1px solid #3a3b3c;font-size:10px;font-weight:700;text-transform:uppercase;}
+#payrollPreview thead tr:nth-child(2) th{background:#3a3b3c;color:#e4e6eb;padding:7px 8px;text-align:center;border:1px solid #4a4b4c;font-size:9px;font-weight:600;}
+#payrollPreview tbody td{padding:8px;border:1px solid var(--border);text-align:right;vertical-align:middle;}
+#payrollPreview tbody td.txt{text-align:left;}
+#payrollPreview tbody td.ctr{text-align:center;}
+#payrollPreview tbody tr:nth-child(even) td{background:#fafafa;}
+#payrollPreview tbody tr:hover td{background:#f0f7ff;}
+#payrollPreview .allow-cell{background:#eff6ff!important;}
+#payrollPreview .deduct-cell{background:#fef2f2!important;color:#dc2626;}
+#payrollPreview .net-cell{background:#f0fdf4!important;color:#065f46;font-weight:800;font-size:12px;}
+#payrollPreview .total-row td{background:#1c1e21!important;color:#fff!important;font-weight:700;}
+.payroll-info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;font-size:11px;color:#1e40af;margin-bottom:16px;line-height:1.8;}
+/* EARNINGS TAB */
+.payslip-card{background:#fff;border-radius:var(--r2);box-shadow:var(--shadow2);overflow:hidden;max-width:520px;margin:0 auto;}
+.payslip-header{background:var(--navy);color:#fff;padding:20px 24px;}
+.payslip-company{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.payslip-period{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;}
+.payslip-emp{padding:16px 24px;background:#f8f9fa;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.payslip-emp-item .label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+.payslip-emp-item .value{font-size:12px;font-weight:600;color:var(--navy);margin-top:1px;}
+.payslip-body{padding:20px 24px;}
+.payslip-section{margin-bottom:16px;}
+.payslip-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.payslip-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+.payslip-row .item{font-size:12px;color:var(--navy3);}
+.payslip-row .amount{font-size:12px;font-weight:600;color:var(--navy);}
+.payslip-row.earning .amount{color:var(--green);}
+.payslip-row.deduction .amount{color:var(--red);}
+.payslip-net{background:var(--navy);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
+.payslip-net .label{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);}
+.payslip-net .amount{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;}
+.period-picker{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+#menuToggle{display:none;}
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);}
+  #sidebar.open{transform:translateX(0);}
+  #mainContent{margin-left:0;}
+  #menuToggle{display:flex;}
+  .page-content{padding:16px;}
+  .top-bar{padding:0 16px;}
+  .slide-panel{width:100%;}
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid2{grid-template-columns:1fr;}
+}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
-<!-- same HTML structure unchanged until <script type="module"> -->
 <div id="toastContainer"></div>
-<!-- ... all the HTML sections unchanged ... -->
+<div id="startupError" class="hidden" style="position:fixed;left:16px;right:16px;top:16px;z-index:10000;background:#fff;border:1px solid #fecaca;border-left:4px solid #fa383e;border-radius:10px;box-shadow:var(--shadow2);padding:14px 16px;color:#991b1b;font:13px/1.5 Arial,sans-serif;">
+  <strong>AFB Teams could not finish loading.</strong>
+  <div id="startupErrorMsg" style="margin-top:4px;color:#7f1d1d;"></div>
+</div>
+<div id="offlineBanner">⚠️ You are offline — actions will be queued and synced when reconnected</div>
+<div id="autoClockoutBanner" class="hidden">
+  <div class="autoClockout-title">⚠️ Auto Clock-Out Warning</div>
+  <div class="autoClockout-sub">You forgot to clock out! Auto clock-out in <strong id="autoClockoutTimer">5:00</strong></div>
+  <button class="btn btn-danger btn-sm btn-full" onclick="manualClockOutNow()">Clock Out Now</button>
+</div>
+
+<!-- LOGIN -->
+<div id="loginSection">
+  <div class="login-box">
+    <div class="login-logo">AFB<span style="color:var(--accent);">.</span>Teams</div>
+    <div class="login-tagline">Team attendance and payroll portal</div>
+    <div id="loginError" class="alert alert-error hidden" style="margin-bottom:16px;"></div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group"><label class="form-label">Email</label><input type="email" id="lUser" class="form-input" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" id="lPass" class="form-input" placeholder="••••••••" autocomplete="current-password"></div>
+      <button id="loginButton" class="btn btn-primary btn-full" style="padding:12px;font-size:13px;" onclick="handleLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell" class="hidden">
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">AFB<span style="color:var(--accent);">.</span>Teams</div>
+      <div class="sub">Team Portal</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <div class="user-info">
+        <div class="name" id="sidebarName">User</div>
+        <div class="role-pill" id="sidebarRole">Employee</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)"><span class="icon">🏠</span> Dashboard</button>
+        <button class="nav-item" data-tab="earnings" onclick="switchTab('earnings',this)"><span class="icon">💵</span> My Earnings</button>
+        <button class="nav-item" data-tab="leaves" onclick="switchTab('leaves',this)"><span class="icon">📋</span> My Leaves</button>
+      </div>
+      <div class="nav-section" id="navManage" style="display:none;">
+        <div class="nav-label">Manage</div>
+        <button class="nav-item adm-hr-only" data-tab="dir" onclick="switchTab('dir',this)" style="display:none;"><span class="icon">👥</span> Directory</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="active" onclick="switchTab('active',this)" style="display:none;"><span class="icon">🟢</span> Active Now</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="sched" onclick="switchTab('sched',this)" style="display:none;"><span class="icon">📅</span> Schedules</button>
+      </div>
+      <div class="nav-section" id="navReports" style="display:none;">
+        <div class="nav-label">Reports</div>
+        <button class="nav-item adm-hr-only" data-tab="pay" onclick="switchTab('pay',this)" style="display:none;"><span class="icon">📊</span> Payroll &amp; Attendance</button>
+        <button class="nav-item adm-hr-only" data-tab="payroll" onclick="switchTab('payroll',this)" style="display:none;"><span class="icon">💰</span> Payroll Export</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="timestamps" onclick="switchTab('timestamps',this)" style="display:none;"><span class="icon">⏱</span> Timestamp Sheet</button>
+        <button class="nav-item adm-ops-hr-only" data-tab="audit" onclick="switchTab('audit',this)" style="display:none;"><span class="icon">🔍</span> Audit Logs</button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="handleLogout()"><span>🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <div id="mainContent">
+    <div id="offlineQueueBanner" class="hidden" style="background:#fef3c7;border-bottom:1px solid #fde68a;padding:6px 32px;font-size:11px;color:#92400e;font-weight:600;">
+      📦 <span id="queueCount">0</span> action(s) queued offline — will sync when reconnected
+    </div>
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button id="menuToggle" class="icon-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div class="top-bar-title" id="topBarTitle">Dashboard</div>
+      </div>
+      <div class="top-bar-actions">
+        <button class="icon-btn hidden" id="inboxBtn" onclick="openPanel('inboxPanel')">✉️<span class="dot hidden" id="inboxDot"></span></button>
+        <button class="icon-btn hidden" id="notifBtn" onclick="openPanel('notifPanel')">🔔<span class="dot hidden" id="notifDot"></span></button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <section id="sec-dashboard" class="tab-content">
+        <div class="section-title" id="dashGreet">Good morning</div>
+        <div class="section-sub">Here's your overview for today</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
+          <div>
+            <div class="clock-widget">
+              <div class="clock-time" id="liveClock">00:00:00</div>
+              <div class="clock-date" id="liveDate">Loading…</div>
+              <button id="btnClockIn" class="clock-btn in" onclick="userClockAction('P')">▶ Clock In</button>
+              <button id="btnClockOut" class="clock-btn out hidden" onclick="userClockAction('OUT')">■ Clock Out</button>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Leave Balance</div></div>
+              <div class="balance-row">
+                <div class="bal-card sl"><div class="bal-label">Sick Leave</div><div class="bal-num" id="slView">0</div><div class="bal-bar"><div class="bal-bar-fill" id="slProg" style="width:0%"></div></div><div class="bal-meta"><span>Used: <b id="slUsed">0</b></span><span>Total: <b id="slTotal">0</b></span></div></div>
+                <div class="bal-card vl"><div class="bal-label">Vacation Leave</div><div class="bal-num" id="vlView">0</div><div class="bal-bar"><div class="bal-bar-fill" id="vlProg" style="width:0%"></div></div><div class="bal-meta"><span>Used: <b id="vlUsed">0</b></span><span>Total: <b id="vlTotal">0</b></span></div></div>
+              </div>
+              <button class="btn btn-primary btn-full" onclick="toggleLeaveForm()" style="margin-top:4px;">+ File Leave Request</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="stats-row" style="grid-template-columns:1fr 1fr;">
+              <div class="stat-card blue"><div class="stat-icon">📅</div><div class="stat-num" id="monthPresent">0</div><div class="stat-label">Days Present</div></div>
+              <div class="stat-card amber"><div class="stat-icon">⏱</div><div class="stat-num" id="monthLates">0</div><div class="stat-label">Mins Late</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">My Schedule</div></div>
+              <div class="sched-grid">
+                <div class="sched-row"><span class="sched-key">Shift</span><span class="sched-val" id="myShift">—</span></div>
+                <div class="sched-row"><span class="sched-key">Working Days</span><span class="sched-val" id="myDays">—</span></div>
+                <div class="sched-row"><span class="sched-key">Time</span><span class="sched-val" id="myTime">—</span></div>
+                <div class="sched-row"><span class="sched-key">Rest Days</span><span class="sched-val" id="myOff" style="color:var(--red)">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="leaveFormSection" class="card hidden" style="max-width:560px;margin-top:20px;">
+          <div class="card-header"><div class="card-title">New Leave Request</div><button class="btn btn-ghost btn-sm" onclick="toggleLeaveForm()">✕ Close</button></div>
+          <div class="hierarchy-box"><strong>Approval flow:</strong> Employee → OPS (same dept) → Admin (same dept) → HR<br>Any authorized approver can action.</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group"><label class="form-label">Leave Type</label><select id="lvType" class="form-select" onchange="updateLeaveBalance()"><option value="SL">Sick Leave (SL)</option><option value="VL">Vacation Leave (VL)</option></select></div>
+            <div class="form-grid2">
+              <div class="form-group"><label class="form-label">Start Date</label><input type="date" id="lvStartDate" class="form-input" onchange="checkDateRange()"></div>
+              <div class="form-group"><label class="form-label">End Date</label><input type="date" id="lvEndDate" class="form-input" onchange="checkDateRange()"></div>
+            </div>
+            <div id="dateRangeError" class="alert alert-error hidden"></div>
+            <div id="overlapError" class="alert alert-error hidden"></div>
+            <div id="scheduleConflict" class="alert alert-info hidden"></div>
+            <div id="consecutiveError" class="alert alert-error hidden"></div>
+            <div class="form-group"><label class="form-label">Reason</label><textarea id="lvReason" class="form-textarea" placeholder="Brief reason…"></textarea></div>
+            <div class="alert alert-info" style="font-size:11px;">Balance: <b id="availableBalance">0</b> days &nbsp;|&nbsp; Requested: <b id="requestedDays">0</b> working days &nbsp;|&nbsp; Max consecutive: <b id="maxConsecutiveDisplay">30</b> days</div>
+            <button onclick="submitLeave()" class="btn btn-primary btn-full">Submit Request</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MY EARNINGS (payslip for each employee) -->
+      <section id="sec-earnings" class="tab-content hidden">
+        <div class="section-title">💵 My Earnings</div>
+        <div class="section-sub">View your current payslip breakdown</div>
+        <div class="period-picker">
+          <select id="erMonth" class="toolbar-select" onchange="renderEarnings()"></select>
+          <select id="erPeriod" class="toolbar-select" onchange="renderEarnings()">
+            <option value="1-15">Period: 1 – 15</option>
+            <option value="16-31">Period: 16 – End</option>
+          </select>
+        </div>
+        <div id="earningsContent">
+          <div style="text-align:center;padding:60px 20px;color:var(--muted);">
+            <div style="font-size:48px;margin-bottom:12px;">💵</div>
+            <div style="font-size:13px;font-weight:600;">Select a period above to view your earnings</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIRECTORY -->
+      <section id="sec-dir" class="tab-content hidden">
+        <div class="section-title">Staff Directory</div>
+        <div class="section-sub">Manage all employee records</div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><div class="card-title" id="dirFormTitle">Add New Employee</div><div style="display:flex;gap:8px;"><button class="btn btn-purple btn-sm" onclick="toggleBulkRegister()">📋 Bulk Register</button><button id="cancelEditBtn" class="btn btn-ghost btn-sm hidden" onclick="cancelEdit()">✕ Cancel Edit</button></div></div>
+          <div class="notice">ℹ️ New employees are created via a secondary auth instance — you will not be logged out.</div>
+          <div id="bulkRegisterPanel" class="hidden" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;">
+            <div class="card-title" style="margin-bottom:10px;">Bulk Employee Registration</div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">One per line: <code style="background:var(--border);padding:2px 6px;border-radius:4px;">FullName, Email, Password, Dept, Role, SL, VL</code></p>
+            <textarea id="bulkRegisterData" class="form-textarea" style="height:120px;font-family:monospace;font-size:11px;" placeholder="Juan Dela Cruz, juan@company.com, pass123, RC, Employee, 10, 10"></textarea>
+            <div id="bulkProgress" class="hidden" style="font-size:11px;color:var(--muted);margin:8px 0;"></div>
+            <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-purple btn-sm" onclick="runBulkRegister()">▶ Run</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('bulkRegisterPanel').classList.add('hidden')">Close</button></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Emp ID</label><input type="text" id="addEmpNum" class="form-input" placeholder="EMP001"></div>
+            <div class="form-group"><label class="form-label">Full Name *</label><input type="text" id="addFullName" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Email *</label><input type="email" id="addUser" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Password *</label><input type="password" id="addPass" class="form-input" placeholder="Min 6 chars"></div>
+            <div class="form-group"><label class="form-label">Department</label><select id="addDept" class="form-select"><option value="RC">RC</option><option value="CSR">CSR</option></select></div>
+            <div class="form-group"><label class="form-label">Role</label><select id="addRole" class="form-select"><option>Employee</option><option>Admin</option><option>OPS</option><option>HR</option></select></div>
+            <div class="form-group"><label class="form-label">Birthday</label><input type="date" id="addBday" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Hire Date</label><input type="date" id="addHireDate" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Position / Title</label><input type="text" id="addPosition" class="form-input" placeholder="e.g. Head - Operations"></div>
+            <div class="form-group"><label class="form-label">Monthly Salary (₱)</label><input type="number" id="addSalary" class="form-input" placeholder="0" min="0" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Transpo Allow (₱)</label><input type="number" id="addTranspo" class="form-input" value="1500" min="0" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Stat Benefits (₱)</label><input type="number" id="addStat" class="form-input" value="1000" min="0" step="0.01"></div>
+            <div class="form-group"><label class="form-label">Contact #</label><input type="tel" id="addContact" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Emergency #</label><input type="tel" id="addEmergency" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Backend ID</label><input type="text" id="addBackend" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Assets</label><input type="text" id="addAssets" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Default Shift</label><input type="text" id="addDefaultShift" class="form-input" placeholder="e.g. Morning or Night"></div>
+            <div class="form-group"><label class="form-label">SL Days</label><input type="number" id="addSL" class="form-input" value="10" min="0"></div>
+            <div class="form-group"><label class="form-label">VL Days</label><input type="number" id="addVL" class="form-input" value="10" min="0"></div>
+            <div class="form-group"><label class="form-label">Max Consecutive Leave</label><input type="number" id="addMaxConsecutive" class="form-input" value="30" min="1"></div>
+          </div>
+          <div style="margin-top:16px;"><button id="addEmployeeBtn" class="btn btn-primary" onclick="addEmployee()">Add Employee</button></div>
+        </div>
+        <div class="card"><div class="card-header"><div class="card-title">All Employees</div></div><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search employees…" onkeyup="searchEmployees()"></div><div class="table-wrap" id="dirTable"></div></div>
+      </section>
+
+      <!-- ACTIVE NOW -->
+      <section id="sec-active" class="tab-content hidden">
+        <div class="section-title">Active Now</div><div class="section-sub">Employees currently clocked in</div>
+        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchActive()"></div><div class="table-wrap" id="activeTable"></div></div>
+      </section>
+
+      <!-- SCHEDULES -->
+      <section id="sec-sched" class="tab-content hidden">
+        <div class="section-title">Team Schedules</div><div class="section-sub">Set shift, time slot, and rest days per employee per month</div>
+        <div class="card">
+          <div class="toolbar" style="margin-bottom:16px;">
+            <select id="sMonth" class="toolbar-select" onchange="renderSchedules()"></select>
+            <div class="search-wrap" style="flex:1;min-width:200px;margin:0;"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchSchedules()"></div>
+            <button id="saveSchedulesBtn" class="btn btn-success hidden" onclick="saveAllSchedules()">Publish All Changes</button>
+          </div>
+          <div class="table-wrap" id="schedTable"></div>
+        </div>
+      </section>
+
+      <!-- PAYROLL & ATTENDANCE -->
+      <section id="sec-pay" class="tab-content hidden">
+        <div class="section-title">Payroll &amp; Attendance</div><div class="section-sub">Attendance tracker — click any cell to cycle status</div>
+        <div class="card">
+          <div class="toolbar" style="margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+            <input type="text" id="pShiftSearch" class="toolbar-select" placeholder="Filter shift…" oninput="renderAttendance()" style="width:130px;">
+            <select id="pMonth" class="toolbar-select" onchange="renderAttendance()"></select>
+            <select id="pPeriod" class="toolbar-select" onchange="renderAttendance()"><option value="1-15">Period: 1–15</option><option value="16-31">Period: 16–End</option></select>
+            <div style="flex:1;min-width:200px;"><div class="search-wrap" style="margin:0;"><span class="search-icon">🔍</span><input type="text" id="attendanceSearch" class="search-input" placeholder="Search…" onkeyup="searchAttendance()"></div></div>
+            <button class="btn btn-success btn-sm" onclick="exportToExcel()">⬇ Export Excel</button>
+          </div>
+          <div class="table-wrap" id="payTable"></div>
+        </div>
+      </section>
+
+      <!-- PAYROLL EXPORT -->
+      <section id="sec-payroll" class="tab-content hidden">
+        <div class="section-title">💰 Payroll Export</div>
+        <div class="section-sub">Generate payroll matching your NUEBE Excel format exactly</div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="toolbar" style="gap:10px;flex-wrap:wrap;">
+            <select id="pyMonth" class="toolbar-select" onchange="renderPayrollPreview()"></select>
+            <select id="pyPeriod" class="toolbar-select" onchange="renderPayrollPreview()"><option value="1-15">Period: 1 – 15</option><option value="16-31">Period: 16 – End</option></select>
+            <button class="btn btn-navy btn-sm" onclick="exportPayrollExcel()" style="padding:9px 20px;">⬇ Export Payroll Excel (3 Sheets)</button>
+          </div>
+          <div class="payroll-info-box" style="margin-top:16px;">
+            📋 <strong>Exports with full colors matching your NUEBE format:</strong><br>
+            <span style="margin-right:16px;">📄 <strong>Sheet 1</strong> — Request Claim</span>
+            <span style="margin-right:16px;">📊 <strong>Sheet 2</strong> — Payroll Request</span>
+            <span>📅 <strong>Sheet 3</strong> — Attendance Sheet</span><br>
+            <span style="font-size:10px;color:#1e40af;">💡 <strong>Night Diff</strong> = pCount × 8hrs × (daily/8) × 10% for Night shift &nbsp;|&nbsp; <strong>Meal</strong> = P×₱200 + RDS×₱200 + HD×₱100</span>
+          </div>
+        </div>
+        <div id="pyStats" class="payroll-summary" style="display:none;"></div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <div class="card-title">Payroll Preview</div>
+            <div id="pyPeriodLabel" style="font-size:11px;color:var(--muted);font-weight:600;"></div>
+          </div>
+          <div id="payrollPreview"><div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:48px;margin-bottom:12px;">💰</div><div style="font-size:13px;font-weight:600;">Select a month and period above to preview</div></div></div>
+        </div>
+      </section>
+
+      <!-- AUDIT -->
+      <section id="sec-audit" class="tab-content hidden">
+        <div class="section-title">Audit Logs</div><div class="section-sub">System-wide action history</div>
+        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search logs…" onkeyup="searchAudit()"></div><div class="table-wrap" id="auditTable"></div></div>
+      </section>
+
+      <!-- MY LEAVES -->
+      <section id="sec-leaves" class="tab-content hidden">
+        <div class="section-title">My Leave History</div><div class="section-sub">Track and manage your leave requests</div>
+        <div class="stats-row" style="margin-bottom:20px;">
+          <div class="stat-card blue"><div class="stat-num" id="totalLeaves">0</div><div class="stat-label">Total Requests</div></div>
+          <div class="stat-card green"><div class="stat-num" id="approvedLeaves">0</div><div class="stat-label">Approved</div></div>
+          <div class="stat-card amber"><div class="stat-num" id="pendingLeaves">0</div><div class="stat-label">Pending</div></div>
+          <div class="stat-card red"><div class="stat-num" id="rejectedLeaves">0</div><div class="stat-label">Rejected</div></div>
+        </div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search leaves…" onkeyup="searchMyLeaves()"></div>
+        <div class="leave-grid" id="myLeavesContainer"></div>
+      </section>
+
+      <!-- TIMESTAMP SHEET -->
+      <section id="sec-timestamps" class="tab-content hidden">
+        <div class="section-title">Timestamp Sheet (DTR)</div><div class="section-sub">Daily time record — In/Out per employee per day</div>
+        <div class="card">
+          <div class="toolbar" style="margin-bottom:16px;"><select id="tsMonth" class="toolbar-select" onchange="renderTimestamps()"></select><button class="btn btn-success btn-sm" onclick="exportTimestampsToExcel()">⬇ Export DTR Excel</button></div>
+          <div class="table-wrap" id="timestampTable"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
+<div class="slide-panel" id="inboxPanel">
+  <div class="panel-head"><div class="panel-title">Leave Requests <span id="inboxCountBadge" style="font-size:11px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;margin-left:8px;">0</span></div><button class="panel-close" onclick="closeAllPanels()">✕</button></div>
+  <div class="panel-body" id="inboxContent"></div>
+</div>
+<div class="slide-panel" id="notifPanel">
+  <div class="panel-head"><div class="panel-title">Notifications</div><button class="panel-close" onclick="closeAllPanels()">✕</button></div>
+  <div class="panel-body" id="notifContent"></div>
+</div>
+
+<script>
+(function(){
+  function se(m){var b=document.getElementById('startupError'),e=document.getElementById('startupErrorMsg');if(b&&e){e.textContent=m||'Unknown error.';b.classList.remove('hidden');}}
+  window.addEventListener('error',function(e){se(e.message||'A script failed to load.');});
+  window.addEventListener('unhandledrejection',function(e){var r=e.reason;se((r&&r.message)||String(r||'A promise failed.'));});
+})();
+(function(){
+  var N=['handleLogin','handleLogout','userClockAction','submitLeave','cancelLeave','addEmployee','editEmployee','cancelEdit','manualClockOutNow','switchTab','toggleLeaveForm','updateLeaveBalance','checkDateRange','exportToExcel','renderAttendance','renderSchedules','searchEmployees','searchActive','searchSchedules','searchAttendance','searchAudit','searchMyLeaves','changeAttendanceStatus','updateScheduleField','saveSchedule','saveAllSchedules','openPanel','closeAllPanels','approveLeave','rejectLeave','markNotificationRead','deleteEmployee','toggleBulkRegister','runBulkRegister','renderTimestamps','exportTimestampsToExcel','renderPayrollPreview','exportPayrollExcel','renderEarnings'];
+  N.forEach(function(n){window[n]=function(){var a=arguments,t=0;var iv=setInterval(function(){t++;if(window['__hr_'+n]){clearInterval(iv);window['__hr_'+n].apply(null,a);}else if(t>100)clearInterval(iv);},50);};});
+})();
+</script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import{getDatabase,ref,set,get,update,onValue,push}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// --- Firebase config ---
-const FC = { /* … same … */ };
-const app = initializeApp(FC);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const secApp = initializeApp(FC, "Secondary");
-const secAuth = getAuth(secApp);
+const FC={apiKey:"AIzaSyBuehIPvszQL5Y35Wo5hyUiK_sNOm6uLq0",authDomain:"realtime-database-49a47.firebaseapp.com",databaseURL:"https://realtime-database-49a47-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"realtime-database-49a47",storageBucket:"realtime-database-49a47.firebasestorage.app",messagingSenderId:"879389111428",appId:"1:879389111428:web:cf1bf08dbdf46c87533ed1"};
+const app=initializeApp(FC);
+const db=getDatabase(app);
+const auth=getAuth(app);
+const secApp=initializeApp(FC,"Secondary");
+const secAuth=getAuth(secApp);
 
-// --- Constants ---
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const MF = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const SC = ['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
-const LT = { SL:'Sick Leave', VL:'Vacation Leave' };
-const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const LEG = [['RD','RESTDAY'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEAREVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
-const LEG_CLR = { RD:'',SL:'FFFF00',A:'FF0000',NPL:'1BA3B5',P:'',NPSL:'FFFF00',S:'BE424B',VL:'FFFF00',UT:'',HD:'',BL:'00FDFF',PL:'52FDC4',ML:'FC82A4' };
-const WD = 26;
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MF=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const SC=['','P','RD','RDS','SL','VL','A','NPL','NPSL','S','UT','HD','BL','PL','ML'];
+const LT={SL:'Sick Leave',VL:'Vacation Leave'};
+const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const LEG=[['RD','RESTDAY'],['SL','SICK LEAVE'],['A','ABSENT'],['NPL','NO PAID LEAVE'],['P','PRESENT'],['NPSL','NO PAID SICK LEAVE'],['S','SUSPENDED'],['VL','VACATION LEAVE'],['UT','UNDER TIME'],['HD','HALF DAY'],['BL','BEAREVEMENT LEAVE'],['PL','PATERNITY LEAVE'],['ML','MATERNITY LEAVE']];
+const LEG_CLR={RD:'',SL:'FFFF00',A:'FF0000',NPL:'1BA3B5',P:'',NPSL:'FFFF00',S:'BE424B',VL:'FFFF00',UT:'',HD:'',BL:'00FDFF',PL:'52FDC4',ML:'FC82A4'};
+const WD=26;
 
-// --- Global state ---
-const S = { users:{}, attendance:{}, leaveRequests:{}, notifications:{}, currentUser:null, listeners:{}, isProcessing:{}, isOnline:navigator.onLine, offlineQueue:[], autoClockOutInterval:null, forgotLogoutTimer:null, editingEmployeeId:null, scheduleChanges:null };
+const S={users:{},attendance:{},leaveRequests:{},notifications:{},currentUser:null,listeners:{},isProcessing:{},isOnline:navigator.onLine,offlineQueue:[],autoClockOutInterval:null,forgotLogoutTimer:null,editingEmployeeId:null,scheduleChanges:null};
 
 /* ── HELPERS ── */
-function esc(t){ if(t==null)return''; const d=document.createElement('div'); d.textContent=String(t); return d.innerHTML; }
-function php(n){ return '₱'+(+n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function pld(s){ if(!s)return null; const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
-function todayL(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
-function tmrStr(){ const t=new Date(); t.setDate(t.getDate()+1); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; }
-function isAH(){ return S.currentUser && ['HR','Admin'].includes(S.currentUser.role); }
-function isAOH(){ return S.currentUser && ['HR','Admin','OPS'].includes(S.currentUser.role); }
-function splitName(full){ const p=(full||'').trim().split(' ').filter(Boolean); if(!p.length)return{L:'',F:''}; if(p.length===1)return{L:p[0],F:''}; return{L:p[p.length-1],F:p.slice(0,-1).join(' ')}; }
-function ek(uid,u){ const r=String(u?.empID||uid||'').trim(); const n=r.match(/\d+/); return{r,n:n?parseInt(n[0]):Number.MAX_SAFE_INTEGER}; }
-function cmp([ua,a],[ub,b]){ const ka=ek(ua,a),kb=ek(ub,b); if(ka.n!==kb.n)return ka.n-kb.n; return ka.r.localeCompare(kb.r,undefined,{numeric:true,sensitivity:'base'}); }
-function aes(){ return Object.entries(S.users).filter(([,u])=>!u.disabled).sort(cmp); }
-function guc(id){ return S.users[id] || (S.currentUser?.id===id ? S.currentUser : null); }
+function esc(t){if(t==null)return'';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML;}
+function php(n){return'₱'+(+n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pld(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function todayL(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
+function tmrStr(){const t=new Date();t.setDate(t.getDate()+1);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;}
+function isAH(){return S.currentUser&&['HR','Admin'].includes(S.currentUser.role);}
+function isAOH(){return S.currentUser&&['HR','Admin','OPS'].includes(S.currentUser.role);}
+
+function splitName(full){
+  const p=(full||'').trim().split(' ').filter(Boolean);
+  if(!p.length)return{L:'',F:''};
+  if(p.length===1)return{L:p[0],F:''};
+  return{L:p[p.length-1],F:p.slice(0,-1).join(' ')};
+}
+
+function ek(uid,u){const r=String(u?.empID||uid||'').trim();const n=r.match(/\d+/);return{r,n:n?parseInt(n[0]):Number.MAX_SAFE_INTEGER};}
+function cmp([ua,a],[ub,b]){const ka=ek(ua,a),kb=ek(ub,b);if(ka.n!==kb.n)return ka.n-kb.n;return ka.r.localeCompare(kb.r,undefined,{numeric:true,sensitivity:'base'});}
+function aes(){return Object.entries(S.users).filter(([,u])=>!u.disabled).sort(cmp);}
+function guc(id){return S.users[id]||(S.currentUser?.id===id?S.currentUser:null);}
 
 function pTime(s){
-  if(!s||!s.trim())return null; s=s.trim().toUpperCase().replace(/(\d)(AM|PM)/i,'$1 $2');
-  if(s.includes(':')){ const p=s.split(':'); let h=parseInt(p[0])||0; const m=parseInt(p[1])||0; if(s.includes('PM')&&h<12)h+=12; if(s.includes('AM')&&h===12)h=0; return[h,m]; }
-  const m=s.match(/(\d+)\s*(AM|PM)?/i); if(m){ let h=parseInt(m[1])||0; const pd=(m[2]||'AM').toUpperCase(); if(pd==='PM'&&h<12)h+=12; if(pd==='AM'&&h===12)h=0; return[h,0]; } return null;
+  if(!s||!s.trim())return null;s=s.trim().toUpperCase().replace(/(\d)(AM|PM)/i,'$1 $2');
+  if(s.includes(':')){const p=s.split(':');let h=parseInt(p[0])||0;const m=parseInt(p[1])||0;if(s.includes('PM')&&h<12)h+=12;if(s.includes('AM')&&h===12)h=0;return[h,m];}
+  const m=s.match(/(\d+)\s*(AM|PM)?/i);if(m){let h=parseInt(m[1])||0;const pd=(m[2]||'AM').toUpperCase();if(pd==='PM'&&h<12)h+=12;if(pd==='AM'&&h===12)h=0;return[h,0];}return null;
 }
+
 function lateMins(ci,uid,mon){
   const u=S.users[uid]||(S.currentUser?.id===uid?S.currentUser:null);
   const slot=u?(u['out_'+mon]||''):'';
   if(!slot||!/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot))return 0;
-  const p=pTime(slot.split(/[-–]/)[0].trim()); if(!p)return 0;
-  const [sh,sm]=p; const sc=new Date(ci); sc.setHours(sh,sm,0,0);
-  if(sh>=18 && ci.getHours()<12) sc.setDate(sc.getDate()-1);
-  if(sh<6 && ci.getHours()>=18) sc.setDate(sc.getDate()+1);
-  const d=ci-sc; return d<=0?0:Math.floor(d/60000);
+  const p=pTime(slot.split(/[-–]/)[0].trim());if(!p)return 0;
+  const[sh,sm]=p;const sc=new Date(ci);sc.setHours(sh,sm,0,0);
+  if(sh>=18&&ci.getHours()<12)sc.setDate(sc.getDate()-1);
+  if(sh<6&&ci.getHours()>=18)sc.setDate(sc.getDate()+1);
+  const d=ci-sc;return d<=0?0:Math.floor(d/60000);
 }
+
 function usedLv(uid,type){
-  let u=0; if(!S.leaveRequests)return 0;
-  Object.values(S.leaveRequests).forEach(l=>{ if(l.empID===uid && l.type===type && l.status==='Approved') u+=wDays(l.startDate,l.endDate||l.startDate,uid); });
+  let u=0;if(!S.leaveRequests)return 0;
+  Object.values(S.leaveRequests).forEach(l=>{if(l.empID===uid&&l.type===type&&l.status==='Approved')u+=wDays(l.startDate,l.endDate||l.startDate,uid);});
   return u;
 }
+
 function wDays(s,e,uid){
-  if(!s)return 0; const start=pld(s),end=e?pld(e):new Date(start);
-  const u=guc(uid); if(!u)return 0; let d=0; const c=new Date(start);
-  while(c<=end){ const m=c.getMonth(),dn=DOW[c.getDay()]; const o1=u['off1_'+m]||'',o2=u['off2_'+m]||''; if(o1!==dn&&o2!==dn)d++; c.setDate(c.getDate()+1); }
+  if(!s)return 0;const start=pld(s),end=e?pld(e):new Date(start);
+  const u=guc(uid);if(!u)return 0;let d=0;const c=new Date(start);
+  while(c<=end){const m=c.getMonth(),dn=DOW[c.getDay()];const o1=u['off1_'+m]||'',o2=u['off2_'+m]||'';if(o1!==dn&&o2!==dn)d++;c.setDate(c.getDate()+1);}
   return d;
 }
-function consec(uid,s,e){ const u=guc(uid); const d=wDays(s,e||s,uid); const max=(u&&u.maxConsecutiveLeave)?u.maxConsecutiveLeave:30; return{valid:d<=max,d,max}; }
+
+function consec(uid,s,e){const u=guc(uid);const d=wDays(s,e||s,uid);const max=(u&&u.maxConsecutiveLeave)?u.maxConsecutiveLeave:30;return{valid:d<=max,d,max};}
+
 function overlap(uid,s,e,excl=null){
-  if(!S.leaveRequests)return false; const sd=pld(s),ed=e?pld(e):new Date(sd);
-  for(const [id,l] of Object.entries(S.leaveRequests)){ if(excl&&id===excl)continue; if(l.empID!==uid)continue; if(l.status==='Rejected'||l.status==='Cancelled')continue; const es=pld(l.startDate),ee=l.endDate?pld(l.endDate):new Date(es); if(sd<=ee&&ed>=es)return true; }
+  if(!S.leaveRequests)return false;const sd=pld(s),ed=e?pld(e):new Date(sd);
+  for(const[id,l]of Object.entries(S.leaveRequests)){if(excl&&id===excl)continue;if(l.empID!==uid)continue;if(l.status==='Rejected'||l.status==='Cancelled')continue;const es=pld(l.startDate),ee=l.endDate?pld(l.endDate):new Date(es);if(sd<=ee&&ed>=es)return true;}
   return false;
 }
-function canAp(req){ if(!S.currentUser)return false; const emp=S.users[req.empID]; if(!emp)return false; const cu=S.currentUser; if(cu.role==='HR')return true; if(emp.dept!==cu.dept)return false; const rh={Employee:1,OPS:2,Admin:3,HR:4}; return (rh[cu.role]||0)>(rh[emp.role]||0); }
-function canCx(req){ if(!S.currentUser)return false; const cu=S.currentUser,re=S.users[req.empID]; if(cu.role==='HR')return true; if(cu.role==='Admin'&&re&&re.dept===cu.dept)return true; if(cu.id===req.empID&&req.status==='Pending')return true; return false; }
 
-/* ── NIGHT HOURS (REVISED – NO DEFAULT, CAPPED 8h/DAY) ── */
-function nightMins(ci,co){
+function canAp(req){if(!S.currentUser)return false;const emp=S.users[req.empID];if(!emp)return false;const cu=S.currentUser;if(cu.role==='HR')return true;if(emp.dept!==cu.dept)return false;const rh={Employee:1,OPS:2,Admin:3,HR:4};return(rh[cu.role]||0)>(rh[emp.role]||0);}
+function canCx(req){if(!S.currentUser)return false;const cu=S.currentUser,re=S.users[req.empID];if(cu.role==='HR')return true;if(cu.role==='Admin'&&re&&re.dept===cu.dept)return true;if(cu.id===req.empID&&req.status==='Pending')return true;return false;}
+
+/* ══════════════════════════════════════════════════════════════
+   PAYROLL CALCULATION — CORE MODULE
+   
+   Night Diff FIX (verified from actual NUEBE Excel):
+   - Excel R column = pCount × 8 hrs (8 hours per present day)
+   - Night diff = nightHrs × (daily/8) × 10%
+   - Example: 11 P days × 8h = 88h → 88 × (1153.846/8) × 0.10 = ₱1,269.23 ✓
+   
+   Logic:
+   - If employee is Night shift AND has clock timestamps → compute actual 10PM-6AM hrs
+   - If employee is Night shift AND NO timestamps → use pCount × 8 hrs (Excel default)
+   - If NOT Night shift → 0 night diff always
+══════════════════════════════════════════════════════════════ */
+
+function nightMinsFromTimestamps(ci,co){
   if(!ci||!co)return 0;
   const tm=d=>d.getHours()*60+d.getMinutes();
-  let s=tm(ci), e=tm(co);
-  if(e<s) e+=1440;
-  return Math.max(0, Math.min(e,1800)-Math.max(s,1320));
+  let s=tm(ci),e=tm(co);if(e<s)e+=1440;
+  return Math.max(0,Math.min(e,1800)-Math.max(s,1320));
 }
-function computeNightHrs(uid,mon,pS,pE){
-  const att = S.attendance[uid] || {};
-  let totalMins = 0;
-  for(let d=pS; d<=pE; d++){
-    const k = `${mon}_${d}`;
-    const st = att[k] || '';
-    const ci = att[`${k}_time`];
-    const co = att[`${k}_out`];
-    if((st==='P' || st==='RDS') && ci && co){
-      const mins = nightMins(new Date(ci), new Date(co));
-      totalMins += Math.min(mins, 480);  // cap 8h per day
+
+function computeNightHrs(uid,mon,pS,pE,pCnt){
+  const att=S.attendance[uid]||{};
+  const u=S.users[uid]||{};
+  const shiftLabel=(u['shift_'+mon]||u.defaultShift||'').toLowerCase();
+  const isNight=shiftLabel.includes('night')||shiftLabel.includes('ns');
+
+  // NOT a night shift employee → 0 always
+  if(!isNight) return 0;
+
+  // Check if any clock timestamps exist
+  let totalMins=0;
+  let hasTimestamps=false;
+  for(let d=pS;d<=pE;d++){
+    const k=`${mon}_${d}`,st=att[k]||'',ci=att[`${k}_time`],co=att[`${k}_out`];
+    if((st==='P'||st==='RDS')&&ci&&co){
+      hasTimestamps=true;
+      totalMins+=nightMinsFromTimestamps(new Date(ci),new Date(co));
     }
   }
-  return totalMins / 60;
+
+  // Night shift + timestamps → actual hours
+  if(hasTimestamps) return totalMins/60;
+
+  // Night shift + NO timestamps → use pCount × 8h (Excel standard)
+  return pCnt*8;
+}
+
+function calcPayroll(uid,mon,pS,pE){
+  const att=S.attendance[uid]||{};
+  const u=S.users[uid]||{};
+  const salary=Math.max(0,parseFloat(u.monthlySalary)||0);
+  const cutoff=salary/2;
+  const daily=salary/WD;
+
+  let pCnt=0,rdsCnt=0,hdCnt=0,absDays=0,lMin=0,utHrs=0;
+  for(let d=pS;d<=pE;d++){
+    const k=`${mon}_${d}`,st=att[k]||'',late=parseInt(att[`${k}_late`]||0);
+    lMin+=late;
+    switch(st){
+      case'P': pCnt++; break;
+      case'RDS': rdsCnt++; break;
+      case'HD': hdCnt++; break;
+      case'UT': pCnt++; utHrs++; break;
+      case'A': case'NPL': case'NPSL': case'S': absDays++; break;
+    }
+  }
+
+  const meal=pCnt*200+rdsCnt*200+hdCnt*100;
+  const transpo=Math.max(0,parseFloat(u.transpoAllow)||0);
+  const stat=Math.max(0,parseFloat(u.statBenefits)||0);
+  const bday=0,regHol=0,specHol=0;
+
+  const nh=computeNightHrs(uid,mon,pS,pE,pCnt+rdsCnt);
+  const nd=nh*(daily/8)*0.10;
+
+  const colK=daily;
+  const totalAllow=colK+meal+transpo+bday+nd+stat+regHol+specHol;
+
+  const absAmt=absDays*daily;
+  const tardAmt=lMin>0?(lMin/60)*(daily/8):0;
+  const utAmt=utHrs>0?utHrs*(daily/8):0;
+  const totalDeduct=absAmt+tardAmt+utAmt;
+  const net=cutoff+meal+transpo+bday+nd+stat+regHol+specHol-totalDeduct;
+
+  return{salary,cutoff,daily,colK,pCnt,rdsCnt,hdCnt,absDays,lMin,utHrs,meal,transpo,bday,stat,nh,nd,regHol,specHol,totalAllow,absAmt,tardAmt,utAmt,totalDeduct,net};
+}
+
+/* ── MY EARNINGS TAB ── */
+function renderEarnings(){
+  if(!S.currentUser)return;
+  const mon=parseInt(document.getElementById('erMonth').value);
+  if(isNaN(mon))return;
+  const per=document.getElementById('erPeriod').value;
+  const[pS,pEr]=per.split('-').map(Number);
+  const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
+
+  const uid=S.currentUser.id;
+  const u=guc(uid)||S.currentUser;
+  const p=calcPayroll(uid,mon,pS,pE);
+  const{L,F}=splitName(u.fullName);
+  const shiftLabel=(u['shift_'+mon]||u.defaultShift||'—');
+
+  const el=document.getElementById('earningsContent');
+  if(!u.monthlySalary||u.monthlySalary===0){
+    el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No salary information on file. Contact HR or Admin to update your profile.</div>`;
+    return;
+  }
+
+  el.innerHTML=`
+  <div class="payslip-card">
+    <div class="payslip-header">
+      <div class="payslip-company">AFB Teams</div>
+      <div class="payslip-period">Payslip · ${MF[mon]} ${pS}–${pE}, ${year}</div>
+    </div>
+    <div class="payslip-emp">
+      <div class="payslip-emp-item"><div class="label">Employee Name</div><div class="value">${esc(u.fullName)}</div></div>
+      <div class="payslip-emp-item"><div class="label">Emp ID</div><div class="value">${esc(u.empID||uid)}</div></div>
+      <div class="payslip-emp-item"><div class="label">Position</div><div class="value">${esc(u.position||u.dept||'—')}</div></div>
+      <div class="payslip-emp-item"><div class="label">Department</div><div class="value">${esc(u.dept||'—')}</div></div>
+      <div class="payslip-emp-item"><div class="label">Shift</div><div class="value">${esc(shiftLabel)}</div></div>
+      <div class="payslip-emp-item"><div class="label">Days Present</div><div class="value">${p.pCnt} P · ${p.rdsCnt} RDS · ${p.hdCnt} HD</div></div>
+    </div>
+    <div class="payslip-body">
+      <div class="payslip-section">
+        <div class="payslip-section-title">💚 Earnings</div>
+        <div class="payslip-row earning"><span class="item">Basic Salary (Cut-off)</span><span class="amount">${php(p.cutoff)}</span></div>
+        <div class="payslip-row earning"><span class="item">Meal Allowance <small style="color:var(--muted);">(P×₱200+RDS×₱200+HD×₱100)</small></span><span class="amount">${php(p.meal)}</span></div>
+        <div class="payslip-row earning"><span class="item">Transportation Allowance</span><span class="amount">${php(p.transpo)}</span></div>
+        ${p.nd>0?`<div class="payslip-row earning"><span class="item">Night Differential <small style="color:var(--muted);">(${p.nh.toFixed(1)}h × rate × 10%)</small></span><span class="amount">${php(p.nd)}</span></div>`:''}
+        <div class="payslip-row earning"><span class="item">Statutory Benefits</span><span class="amount">${php(p.stat)}</span></div>
+        <div class="payslip-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;">
+          <span class="item" style="font-weight:700;">Total Allowances</span>
+          <span class="amount" style="font-weight:700;color:var(--accent);">${php(p.totalAllow)}</span>
+        </div>
+      </div>
+      <div class="payslip-section">
+        <div class="payslip-section-title">🔴 Deductions</div>
+        ${p.absDays>0?`<div class="payslip-row deduction"><span class="item">Absences (${p.absDays} day${p.absDays>1?'s':''})</span><span class="amount">−${php(p.absAmt)}</span></div>`:''}
+        ${p.tardAmt>0?`<div class="payslip-row deduction"><span class="item">Tardiness (${p.lMin} min)</span><span class="amount">−${php(p.tardAmt)}</span></div>`:''}
+        ${p.utAmt>0?`<div class="payslip-row deduction"><span class="item">Undertime (${p.utHrs}h)</span><span class="amount">−${php(p.utAmt)}</span></div>`:''}
+        ${p.totalDeduct===0?`<div class="payslip-row"><span class="item" style="color:var(--green);">No deductions this period 🎉</span><span class="amount">₱0.00</span></div>`:`
+        <div class="payslip-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;">
+          <span class="item" style="font-weight:700;">Total Deductions</span>
+          <span class="amount" style="font-weight:700;color:var(--red);">−${php(p.totalDeduct)}</span>
+        </div>`}
+      </div>
+    </div>
+    <div class="payslip-net">
+      <div class="label">NET PAY</div>
+      <div class="amount">${php(p.net)}</div>
+    </div>
+    <div style="padding:12px 24px;background:#f8f9fa;font-size:10px;color:var(--muted);text-align:center;">
+      This is a system-generated payslip. For concerns, contact HR.
+    </div>
+  </div>`;
 }
 
 /* ── OFFLINE ── */
-function qk(){ return S.currentUser ? `hr_offline_${S.currentUser.id}` : null; }
+function qk(){return S.currentUser?`hr_offline_${S.currentUser.id}`:null;}
 function setupOffline(){
-  window.addEventListener('online',()=>{S.isOnline=true; updOff(); showToast('Connection restored! Syncing…','info'); setTimeout(procQ,1000);});
-  window.addEventListener('offline',()=>{S.isOnline=false; updOff();});
-  updOff(); S.autoClockOutInterval=setInterval(chkAuto,60000);
-  setInterval(()=>{ if(S.isOnline && S.offlineQueue.length) procQ(); },30000);
+  window.addEventListener('online',()=>{S.isOnline=true;updOff();showToast('Connection restored! Syncing…','info');setTimeout(procQ,1000);});
+  window.addEventListener('offline',()=>{S.isOnline=false;updOff();});
+  updOff();S.autoClockOutInterval=setInterval(chkAuto,60000);
+  setInterval(()=>{if(S.isOnline&&S.offlineQueue.length)procQ();},30000);
 }
 function updOff(){
-  const b=document.getElementById('offlineBanner'); if(b) b.style.display = S.isOnline ? 'none' : 'block';
-  const q=document.getElementById('offlineQueueBanner'); if(q){ q.classList.toggle('hidden',!S.offlineQueue.length); document.getElementById('queueCount').textContent = S.offlineQueue.length; }
+  const b=document.getElementById('offlineBanner');if(b)b.style.display=S.isOnline?'none':'block';
+  const q=document.getElementById('offlineQueueBanner');if(q){q.classList.toggle('hidden',!S.offlineQueue.length);document.getElementById('queueCount').textContent=S.offlineQueue.length;}
 }
-function addQ(type,data){ S.offlineQueue.push({type,data}); const k=qk(); if(k) localStorage.setItem(k,JSON.stringify(S.offlineQueue)); updOff(); }
+function addQ(t,d){S.offlineQueue.push({t,d});const k=qk();if(k)localStorage.setItem(k,JSON.stringify(S.offlineQueue));updOff();}
 async function procQ(){
-  if(!S.offlineQueue.length || !S.isOnline) return; const fail=[];
-  for(const a of S.offlineQueue){ try{ await execQ(a.type,a.data); await new Promise(r=>setTimeout(r,300)); } catch{ fail.push(a); } }
-  S.offlineQueue = fail; const k=qk(); if(k) localStorage.setItem(k,JSON.stringify(S.offlineQueue));
-  showToast(fail.length?`${fail.length} action(s) failed to sync`:'All queued actions synced!',fail.length?'error':'success'); updOff();
+  if(!S.offlineQueue.length||!S.isOnline)return;const fail=[];
+  for(const a of S.offlineQueue){try{await execQ(a.t,a.d);await new Promise(r=>setTimeout(r,300));}catch{fail.push(a);}}
+  S.offlineQueue=fail;const k=qk();if(k)localStorage.setItem(k,JSON.stringify(S.offlineQueue));
+  showToast(fail.length?`${fail.length} action(s) failed to sync`:'All queued actions synced!',fail.length?'error':'success');updOff();
 }
 async function execQ(type,d){
-  if(type==='clock_in'){ await update(ref(db,`attendance/${d.uid}`),d.upd); await push(ref(db,'audit_logs'),d.al); }
-  else if(type==='clock_out'){ await update(ref(db,`attendance/${d.uid}`),d.upd); await push(ref(db,'audit_logs'),d.al); await push(ref(db,'notifications'),d.nt); }
-  else if(type==='submit_leave'){ await push(ref(db,'leave_requests'),d.req); await push(ref(db,'audit_logs'),d.al); }
-  else if(type==='auto_out'){ await update(ref(db,`attendance/${d.uid}`),d.upd); await push(ref(db,'audit_logs'),d.al); await push(ref(db,'notifications'),d.nt); }
+  if(type==='ci'){await update(ref(db,`attendance/${d.uid}`),d.upd);await push(ref(db,'audit_logs'),d.al);}
+  else if(type==='co'){await update(ref(db,`attendance/${d.uid}`),d.upd);await push(ref(db,'audit_logs'),d.al);await push(ref(db,'notifications'),d.nt);}
+  else if(type==='lv'){await push(ref(db,'leave_requests'),d.req);await push(ref(db,'audit_logs'),d.al);}
+  else if(type==='ao'){await update(ref(db,`attendance/${d.uid}`),d.upd);await push(ref(db,'audit_logs'),d.al);await push(ref(db,'notifications'),d.nt);}
 }
-async function safeOp(fn,qType,qData){
-  if(!S.isOnline){ addQ(qType,qData); return {ok:false,q:true}; }
-  try{ await fn(); return {ok:true}; } catch(e){ if(!navigator.onLine){ addQ(qType,qData); return {ok:false,q:true}; } throw e; }
-}
+async function safeOp(fn,qt,qd){if(!S.isOnline){addQ(qt,qd);return{ok:false,q:true};}try{await fn();return{ok:true};}catch(e){if(!navigator.onLine){addQ(qt,qd);return{ok:false,q:true};}throw e;}}
 
 /* ── AUTO CLOCK-OUT ── */
-async function chkAuto(){ /* unchanged */ }
-function showAutoBanner(m){ /* unchanged */ }
-function hideBanner(){ /* unchanged */ }
-function fmt(s){ /* unchanged */ }
-function manualClockOutNow(){ userClockAction('OUT'); }
+async function chkAuto(){
+  if(!S.currentUser)return;const now=new Date(),yest=new Date(now);yest.setDate(yest.getDate()-1);let ak=null;
+  for(const dv of[now,yest]){const k=`${dv.getMonth()}_${dv.getDate()}`;const att=S.attendance[S.currentUser.id]||{};if(att[k]==='P'&&!att[`${k}_out`]&&att[`${k}_time`]){ak=k;break;}}
+  if(!ak)return;
+  const ci=new Date(S.attendance[S.currentUser.id][`${ak}_time`]),autoT=new Date(ci.getTime()+43200000),warnT=new Date(autoT.getTime()-1800000);
+  if(now>=autoT){try{await doAutoOut(ak);hideBanner();showToast('Auto clocked out after 12-hour shift','info');}catch{addQ('ao',bAP(ak));}}
+  else if(now>=warnT)showAutoBanner(Math.ceil((autoT-now)/60000));
+}
+function bAP(k){const n=new Date();return{uid:S.currentUser.id,upd:{[`${k}_out`]:n.toISOString(),[`${k}_auto`]:true},al:{name:S.currentUser.fullName,action:'AUTO CLOCK OUT',timestamp:n.toISOString(),empID:S.currentUser.id,department:S.currentUser.dept,auto:true},nt:{userId:S.currentUser.id,title:'Auto Clock-Out',message:`Auto clocked out at ${n.toLocaleTimeString()} after 12h.`,type:'warning',timestamp:n.toISOString(),read:false}};}
+async function doAutoOut(k){const p=bAP(k);await update(ref(db,`attendance/${p.uid}`),p.upd);await push(ref(db,'audit_logs'),p.al);await push(ref(db,'notifications'),p.nt);localStorage.removeItem('hr_lc');hideBanner();document.getElementById('btnClockIn').classList.remove('hidden');document.getElementById('btnClockOut').classList.add('hidden');}
+function showAutoBanner(m){const b=document.getElementById('autoClockoutBanner');if(!b)return;b.classList.remove('hidden');let s=m*60;document.getElementById('autoClockoutTimer').textContent=fmt(s);if(S.forgotLogoutTimer)clearInterval(S.forgotLogoutTimer);S.forgotLogoutTimer=setInterval(()=>{s--;if(s<=0){clearInterval(S.forgotLogoutTimer);hideBanner();}else document.getElementById('autoClockoutTimer').textContent=fmt(s);},1000);}
+function hideBanner(){const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');if(S.forgotLogoutTimer){clearInterval(S.forgotLogoutTimer);S.forgotLogoutTimer=null;}}
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;}
+function manualClockOutNow(){userClockAction('OUT');}
 
-/* ── CLOCK IN/OUT (IP CAPTURE ADDED) ── */
+/* ── CLOCK IN/OUT ── */
 async function userClockAction(type){
-  if(S.isProcessing['clock']) return;
-  const now=new Date(), mon=now.getMonth(), day=now.getDate(), key=`${mon}_${day}`, uid=S.currentUser.id;
-  if(type==='P'){
-    const att=S.attendance[uid]||{};
-    if(att[key]==='P' && !att[`${key}_out`]){ showToast('Already clocked in today','error'); return; }
-  }
-  S.isProcessing['clock'] = true;
+  if(S.isProcessing['clock'])return;
+  const now=new Date(),mon=now.getMonth(),day=now.getDate(),key=`${mon}_${day}`,uid=S.currentUser.id;
+  if(type==='P'){const att=S.attendance[uid]||{};if(att[key]==='P'&&!att[`${key}_out`]){showToast('Already clocked in today','error');return;}}
+  S.isProcessing['clock']=true;
   try{
     if(type==='P'){
-      // Capture IP
-      let ip = '';
-      try {
-        const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(4000) });
-        if(res.ok){ const data = await res.json(); ip = data.ip || ''; }
-      } catch {}
-      const lm = lateMins(now,uid,mon);
-      const upd = { [key]:'P', [`${key}_time`]:now.toISOString(), [`${key}_ip`]:ip };
-      if(lm>0) upd[`${key}_late`] = lm;
-      localStorage.setItem('hr_lc', JSON.stringify({uid,key}));
-      const al = { name:S.currentUser.fullName, action: lm>0?`CLOCK IN (${lm}m late)`:'CLOCK IN', timestamp:now.toISOString(), empID:uid, department:S.currentUser.dept, time:now.toLocaleTimeString() };
-      const r = await safeOp(async()=>{ await update(ref(db,`attendance/${uid}`),upd); await push(ref(db,'audit_logs'),al); },'clock_in',{uid,upd,al});
-      if(r.ok||r.q){ showToast(r.ok?(lm>0?`Clocked in — ${lm} min late`:'Clocked in! 👋'):'Offline — clock in queued',r.ok?'success':'info'); document.getElementById('btnClockIn').classList.add('hidden'); document.getElementById('btnClockOut').classList.remove('hidden'); }
-    } else {
-      let ck=key; try{ const p=JSON.parse(localStorage.getItem('hr_lc')||'{}'); if(p.uid===uid&&p.key) ck=p.key; }catch{}
-      const att=S.attendance[uid]||{};
-      if(!att[`${key}_time`]){ const y=new Date(now); y.setDate(y.getDate()-1); const yk=`${y.getMonth()}_${y.getDate()}`; if(att[`${yk}_time`]&&!att[`${yk}_out`]) ck=yk; }
-      const upd = { [`${ck}_out`]:now.toISOString() };
-      const al = { name:S.currentUser.fullName, action:'CLOCK OUT', timestamp:now.toISOString(), empID:uid, department:S.currentUser.dept, time:now.toLocaleTimeString() };
-      const nt = { userId:uid, title:'Clock Out', message:`Clocked out at ${now.toLocaleTimeString()}`, type:'info', timestamp:now.toISOString(), read:false };
-      const r = await safeOp(async()=>{ await update(ref(db,`attendance/${uid}`),upd); await push(ref(db,'audit_logs'),al); await push(ref(db,'notifications'),nt); },'clock_out',{uid,upd,al,nt});
-      if(r.ok||r.q){ showToast(r.ok?'Clocked out successfully!':'Offline — clock out queued',r.ok?'success':'info'); localStorage.removeItem('hr_lc'); hideBanner(); document.getElementById('btnClockIn').classList.remove('hidden'); document.getElementById('btnClockOut').classList.add('hidden'); }
+      const lm=lateMins(now,uid,mon);const upd={[key]:'P',[`${key}_time`]:now.toISOString()};if(lm>0)upd[`${key}_late`]=lm;
+      localStorage.setItem('hr_lc',JSON.stringify({uid,key}));
+      const al={name:S.currentUser.fullName,action:lm>0?`CLOCK IN (${lm}m late)`:'CLOCK IN',timestamp:now.toISOString(),empID:uid,department:S.currentUser.dept,time:now.toLocaleTimeString()};
+      const r=await safeOp(async()=>{await update(ref(db,`attendance/${uid}`),upd);await push(ref(db,'audit_logs'),al);},'ci',{uid,upd,al});
+      if(r.ok||r.q){showToast(r.ok?(lm>0?`Clocked in — ${lm} min late`:'Clocked in! 👋'):'Offline — clock in queued',r.ok?'success':'info');document.getElementById('btnClockIn').classList.add('hidden');document.getElementById('btnClockOut').classList.remove('hidden');}
+    }else{
+      let ck=key;try{const p=JSON.parse(localStorage.getItem('hr_lc')||'{}');if(p.uid===uid&&p.key)ck=p.key;}catch{}
+      const att=S.attendance[uid]||{};if(!att[`${key}_time`]){const y=new Date(now);y.setDate(y.getDate()-1);const yk=`${y.getMonth()}_${y.getDate()}`;if(att[`${yk}_time`]&&!att[`${yk}_out`])ck=yk;}
+      const upd={[`${ck}_out`]:now.toISOString()};
+      const al={name:S.currentUser.fullName,action:'CLOCK OUT',timestamp:now.toISOString(),empID:uid,department:S.currentUser.dept,time:now.toLocaleTimeString()};
+      const nt={userId:uid,title:'Clock Out',message:`Clocked out at ${now.toLocaleTimeString()}`,type:'info',timestamp:now.toISOString(),read:false};
+      const r=await safeOp(async()=>{await update(ref(db,`attendance/${uid}`),upd);await push(ref(db,'audit_logs'),al);await push(ref(db,'notifications'),nt);},'co',{uid,upd,al,nt});
+      if(r.ok||r.q){showToast(r.ok?'Clocked out successfully!':'Offline — clock out queued',r.ok?'success':'info');localStorage.removeItem('hr_lc');hideBanner();document.getElementById('btnClockIn').classList.remove('hidden');document.getElementById('btnClockOut').classList.add('hidden');}
     }
-  } catch { showToast(navigator.onLine?'Failed to record action':'Offline — action queued','error'); }
-  finally { S.isProcessing['clock']=false; }
+  }catch{showToast(navigator.onLine?'Failed to record action':'Offline — action queued','error');}
+  finally{S.isProcessing['clock']=false;}
 }
-
-/* ── ADMIN CLOCK OUT (MANUAL) ── */
-async function adminClockOut(employeeId){
-  if(!confirm(`Clock out employee ${S.users[employeeId]?.fullName || employeeId}?`)) return;
-  const now = new Date();
-  const mon = now.getMonth();
-  const day = now.getDate();
-  const key = `${mon}_${day}`;
-  let ck = key;
-  const att = S.attendance[employeeId] || {};
-  if(!att[`${key}_time`]){
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yk = `${yesterday.getMonth()}_${yesterday.getDate()}`;
-    if(att[`${yk}_time`] && !att[`${yk}_out`]) ck = yk;
-  }
-  const upd = { [`${ck}_out`]: now.toISOString() };
-  const al = {
-    name: `${S.currentUser.fullName} (admin)`,
-    action: `Manually clocked out ${S.users[employeeId]?.fullName || employeeId}`,
-    timestamp: now.toISOString(),
-    empID: employeeId,
-    department: S.users[employeeId]?.dept || '',
-    time: now.toLocaleTimeString()
-  };
-  const nt = {
-    userId: employeeId,
-    title: 'Manual Clock-Out',
-    message: `You were clocked out by ${S.currentUser.fullName} at ${now.toLocaleTimeString()}.`,
-    type: 'warning',
-    timestamp: now.toISOString(),
-    read: false
-  };
-  try {
-    await update(ref(db, `attendance/${employeeId}`), upd);
-    await push(ref(db, 'audit_logs'), al);
-    await push(ref(db, 'notifications'), nt);
-    showToast(`Clocked out ${S.users[employeeId]?.fullName || employeeId}`, 'success');
-  } catch(e) {
-    showToast('Failed to clock out employee', 'error');
-  }
-}
-window.adminClockOut = adminClockOut;
 
 /* ── AUTH ── */
-onAuthStateChanged(auth, async (user)=>{
-  if(user){
-    if(!S.currentUser){
-      try{
-        const snap = await get(ref(db, `users/${user.uid}`));
-        if(snap.exists()){
-          const data = snap.val();
-          if(data.disabled){ await signOut(auth); showFE('loginError','Account disabled. Contact admin.'); return; }
-          S.currentUser = {id:user.uid, ...data};
-          const k = qk(); if(k){ try{ const q = localStorage.getItem(k); if(q) S.offlineQueue = JSON.parse(q); }catch{} }
-          showApp(); setupListeners();
-        } else { await signOut(auth); showFE('loginError','No employee profile found.'); }
-      } catch(e){ await signOut(auth); showFE('loginError', e?.code==='PERMISSION_DENIED'?'Database access denied.':'Could not load profile.'); }
-    }
-  } else {
-    if(S.currentUser) doLogout();
-  }
+onAuthStateChanged(auth,async(user)=>{
+  if(user){if(!S.currentUser){try{const snap=await get(ref(db,`users/${user.uid}`));if(snap.exists()){const data=snap.val();if(data.disabled){await signOut(auth);showFE('loginError','Account disabled. Contact admin.');return;}S.currentUser={id:user.uid,...data};const k=qk();if(k){try{const q=localStorage.getItem(k);if(q)S.offlineQueue=JSON.parse(q);}catch{}}showApp();setupListeners();}else{await signOut(auth);showFE('loginError','No employee profile found.');}}catch(e){await signOut(auth);showFE('loginError',e?.code==='PERMISSION_DENIED'?'Database access denied.':'Could not load profile.');}}}
+  else{if(S.currentUser)doLogout();}
 });
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const now = new Date();
-  document.querySelectorAll('#pMonth,#sMonth,#tsMonth,#pyMonth').forEach(sel=>{
-    sel.innerHTML = MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');
-  });
-  ['pPeriod','pyPeriod'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value = now.getDate()<=15?'1-15':'16-31'; });
-  const ts = tmrStr(); ['lvStartDate','lvEndDate'].forEach(id=>{ const el=document.getElementById(id); if(el) el.min = ts; });
-  updateClock(); setInterval(updateClock,1000); setupOffline();
-  document.getElementById('lPass').addEventListener('keypress',e=>{ if(e.key==='Enter') handleLogin(); });
+document.addEventListener('DOMContentLoaded',()=>{
+  const now=new Date();
+  document.querySelectorAll('#pMonth,#sMonth,#tsMonth,#pyMonth,#erMonth').forEach(sel=>{sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}"${now.getMonth()===i?' selected':''}>${m}</option>`).join('');});
+  ['pPeriod','pyPeriod','erPeriod'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=now.getDate()<=15?'1-15':'16-31';});
+  const ts=tmrStr();['lvStartDate','lvEndDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.min=ts;});
+  updateClock();setInterval(updateClock,1000);setupOffline();
+  document.getElementById('lPass').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
 });
 
 function updateClock(){
-  const now = new Date();
-  const cl = document.getElementById('liveClock'); if(cl) cl.textContent = now.toLocaleTimeString();
-  const dl = document.getElementById('liveDate'); if(dl) dl.textContent = now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const gr = document.getElementById('dashGreet'); if(gr){ const h=now.getHours(); gr.textContent = `Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${S.currentUser?.fullName?.split(' ')[0]||''}!`; }
+  const now=new Date();
+  const cl=document.getElementById('liveClock');if(cl)cl.textContent=now.toLocaleTimeString();
+  const dl=document.getElementById('liveDate');if(dl)dl.textContent=now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const gr=document.getElementById('dashGreet');if(gr){const h=now.getHours();gr.textContent=`Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${S.currentUser?.fullName?.split(' ')[0]||''}!`;}
 }
 
 async function handleLogin(){
-  // unchanged
+  if(S.isProcessing['login'])return;const email=document.getElementById('lUser').value.trim(),pass=document.getElementById('lPass').value;
+  if(!email||!pass){showFE('loginError','Please enter email and password');return;}
+  S.isProcessing['login']=true;const btn=document.getElementById('loginButton');btn.textContent='Signing in…';btn.disabled=true;
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){let m='Login failed';if(e.code==='auth/invalid-email')m='Invalid email format';else if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential'].includes(e.code))m='Invalid email or password';else if(e.code==='auth/network-request-failed')m='Network error.';else if(!navigator.onLine)m='You are offline';showFE('loginError',m);}
+  finally{S.isProcessing['login']=false;btn.textContent='Sign In';btn.disabled=false;}
 }
+
 async function handleLogout(silent=false){
-  // unchanged
+  if(!silent&&!confirm('Sign out?'))return;
+  if(S.autoClockOutInterval)clearInterval(S.autoClockOutInterval);if(S.forgotLogoutTimer)clearInterval(S.forgotLogoutTimer);
+  const k=qk();if(k&&S.offlineQueue.length)localStorage.setItem(k,JSON.stringify(S.offlineQueue));
+  Object.values(S.listeners).forEach(f=>{if(typeof f==='function')f();});await signOut(auth);doLogout();
 }
+
 function doLogout(){
-  // unchanged
+  Object.assign(S,{currentUser:null,users:{},attendance:{},leaveRequests:{},listeners:{},offlineQueue:[],editingEmployeeId:null,scheduleChanges:null});
+  document.getElementById('appShell').classList.add('hidden');document.getElementById('loginSection').style.display='';
+  document.getElementById('lUser').value='';document.getElementById('lPass').value='';document.getElementById('loginError').classList.add('hidden');
+  document.getElementById('lUser').focus();document.getElementById('autoClockoutBanner').classList.add('hidden');
 }
+
 function showApp(){
-  // unchanged
+  document.getElementById('loginSection').style.display='none';document.getElementById('appShell').classList.remove('hidden');
+  const cu=S.currentUser;document.getElementById('sidebarName').textContent=cu.fullName;document.getElementById('sidebarRole').textContent=cu.role;document.getElementById('userAvatar').textContent=(cu.fullName||'U')[0].toUpperCase();
+  applyRoles();switchTabI('dashboard',document.querySelector('[data-tab="dashboard"]'));
 }
+
 function applyRoles(){
-  // unchanged
+  const ah=isAH(),aoh=isAOH();
+  document.querySelectorAll('.adm-hr-only').forEach(el=>el.style.display=ah?'':'none');
+  document.querySelectorAll('.adm-ops-hr-only').forEach(el=>el.style.display=aoh?'':'none');
+  document.getElementById('navManage').style.display=aoh?'':'none';document.getElementById('navReports').style.display=aoh?'':'none';
+  document.getElementById('inboxBtn').classList.toggle('hidden',!aoh);document.getElementById('notifBtn').classList.toggle('hidden',!aoh);
 }
-function switchTabI(tab, btn){
-  if((tab==='pay'||tab==='payroll') && !isAH()){ showToast('Restricted to HR and Admin','error'); return; }
-  document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  const sec = document.getElementById('sec-'+tab);
-  if(sec){ sec.classList.remove('hidden'); if(btn) btn.classList.add('active'); }
-  const titles = { dashboard:'Dashboard', dir:'Staff Directory', active:'Active Now', sched:'Schedules', pay:'Payroll & Attendance', payroll:'Payroll Export', audit:'Audit Logs', leaves:'My Leaves', timestamps:'Timestamp Sheet' };
-  const tb = document.getElementById('topBarTitle'); if(tb) tb.textContent = titles[tab]||'';
-  renderTab();
+
+function switchTabI(tab,btn){
+  if((tab==='pay'||tab==='payroll')&&!isAH()){showToast('Restricted to HR and Admin','error');return;}
+  document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const sec=document.getElementById('sec-'+tab);if(sec){sec.classList.remove('hidden');if(btn)btn.classList.add('active');}
+  const titles={dashboard:'Dashboard',earnings:'My Earnings',dir:'Staff Directory',active:'Active Now',sched:'Schedules',pay:'Payroll & Attendance',payroll:'Payroll Export',audit:'Audit Logs',leaves:'My Leaves',timestamps:'Timestamp Sheet'};
+  const tb=document.getElementById('topBarTitle');if(tb)tb.textContent=titles[tab]||'';renderTab();
 }
+
 function renderTab(){
-  if(!S.currentUser) return;
-  const a = document.querySelector('.nav-item.active'); if(!a) return;
-  const t = a.getAttribute('data-tab');
-  if(t==='dashboard') updDash();
-  else if(t==='dir') renderDir();
-  else if(t==='active') renderActive();
-  else if(t==='sched') renderSchedules();
-  else if(t==='pay'&&isAH()) renderAttendance();
-  else if(t==='payroll'&&isAH()) renderPayrollPreview();
-  else if(t==='audit') get(ref(db,'audit_logs')).then(s=>renderAudit(s.val()));
-  else if(t==='leaves') updMyLeaves();
-  else if(t==='timestamps') renderTimestamps();
+  if(!S.currentUser)return;const a=document.querySelector('.nav-item.active');if(!a)return;const t=a.getAttribute('data-tab');
+  if(t==='dashboard')updDash();
+  else if(t==='earnings')renderEarnings();
+  else if(t==='dir')renderDir();
+  else if(t==='active')renderActive();
+  else if(t==='sched')renderSchedules();
+  else if(t==='pay'&&isAH())renderAttendance();
+  else if(t==='payroll'&&isAH())renderPayrollPreview();
+  else if(t==='audit'){get(ref(db,'audit_logs')).then(s=>renderAudit(s.val()));}
+  else if(t==='leaves')updMyLeaves();
+  else if(t==='timestamps')renderTimestamps();
 }
 
 /* ── DASHBOARD ── */
 function updDash(){
-  // unchanged
+  if(!S.currentUser)return;const now=new Date(),mon=now.getMonth(),uid=S.currentUser.id;
+  const u=guc(uid)||S.currentUser;const slU=usedLv(uid,'SL'),vlU=usedLv(uid,'VL'),slM=u.slMax||0,vlM=u.vlMax||0;
+  document.getElementById('slView').textContent=Math.max(0,slM-slU);document.getElementById('vlView').textContent=Math.max(0,vlM-vlU);
+  document.getElementById('slTotal').textContent=slM;document.getElementById('vlTotal').textContent=vlM;document.getElementById('slUsed').textContent=slU;document.getElementById('vlUsed').textContent=vlU;
+  const sp=document.getElementById('slProg'),vp=document.getElementById('vlProg');if(sp)sp.style.width=slM>0?`${(slU/slM)*100}%`:'0%';if(vp)vp.style.width=vlM>0?`${(vlU/vlM)*100}%`:'0%';
+  document.getElementById('myShift').textContent=u['shift_'+mon]||u.defaultShift||'TBA';document.getElementById('myDays').textContent=u['in_'+mon]||'TBA';document.getElementById('myTime').textContent=u['out_'+mon]||'TBA';
+  const o1=u['off1_'+mon]||'',o2=u['off2_'+mon]||'';document.getElementById('myOff').textContent=`${o1} ${o2}`.trim()||'TBA';
+  let present=0,lates=0;const att=S.attendance[uid]||{};for(let d=1;d<=now.getDate();d++){const k=`${mon}_${d}`;if(att[k]==='P'){present++;lates+=parseInt(att[`${k}_late`]||0);}}
+  document.getElementById('monthPresent').textContent=present;document.getElementById('monthLates').textContent=lates;
+  const yest=new Date(now);yest.setDate(yest.getDate()-1);const yk=`${yest.getMonth()}_${yest.getDate()}`,tk=`${mon}_${now.getDate()}`;
+  const ci=(att[tk]==='P'&&!att[`${tk}_out`])||(att[yk]==='P'&&!att[`${yk}_out`]);
+  document.getElementById('btnClockIn').classList.toggle('hidden',ci);document.getElementById('btnClockOut').classList.toggle('hidden',!ci);updateClock();
 }
 
 /* ── LEAVE FORM ── */
-function toggleLeaveForm(){ /* unchanged */ }
-function checkDateRange(){ /* unchanged */ }
-function updateLeaveBalance(){ /* unchanged */ }
-async function submitLeave(){ /* unchanged */ }
-async function cancelLeave(id){ /* unchanged */ }
+function toggleLeaveForm(){
+  const lf=document.getElementById('leaveFormSection');lf.classList.toggle('hidden');
+  if(!lf.classList.contains('hidden')){const ts=tmrStr();const sv=document.getElementById('lvStartDate'),ev=document.getElementById('lvEndDate');sv.min=ts;ev.min=ts;if(!sv.value||sv.value<ts){sv.value=ts;ev.value=ts;}['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));updateLeaveBalance();checkDateRange();}
+}
+function checkDateRange(){
+  const sv=document.getElementById('lvStartDate').value,ev=document.getElementById('lvEndDate').value;
+  ['dateRangeError','overlapError','scheduleConflict','consecutiveError'].forEach(id=>document.getElementById(id).classList.add('hidden'));if(!sv)return;
+  const start=pld(sv),end=ev?pld(ev):new Date(start);
+  if(start<todayL()){showFV('dateRangeError','Cannot request leave for past dates');return;}
+  if(end<start){showFV('dateRangeError','End date cannot be before start date');return;}
+  if(overlap(S.currentUser.id,sv,ev))showFV('overlapError','You already have a leave during this period');
+  const cc=consec(S.currentUser.id,sv,ev);document.getElementById('maxConsecutiveDisplay').textContent=cc.max;if(!cc.valid)showFV('consecutiveError',`Max consecutive leave is ${cc.max} days (requested ${cc.d})`);
+  document.getElementById('requestedDays').textContent=wDays(sv,ev,S.currentUser.id);chkSchedConflict(sv,ev);updateLeaveBalance();
+}
+function chkSchedConflict(sv,ev){
+  const el=document.getElementById('scheduleConflict');if(!el||!sv)return;const u=guc(S.currentUser.id);const c=new Date(pld(sv));const end=ev?pld(ev):new Date(c);let rest=0,work=0;
+  while(c<=end){const m=c.getMonth(),dn=DOW[c.getDay()];const o1=u?u['off1_'+m]||'':'',o2=u?u['off2_'+m]||'':'';if(o1===dn||o2===dn)rest++;else work++;c.setDate(c.getDate()+1);}
+  if(rest>0){el.innerHTML=`ℹ️ Leave includes ${rest} rest day(s). Only ${work} working day(s) will be deducted.`;el.classList.remove('hidden');}else el.classList.add('hidden');
+}
+function updateLeaveBalance(){
+  if(!S.currentUser)return;const type=document.getElementById('lvType').value;const sv=document.getElementById('lvStartDate').value,ev=document.getElementById('lvEndDate').value;const u=guc(S.currentUser.id);
+  const wd=sv?wDays(sv,ev,S.currentUser.id):0;document.getElementById('requestedDays').textContent=wd;
+  const used=usedLv(S.currentUser.id,type);const max=type==='SL'?(u?u.slMax||0:0):(u?u.vlMax||0:0);const avail=Math.max(0,max-used);document.getElementById('availableBalance').textContent=avail;
+  const btn=document.querySelector('#leaveFormSection .btn-primary');if(btn){const ok=avail>=wd&&wd>0;btn.disabled=!ok;btn.style.opacity=ok?'1':'0.5';}
+}
+async function submitLeave(){
+  if(S.isProcessing['leave'])return;const type=document.getElementById('lvType').value;const sv=document.getElementById('lvStartDate').value,ev=document.getElementById('lvEndDate').value;const reason=document.getElementById('lvReason').value.trim();
+  if(!sv){showToast('Please select a start date','error');return;}if(!reason){showToast('Please provide a reason','error');return;}
+  if(pld(sv)<todayL()){showToast('Cannot request leave for past dates','error');return;}
+  if(overlap(S.currentUser.id,sv,ev)){showToast('Overlapping leave exists','error');return;}
+  const cc=consec(S.currentUser.id,sv,ev);if(!cc.valid){showToast(`Max ${cc.max} consecutive days. You requested ${cc.d}.`,'error');return;}
+  const wd=wDays(sv,ev,S.currentUser.id);const avail=parseInt(document.getElementById('availableBalance').textContent);if(avail<wd){showToast(`Insufficient balance: ${avail} available, ${wd} needed`,'error');return;}
+  S.isProcessing['leave']=true;
+  try{
+    const req={empID:S.currentUser.id,name:S.currentUser.fullName,type,startDate:sv,endDate:ev||sv,reason,status:'Pending',department:S.currentUser.dept,submittedAt:new Date().toISOString(),leaveTypeName:LT[type]||type,workingDays:wd};
+    const al={name:S.currentUser.fullName,action:'Submitted leave request',timestamp:new Date().toISOString(),empID:S.currentUser.id,department:S.currentUser.dept,leaveType:type,startDate:sv,endDate:ev||sv,workingDays:wd};
+    const r=await safeOp(async()=>{await push(ref(db,'leave_requests'),req);await push(ref(db,'audit_logs'),al);},'lv',{req,al});
+    if(r.ok){document.getElementById('lvStartDate').value='';document.getElementById('lvEndDate').value='';document.getElementById('lvReason').value='';document.getElementById('leaveFormSection').classList.add('hidden');showToast('Leave request submitted!','success');}
+    else if(r.q)showToast('Offline — leave request queued','info');
+  }catch{showToast('Failed to submit leave request','error');}finally{S.isProcessing['leave']=false;}
+}
+async function cancelLeave(id){
+  if(!confirm('Cancel this leave request?'))return;const req=S.leaveRequests[id];if(!req){showToast('Leave request not found','error');return;}if(!canCx(req)){showToast('Not authorized','error');return;}
+  try{const now=new Date();await update(ref(db,`leave_requests/${id}`),{status:'Cancelled',cancelledAt:now.toISOString(),cancelledBy:S.currentUser.fullName});await push(ref(db,'audit_logs'),{name:S.currentUser.fullName,action:'Cancelled leave request',timestamp:now.toISOString(),empID:req.empID,department:req.department});showToast('Leave cancelled','success');updInbox();updMyLeaves();}
+  catch{showToast('Failed to cancel leave','error');}
+}
 
 /* ── DIRECTORY ── */
-function editEmployee(uid){ /* unchanged */ }
-function cancelEdit(){ /* unchanged */ }
-async function addEmployee(){ /* unchanged */ }
-async function deleteEmployee(uid){ /* unchanged */ }
-function chkDisabled(){ /* unchanged */ }
-function renderDir(){ /* unchanged */ }
-function searchEmployees(){ /* unchanged */ }
-
-/* ── ATTENDANCE ── */
-function renderAttendance(){
-  if(!isAH()){ document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>'; return; }
-  const el = document.getElementById('payTable'); if(!el) return;
-  const now = new Date();
-  const mon = parseInt(document.getElementById('pMonth').value);
-  // FIXED year calculation
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;  // robust cross-year
-  const sf = (document.getElementById('pShiftSearch')?.value||'').trim().toLowerCase();
-  const per = document.getElementById('pPeriod').value;
-  const [pS,pEr] = per.split('-').map(Number);
-  const dim = new Date(year, mon+1, 0).getDate();
-  const pE = pEr>=28 ? dim : pEr;
-  let html = `<table style="min-width:${600+(pE-pS+1)*52}px;"><thead><tr><th>Emp ID</th><th>Name</th><th>Dept</th><th>Shift</th>`;
-  for(let d=pS; d<=pE; d++) html += `<th style="min-width:50px;">${d}</th>`;
-  html += `<th style="min-width:80px;background:#fef2f2;color:#991b1b;">Lates (min)</th></tr></thead><tbody>`;
-  for(const [uid,u] of aes()){
-    const sh = u['shift_'+mon]||u.defaultShift||'';
-    if(sf && !sh.toLowerCase().includes(sf)) continue;
-    html += `<tr><td style="font-weight:600;">${esc(u.empID||uid)}</td><td>${esc(u.fullName)}</td><td>${esc(u.dept)}</td><td style="font-size:11px;color:var(--muted);">${esc(sh)}</td>`;
-    let tl = 0;
-    const att = S.attendance[uid]||{};
-    for(let d=pS; d<=pE; d++){
-      const k = `${mon}_${d}`;
-      const st = att[k]||'';
-      const late = att[`${k}_late`]||0;
-      if(late) tl += parseInt(late);
-      html += `<td class="att-cell s-${st}" onclick="changeAttendanceStatus('${uid}','${k}')">${esc(st)}${late?`<span class="late-tag">${late}m</span>`:''}</td>`;
-    }
-    html += `<td class="lates-total" style="text-align:center;">${tl||'—'}</td></tr>`;
-  }
-  html += `</tbody></table>`;
-  el.innerHTML = html;
+function editEmployee(uid){
+  const u=S.users[uid];if(!u)return;S.editingEmployeeId=uid;
+  const flds={addEmpNum:u.empID||uid,addFullName:u.fullName||'',addUser:u.email||'',addPass:'',addBday:u.birthday||'',addHireDate:u.hireDate||'',addPosition:u.position||'',addContact:u.contact||'',addEmergency:u.emergency||'',addBackend:u.backendID||'',addAssets:u.assets||'',addDefaultShift:u.defaultShift||'',addSL:u.slMax||10,addVL:u.vlMax||10,addMaxConsecutive:u.maxConsecutiveLeave||30,addSalary:u.monthlySalary||0,addTranspo:u.transpoAllow||1500,addStat:u.statBenefits||1000};
+  for(const[id,val]of Object.entries(flds)){const el=document.getElementById(id);if(el)el.value=val;}
+  document.getElementById('addEmpNum').disabled=true;document.getElementById('addDept').value=u.dept||'RC';document.getElementById('addRole').value=u.role||'Employee';
+  document.getElementById('addEmployeeBtn').textContent='Update Employee';document.getElementById('cancelEditBtn').classList.remove('hidden');document.getElementById('dirFormTitle').textContent='Edit Employee';document.getElementById('addEmpNum').scrollIntoView({behavior:'smooth'});
 }
-async function changeAttendanceStatus(uid,key){ /* unchanged */ }
-function searchAttendance(){ /* unchanged */ }
+function cancelEdit(){
+  S.editingEmployeeId=null;['addFullName','addUser','addPass','addBday','addHireDate','addPosition','addContact','addEmergency','addBackend','addAssets','addDefaultShift'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const en=document.getElementById('addEmpNum');if(en){en.value='';en.disabled=false;}
+  document.getElementById('addDept').value='RC';document.getElementById('addSL').value='10';document.getElementById('addVL').value='10';document.getElementById('addRole').value='Employee';document.getElementById('addMaxConsecutive').value='30';
+  document.getElementById('addSalary').value='0';document.getElementById('addTranspo').value='1500';document.getElementById('addStat').value='1000';
+  document.getElementById('addEmployeeBtn').textContent='Add Employee';document.getElementById('cancelEditBtn').classList.add('hidden');document.getElementById('dirFormTitle').textContent='Add New Employee';
+}
+async function addEmployee(){
+  if(S.isProcessing['emp'])return;S.isProcessing['emp']=true;
+  const email=document.getElementById('addUser').value.trim(),pass=document.getElementById('addPass').value,fullName=document.getElementById('addFullName').value.trim(),cid=document.getElementById('addEmpNum').value.trim();
+  if(!email||!fullName){showToast('Email and full name are required','error');S.isProcessing['emp']=false;return;}
+  if(!S.editingEmployeeId&&!pass){showToast('Password is required','error');S.isProcessing['emp']=false;return;}
+  if(!S.editingEmployeeId&&pass.length<6){showToast('Password must be at least 6 characters','error');S.isProcessing['emp']=false;return;}
+  try{
+    let uid;if(S.editingEmployeeId){uid=S.editingEmployeeId;}else{const cr=await createUserWithEmailAndPassword(secAuth,email,pass);uid=cr.user.uid;try{await signOut(secAuth);}catch{}}
+    const empID=cid||uid;
+    const data={fullName,email,empID,dept:document.getElementById('addDept').value,role:document.getElementById('addRole').value,birthday:document.getElementById('addBday').value,hireDate:document.getElementById('addHireDate').value,position:document.getElementById('addPosition').value.trim(),monthlySalary:Math.max(0,parseFloat(document.getElementById('addSalary').value)||0),transpoAllow:Math.max(0,parseFloat(document.getElementById('addTranspo').value)||0),statBenefits:Math.max(0,parseFloat(document.getElementById('addStat').value)||0),contact:document.getElementById('addContact').value.trim(),emergency:document.getElementById('addEmergency').value.trim(),backendID:document.getElementById('addBackend').value.trim(),assets:document.getElementById('addAssets').value.trim(),defaultShift:document.getElementById('addDefaultShift').value.trim(),slMax:Math.max(0,parseInt(document.getElementById('addSL').value)||10),vlMax:Math.max(0,parseInt(document.getElementById('addVL').value)||10),maxConsecutiveLeave:Math.max(1,parseInt(document.getElementById('addMaxConsecutive').value)||30),disabled:false};
+    await set(ref(db,`users/${uid}`),data);showToast(S.editingEmployeeId?'Employee updated!':'Employee added!','success');cancelEdit();renderDir();
+  }catch(e){if(e.code==='auth/email-already-in-use')showToast('Email already in use','error');else showToast('Failed to save: '+(e.message||''),'error');try{await signOut(secAuth);}catch{}}
+  finally{S.isProcessing['emp']=false;}
+}
+function chkDisabled(){if(!S.currentUser)return;const l=S.users[S.currentUser.id];if(l&&l.disabled){showToast('Your account has been disabled. Signing out…','error');setTimeout(()=>handleLogout(true),2000);}}
+async function deleteEmployee(uid){if(!confirm(`Disable employee ${uid}?`))return;try{await update(ref(db,`users/${uid}`),{disabled:true,deletedAt:new Date().toISOString()});showToast('Employee disabled. Data retained.','info');renderDir();}catch{showToast('Failed to disable employee','error');}}
+
+function renderDir(){
+  const el=document.getElementById('dirTable');if(!el)return;const entries=aes();
+  if(!entries.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No employees found.</div>';return;}
+  let html=`<table><thead><tr><th class="txt-left">Emp ID</th><th class="txt-left">Name</th><th class="txt-left">Position</th><th>Dept</th><th>Role</th><th>Monthly Salary</th><th>Shift</th><th>Transpo</th><th>Stat</th><th>SL Bal</th><th>VL Bal</th><th>Actions</th></tr></thead><tbody>`;
+  for(const[uid,u]of entries){const slU=usedLv(uid,'SL'),vlU=usedLv(uid,'VL'),slM=u.slMax||0,vlM=u.vlMax||0;
+    html+=`<tr><td class="txt"><b>${esc(u.empID||uid)}</b></td><td class="txt">${esc(u.fullName)}</td><td class="txt" style="font-size:11px;color:var(--muted);">${esc(u.position||u.dept||'')}</td><td><span style="background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;font-size:11px;">${esc(u.dept)}</span></td><td><span style="background:${u.role==='HR'?'#f3e8ff':u.role==='Admin'?'#dbeafe':u.role==='OPS'?'#d1fae5':'#f1f5f9'};color:${u.role==='HR'?'#7e22ce':u.role==='Admin'?'#1e40af':u.role==='OPS'?'#065f46':'var(--slate)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(u.role)}</span></td><td style="font-weight:700;color:var(--accent);">₱${(u.monthlySalary||0).toLocaleString()}</td><td style="font-size:11px;">${esc(u.defaultShift||'—')}</td><td>₱${(u.transpoAllow||0).toLocaleString()}</td><td>₱${(u.statBenefits||0).toLocaleString()}</td><td><b style="color:var(--green);">${Math.max(0,slM-slU)}</b><span style="color:var(--muted);">/${slM}</span></td><td><b style="color:var(--accent);">${Math.max(0,vlM-vlU)}</b><span style="color:var(--muted);">/${vlM}</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="editEmployee('${uid}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteEmployee('${uid}')">Disable</button></div></td></tr>`;}
+  html+=`</tbody></table>`;el.innerHTML=html;
+}
+function searchEmployees(){const q=document.querySelector('#sec-dir .search-input').value.toLowerCase();document.querySelectorAll('#dirTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
+
+/* ── ATTENDANCE — centered cells ── */
+function renderAttendance(){
+  if(!isAH()){document.getElementById('payTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
+  const el=document.getElementById('payTable');if(!el)return;
+  const mon=parseInt(document.getElementById('pMonth').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const sf=(document.getElementById('pShiftSearch')?.value||'').trim().toLowerCase();const per=document.getElementById('pPeriod').value;const[pS,pEr]=per.split('-').map(Number);const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
+  let html=`<table style="min-width:${600+(pE-pS+1)*52}px;"><thead><tr><th class="txt-left">Emp ID</th><th class="txt-left">Name</th><th>Dept</th><th>Shift</th>`;
+  for(let d=pS;d<=pE;d++)html+=`<th style="min-width:46px;">${d}</th>`;
+  html+=`<th style="min-width:80px;background:#fef2f2;color:#991b1b;">Lates<br>(min)</th></tr></thead><tbody>`;
+  for(const[uid,u]of aes()){const sh=u['shift_'+mon]||u.defaultShift||'';if(sf&&!sh.toLowerCase().includes(sf))continue;
+    html+=`<tr><td class="txt" style="font-weight:600;">${esc(u.empID||uid)}</td><td class="txt">${esc(u.fullName)}</td><td>${esc(u.dept)}</td><td style="font-size:11px;color:var(--muted);">${esc(sh)}</td>`;
+    let tl=0;const att=S.attendance[uid]||{};
+    for(let d=pS;d<=pE;d++){const k=`${mon}_${d}`;const st=att[k]||'';const late=att[`${k}_late`]||0;if(late)tl+=parseInt(late);html+=`<td class="att-cell s-${st}" onclick="changeAttendanceStatus('${uid}','${k}')">${esc(st)}${late?`<span class="late-tag">${late}m</span>`:''}</td>`;}
+    html+=`<td class="lates-total">${tl||'—'}</td></tr>`;}
+  html+=`</tbody></table>`;el.innerHTML=html;
+}
+async function changeAttendanceStatus(uid,key){if(!isAH()){showToast('Only Admin/HR can modify attendance','error');return;}const att=S.attendance[uid]||{};const cur=att[key]||'';const next=SC[(SC.indexOf(cur)+1)%SC.length];try{await update(ref(db,`attendance/${uid}`),{[key]:next});await push(ref(db,'audit_logs'),{name:S.currentUser.fullName,action:`Changed attendance for ${uid} on ${key} to ${next}`,timestamp:new Date().toISOString(),empID:uid});}catch{showToast('Failed to update attendance','error');}}
+function searchAttendance(){const q=document.getElementById('attendanceSearch')?.value?.toLowerCase()||'';document.querySelectorAll('#payTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── SCHEDULES ── */
-function renderSchedules(){ /* unchanged */ }
-function updateScheduleField(eid,field,val){ /* unchanged */ }
-async function saveSchedule(eid,mon){ /* unchanged */ }
-async function saveAllSchedules(){ /* unchanged */ }
-function searchSchedules(){ /* unchanged */ }
-
-/* ── ACTIVE NOW (UPDATED: IP & BACKEND ID, CLOCK OUT BUTTON) ── */
-function renderActive(){
-  const el = document.getElementById('activeTable');
-  if(!el) return;
-  const now = new Date(), mon = now.getMonth(), day = now.getDate(), tk = `${mon}_${day}`;
-  let html = `<table><thead><tr>
-    <th>Emp ID</th><th>Name</th><th>Dept</th><th>Backend ID</th><th>Time In</th><th>IP Address</th><th>Shift</th><th>Status</th><th>Action</th>
-  </tr></thead><tbody>`;
-  let cnt = 0;
-  for(const [uid,u] of aes()){
-    const att = S.attendance[uid]||{};
-    const st = att[tk], co = att[`${tk}_out`];
-    if(st==='P' && !co){
-      cnt++;
-      const ti = att[`${tk}_time`];
-      const late = att[`${tk}_late`]||0;
-      const ip = att[`${tk}_ip`] || '—';
-      const bid = u.backendID || '—';
-      html += `<tr>
-        <td style="font-weight:600;">${esc(u.empID||uid)}</td>
-        <td>${esc(u.fullName)}</td>
-        <td>${esc(u.dept)}</td>
-        <td style="font-size:11px;color:var(--muted);">${esc(bid)}</td>
-        <td>${ti?new Date(ti).toLocaleTimeString():'—'}${late?`<span style="font-size:10px;color:var(--red);margin-left:4px;">+${late}m</span>`:''}</td>
-        <td style="font-family:monospace;font-size:11px;">${esc(ip)}</td>
-        <td style="font-size:11px;color:var(--muted);">${esc(u['shift_'+mon]||u.defaultShift||'—')}</td>
-        <td><span class="status-badge badge-approved">● Present</span></td>
-        <td><button class="btn btn-danger btn-sm" onclick="adminClockOut('${uid.replace(/'/g,"\\'")}')">Clock Out</button></td>
-      </tr>`;
-    }
-  }
-  if(!cnt) html += `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>`;
-  html += `</tbody></table>`;
-  el.innerHTML = html;
+function renderSchedules(){
+  const el=document.getElementById('schedTable');if(!el)return;const mon=parseInt(document.getElementById('sMonth').value);
+  const dO=sel=>['',...DOW].map(d=>`<option value="${d}"${d===sel?' selected':''}>${d||'— none —'}</option>`).join('');
+  const sO=sel=>['','Morning','Night'].map(s=>`<option value="${s}"${s===sel?' selected':''}>${s||'— select —'}</option>`).join('');
+  let html=`<table style="min-width:900px;"><thead><tr><th class="txt-left">Emp ID</th><th class="txt-left">Name</th><th>Dept</th><th style="min-width:200px;">Time Slot</th><th style="min-width:120px;">Shift</th><th style="min-width:120px;">Rest Day 1</th><th style="min-width:120px;">Rest Day 2</th><th>Save</th></tr></thead><tbody>`;
+  for(const[eid,u]of aes()){const p=(S.scheduleChanges||{})[eid]||{};const ts=p['out_'+mon]!==undefined?p['out_'+mon]:(u['out_'+mon]||'');const sh=p['shift_'+mon]!==undefined?p['shift_'+mon]:(u['shift_'+mon]||u.defaultShift||'');const o1=p['off1_'+mon]!==undefined?p['off1_'+mon]:(u['off1_'+mon]||'');const o2=p['off2_'+mon]!==undefined?p['off2_'+mon]:(u['off2_'+mon]||'');const sid=eid.replace(/'/g,"\\'");
+    html+=`<tr><td class="txt" style="font-weight:600;">${esc(u.empID||eid)}</td><td class="txt">${esc(u.fullName)}</td><td>${esc(u.dept)}</td><td><input type="text" class="form-input" value="${esc(ts)}" placeholder="e.g. 10:00 PM - 6:00 AM" oninput="updateScheduleField('${sid}','out_${mon}',this.value)" style="font-size:12px;padding:6px 10px;"></td><td><select class="form-select" onchange="updateScheduleField('${sid}','shift_${mon}',this.value)" style="font-size:12px;padding:6px 10px;">${sO(sh)}</select></td><td><select class="form-select" onchange="updateScheduleField('${sid}','off1_${mon}',this.value)" style="font-size:12px;padding:6px 10px;">${dO(o1)}</select></td><td><select class="form-select" onchange="updateScheduleField('${sid}','off2_${mon}',this.value)" style="font-size:12px;padding:6px 10px;">${dO(o2)}</select></td><td><button class="btn btn-success btn-sm" onclick="saveSchedule('${sid}',${mon})">Save</button></td></tr>`;}
+  html+=`</tbody></table>`;el.innerHTML=html;
 }
-function searchActive(){ /* unchanged */ }
+function updateScheduleField(eid,field,val){document.getElementById('saveSchedulesBtn').classList.remove('hidden');if(!S.scheduleChanges)S.scheduleChanges={};if(!S.scheduleChanges[eid])S.scheduleChanges[eid]={};S.scheduleChanges[eid][field]=val;}
+async function saveSchedule(eid,mon){try{const p=(S.scheduleChanges||{})[eid]||{},u=S.users[eid]||{};const upd={};['out_','shift_','off1_','off2_'].forEach(pre=>{const f=pre+mon;if(f in p)upd[f]=p[f];else if(f in u)upd[f]=u[f];});if(!Object.keys(upd).length){showToast('No changes to save','info');return;}await update(ref(db,`users/${eid}`),upd);if(S.scheduleChanges?.[eid]){Object.keys(upd).forEach(f=>delete S.scheduleChanges[eid][f]);if(!Object.keys(S.scheduleChanges[eid]).length)delete S.scheduleChanges[eid];}if(!S.scheduleChanges||!Object.keys(S.scheduleChanges).length)document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast(`Schedule saved for ${u.fullName||eid}!`,'success');}catch{showToast('Failed to save schedule','error');}}
+async function saveAllSchedules(){if(!S.scheduleChanges||!Object.keys(S.scheduleChanges).length){showToast('No pending changes','info');return;}try{for(const[eid,ch]of Object.entries(S.scheduleChanges)){if(Object.keys(ch).length>0)await update(ref(db,`users/${eid}`),ch);}S.scheduleChanges={};document.getElementById('saveSchedulesBtn').classList.add('hidden');showToast('All schedules published!','success');}catch{showToast('Failed to publish','error');}}
+function searchSchedules(){const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
+
+/* ── ACTIVE NOW ── */
+function renderActive(){
+  const el=document.getElementById('activeTable');if(!el)return;const now=new Date(),mon=now.getMonth(),day=now.getDate(),tk=`${mon}_${day}`;
+  let html=`<table><thead><tr><th class="txt-left">Emp ID</th><th class="txt-left">Name</th><th>Dept</th><th>Time In</th><th>Shift</th><th>Status</th></tr></thead><tbody>`;let cnt=0;
+  for(const[uid,u]of aes()){const att=S.attendance[uid]||{};const st=att[tk],co=att[`${tk}_out`];if(st==='P'&&!co){cnt++;const ti=att[`${tk}_time`];const late=att[`${tk}_late`]||0;html+=`<tr><td class="txt" style="font-weight:600;">${esc(u.empID||uid)}</td><td class="txt">${esc(u.fullName)}</td><td>${esc(u.dept)}</td><td>${ti?new Date(ti).toLocaleTimeString():'—'}${late?`<span style="font-size:10px;color:var(--red);margin-left:4px;">+${late}m</span>`:''}</td><td style="font-size:11px;color:var(--muted);">${esc(u['shift_'+mon]||u.defaultShift||'—')}</td><td><span class="status-badge badge-approved">● Present</span></td></tr>`;}}
+  if(!cnt)html+=`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>`;html+=`</tbody></table>`;el.innerHTML=html;
+}
+function searchActive(){const q=document.querySelector('#sec-active .search-input').value.toLowerCase();document.querySelectorAll('#activeTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── AUDIT ── */
-function renderAudit(logs){ /* unchanged */ }
-function searchAudit(){ /* unchanged */ }
+function renderAudit(logs){const el=document.getElementById('auditTable');if(!el||!logs)return;let html=`<table><thead><tr><th class="txt-left">Timestamp</th><th class="txt-left">User</th><th class="txt-left">Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>`;Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(l=>{html+=`<tr><td class="txt" style="color:var(--muted);font-size:11px;">${new Date(l.timestamp).toLocaleString()}</td><td class="txt">${esc(l.name||'System')}</td><td class="txt">${esc(l.action)}</td><td>${esc(l.empID||'')}</td><td>${esc(l.department||'')}</td></tr>`;});html+=`</tbody></table>`;el.innerHTML=html;}
+function searchAudit(){const q=document.querySelector('#sec-audit .search-input').value.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── INBOX ── */
-function updInbox(){ /* unchanged */ }
-async function approveLeave(lid){ /* unchanged */ }
-async function rejectLeave(lid){ /* unchanged */ }
+function updInbox(){
+  if(!S.currentUser||!isAOH())return;const content=document.getElementById('inboxContent'),cnt=document.getElementById('inboxCountBadge'),dot=document.getElementById('inboxDot');if(!S.leaveRequests)return;let pending=0,html='';
+  Object.entries(S.leaveRequests).forEach(([key,req])=>{if(req.status!=='Pending')return;const ca=canAp(req);const cx=canCx(req);pending++;
+    html+=`<div class="inbox-item"><div class="inbox-name">${esc(req.name)}</div><div class="inbox-detail">${LT[req.type]||req.type} · ${req.startDate}${req.endDate!==req.startDate?` → ${req.endDate}`:''} · ${req.workingDays||1} day(s)</div><div class="inbox-reason">${esc(req.reason)}</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dept: ${esc(req.department)}</div>`;
+    if(ca){html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-success btn-sm" onclick="approveLeave('${key}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectLeave('${key}')">✕ Reject</button>`;if(cx)html+=`<button class="btn btn-amber btn-sm" onclick="cancelLeave('${key}')">Cancel</button>`;html+=`</div>`;}else html+=`<span style="font-size:11px;color:var(--muted);">Not authorized to approve</span>`;html+=`</div>`;});
+  if(!pending)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No pending requests 🎉</div>`;if(content)content.innerHTML=html;if(cnt)cnt.textContent=pending;if(dot)dot.classList.toggle('hidden',pending===0);
+}
+async function approveLeave(lid){
+  try{const req=S.leaveRequests[lid];if(!canAp(req)){showToast('Not authorized','error');return;}const now=new Date(),start=pld(req.startDate),end=req.endDate?pld(req.endDate):new Date(start);const du={},c=new Date(start),emp=S.users[req.empID];
+    while(c<=end){const m=c.getMonth(),dn=DOW[c.getDay()];const o1=emp?(emp['off1_'+m]||''):'',o2=emp?(emp['off2_'+m]||''):'';if(o1!==dn&&o2!==dn)du[`${m}_${c.getDate()}`]=req.type;c.setDate(c.getDate()+1);}
+    await update(ref(db,`leave_requests/${lid}`),{status:'Approved',approvedBy:S.currentUser.fullName,approvedAt:now.toISOString()});if(Object.keys(du).length)await update(ref(db,`attendance/${req.empID}`),du);
+    await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Approved',message:`Your ${LT[req.type]||req.type} from ${req.startDate} to ${req.endDate} was approved by ${S.currentUser.fullName}.`,type:'success',timestamp:now.toISOString(),read:false});
+    await push(ref(db,'audit_logs'),{name:S.currentUser.fullName,action:`Approved leave for ${req.name}`,timestamp:now.toISOString(),empID:req.empID,department:req.department});showToast('Leave approved!','success');}
+  catch{showToast('Failed to approve leave','error');}
+}
+async function rejectLeave(lid){
+  try{const req=S.leaveRequests[lid];if(!canAp(req)){showToast('Not authorized','error');return;}const now=new Date();await update(ref(db,`leave_requests/${lid}`),{status:'Rejected',rejectedBy:S.currentUser.fullName,rejectedAt:now.toISOString()});await push(ref(db,'notifications'),{userId:req.empID,title:'Leave Rejected',message:`Your ${LT[req.type]||req.type} request for ${req.startDate} was rejected by ${S.currentUser.fullName}.`,type:'error',timestamp:now.toISOString(),read:false});await push(ref(db,'audit_logs'),{name:S.currentUser.fullName,action:`Rejected leave for ${req.name}`,timestamp:now.toISOString(),empID:req.empID,department:req.department});showToast('Leave rejected','success');}
+  catch{showToast('Failed to reject','error');}
+}
 
 /* ── NOTIFICATIONS ── */
-function updNotifs(){ /* unchanged */ }
-async function markNotificationRead(id){ /* unchanged */ }
-function openPanel(id){ /* unchanged */ }
-function closeAllPanels(){ /* unchanged */ }
+function updNotifs(){
+  if(!S.currentUser)return;const content=document.getElementById('notifContent'),dot=document.getElementById('notifDot');if(!S.notifications)return;let unread=0,html='';
+  const mine=Object.entries(S.notifications).filter(([,n])=>n.userId===S.currentUser.id).sort(([,a],[,b])=>new Date(b.timestamp)-new Date(a.timestamp));
+  mine.forEach(([key,n])=>{if(!n.read)unread++;const icon=n.type==='success'?'✅':n.type==='error'?'❌':n.type==='warning'?'⚠️':'ℹ️';html+=`<div style="padding:12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;${n.read?'opacity:.65':''}" onclick="markNotificationRead('${key}')"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span>${icon}</span><strong style="font-size:12px;">${esc(n.title)}</strong>${!n.read?'<span style="margin-left:auto;font-size:9px;color:var(--accent);font-weight:700;">NEW</span>':''}</div><div style="font-size:11px;color:var(--navy3);">${esc(n.message)}</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">${new Date(n.timestamp).toLocaleString()}</div></div>`;});
+  if(!mine.length)html=`<div style="text-align:center;padding:32px;color:var(--muted);">No notifications</div>`;if(content)content.innerHTML=html;if(dot)dot.classList.toggle('hidden',unread===0);
+}
+async function markNotificationRead(id){try{await update(ref(db,`notifications/${id}`),{read:true});}catch{}}
+function openPanel(id){document.getElementById('panelOverlay').classList.add('open');document.getElementById(id).classList.add('open');}
+function closeAllPanels(){document.getElementById('panelOverlay').classList.remove('open');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));}
 
 /* ── MY LEAVES ── */
-function updMyLeaves(){ /* unchanged */ }
-function searchMyLeaves(){ /* unchanged */ }
+function updMyLeaves(){
+  if(!S.currentUser)return;const c=document.getElementById('myLeavesContainer');if(!c)return;let total=0,app=0,pend=0,rej=0,html='';
+  const mine=Object.entries(S.leaveRequests||{}).filter(([,l])=>l.empID===S.currentUser.id).sort(([,a],[,b])=>new Date(b.submittedAt)-new Date(a.submittedAt));
+  mine.forEach(([lid,lv])=>{total++;if(lv.status==='Approved')app++;else if(lv.status==='Pending')pend++;else if(lv.status==='Rejected')rej++;const wd=lv.workingDays||1,sc=lv.status.toLowerCase();
+    html+=`<div class="leave-card ${sc}" data-status="${sc}"><div class="leave-type">${LT[lv.type]||esc(lv.type)}</div><div class="leave-dates">📅 ${lv.startDate}${lv.endDate!==lv.startDate?` → ${lv.endDate}`:''} · ${wd} working day${wd!==1?'s':''}</div><span class="status-badge badge-${sc}">● ${esc(lv.status)}</span><div style="margin-top:8px;font-size:11px;color:var(--navy3);">"${esc(lv.reason)}"</div><div style="margin-top:6px;font-size:10px;color:var(--muted);">Submitted ${new Date(lv.submittedAt).toLocaleDateString()}${lv.approvedBy?`<br>Approved by ${esc(lv.approvedBy)}`:''}${lv.rejectedBy?`<br>Rejected by ${esc(lv.rejectedBy)}`:''}${lv.cancelledBy?`<br>Cancelled by ${esc(lv.cancelledBy)}`:''}</div>${lv.status==='Pending'?`<div class="leave-actions"><button class="btn btn-amber btn-sm" onclick="cancelLeave('${lid}')">Cancel Request</button></div>`:''}</div>`;});
+  if(!mine.length)html=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No leave requests yet. File one from your dashboard!</div>`;c.innerHTML=html;
+  document.getElementById('totalLeaves').textContent=total;document.getElementById('approvedLeaves').textContent=app;document.getElementById('pendingLeaves').textContent=pend;document.getElementById('rejectedLeaves').textContent=rej;
+}
+function searchMyLeaves(){const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();let t=0,a=0,p=0,r=0;document.querySelectorAll('#myLeavesContainer .leave-card').forEach(c=>{const v=c.textContent.toLowerCase().includes(q);c.style.display=v?'':'none';if(v){t++;const st=c.getAttribute('data-status')||'';if(st==='approved')a++;else if(st==='pending')p++;else if(st==='rejected')r++;}});document.getElementById('totalLeaves').textContent=t;document.getElementById('approvedLeaves').textContent=a;document.getElementById('pendingLeaves').textContent=p;document.getElementById('rejectedLeaves').textContent=r;}
 
 /* ── BULK REGISTER ── */
-function toggleBulkRegister(){ /* unchanged */ }
-async function runBulkRegister(){ /* unchanged */ }
+function toggleBulkRegister(){document.getElementById('bulkRegisterPanel').classList.toggle('hidden');}
+async function runBulkRegister(){
+  const raw=document.getElementById('bulkRegisterData').value.trim();if(!raw){showToast('No data entered','error');return;}
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);const prog=document.getElementById('bulkProgress');prog.classList.remove('hidden');let ok=0,fail=0;
+  for(let i=0;i<lines.length;i++){const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());prog.textContent=`Processing ${i+1}/${lines.length}: ${fullName||'?'}…`;if(!fullName||!email||!password){fail++;continue;}
+    try{const cr=await createUserWithEmailAndPassword(secAuth,email,password);const uid=cr.user.uid;await set(ref(db,`users/${uid}`),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});ok++;}catch(e){console.error('Bulk fail',email,e);fail++;}finally{try{await signOut(secAuth);}catch{}}}
+  prog.textContent=`✅ Done: ${ok} created, ${fail} failed.`;if(ok>0){renderDir();showToast(`${ok} employee(s) registered!`,'success');}if(fail>0)showToast(`${fail} failed — check console`,'error');
+}
 
-/* ── TIMESTAMP SHEET ── */
+/* ── TIMESTAMP SHEET — centered ── */
 function renderTimestamps(){
-  const el = document.getElementById('timestampTable'); if(!el) return;
-  const now = new Date();
-  const mon = parseInt(document.getElementById('tsMonth').value);
-  // FIXED year calculation (same as attendance)
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;
-  const dim = new Date(year, mon+1, 0).getDate();
-  // ... rest of rendering (unchanged, just uses the corrected year)
-  // (I'll keep the rest as is for brevity, but it should use this year variable)
-  const DAY = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  let html = `<table><thead><tr><th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:200px;">DAILY TIME RECORD<br><small>${MF[mon].toUpperCase()} ${year}</small></th><th rowspan="3" style="background:#fffde7;min-width:80px;">POSITION</th>`;
-  for(let d=1; d<=dim; d++){ const iw=[0,6].includes(new Date(year,mon,d).getDay()); html += `<th colspan="2" style="${iw?'background:#e8f5e9':'background:#fffde7'}">${d}</th>`; }
-  html += `</tr><tr>`;
-  for(let d=1; d<=dim; d++){ const w=new Date(year,mon,d).getDay(), iw=[0,6].includes(w); html += `<th colspan="2" style="${iw?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e'};font-size:9px;">${DAY[w]}</th>`; }
-  html += `</tr><tr>`;
-  for(let d=1; d<=dim; d++){ const iw=[0,6].includes(new Date(year,mon,d).getDay()); html += `<th style="${iw?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1'};font-size:9px;">IN</th><th style="${iw?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f'};font-size:9px;">OUT</th>`; }
-  html += `</tr></thead><tbody>`;
-  for(const [uid,u] of aes()){
-    const att = S.attendance[uid]||{};
-    const {L,F} = splitName(u.fullName);
-    const sh = u['shift_'+mon]||u.defaultShift||u.position||'';
-    html += `<tr><td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">${esc(L.toUpperCase())}</td><td style="text-align:left;padding:4px 8px;white-space:nowrap;">${esc(F.toUpperCase())}</td><td style="text-align:center;font-size:11px;">${esc(sh)}</td>`;
-    for(let d=1; d<=dim; d++){
-      const k = `${mon}_${d}`;
-      const tin = att[`${k}_time`];
-      const tout = att[`${k}_out`];
-      const late = att[`${k}_late`]||0;
-      const st = att[k]||'';
-      const iw = [0,6].includes(new Date(year,mon,d).getDay()), bg = iw?'background:#f1f8e9;':'';
-      let inT = ''; if(tin) inT = new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}); else if(st && st!=='P') inT = st;
-      html += `<td style="${bg}font-size:10px;${late?'color:#dc2626;font-weight:700;':''}">${esc(inT)}${late?`<br><span style="font-size:8px;">+${late}m</span>`:''}</td><td style="${bg}font-size:10px;">${esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')}</td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `</tbody></table>`;
-  el.innerHTML = html;
+  const el=document.getElementById('timestampTable');if(!el)return;const mon=parseInt(document.getElementById('tsMonth').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const dim=new Date(year,mon+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  let html=`<table><thead><tr><th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:180px;">DAILY TIME RECORD<br><small>${MF[mon].toUpperCase()} ${year}</small></th><th rowspan="3" style="background:#fffde7;min-width:80px;">POSITION</th>`;
+  for(let d=1;d<=dim;d++){const iw=[0,6].includes(new Date(year,mon,d).getDay());html+=`<th colspan="2" style="${iw?'background:#e8f5e9':'background:#fffde7'};text-align:center;">${d}</th>`;}html+=`</tr><tr>`;
+  for(let d=1;d<=dim;d++){const w=new Date(year,mon,d).getDay(),iw=[0,6].includes(w);html+=`<th colspan="2" style="${iw?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e'};font-size:9px;text-align:center;">${DAY[w]}</th>`;}html+=`</tr><tr>`;
+  for(let d=1;d<=dim;d++){const iw=[0,6].includes(new Date(year,mon,d).getDay());html+=`<th style="${iw?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1'};font-size:9px;text-align:center;">IN</th><th style="${iw?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f'};font-size:9px;text-align:center;">OUT</th>`;}html+=`</tr></thead><tbody>`;
+  for(const[uid,u]of aes()){const att=S.attendance[uid]||{};const{L,F}=splitName(u.fullName);const sh=u['shift_'+mon]||u.defaultShift||u.position||'';
+    html+=`<tr><td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">${esc(L.toUpperCase())}</td><td style="text-align:left;padding:4px 8px;white-space:nowrap;">${esc(F.toUpperCase())}</td><td style="text-align:center;font-size:11px;">${esc(sh)}</td>`;
+    for(let d=1;d<=dim;d++){const k=`${mon}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const st=att[k]||'';const iw=[0,6].includes(new Date(year,mon,d).getDay()),bg=iw?'background:#f1f8e9;':'';let inT='';if(tin)inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});else if(st&&st!=='P')inT=st;html+=`<td style="${bg}font-size:10px;text-align:center;${late?'color:#dc2626;font-weight:700;':''}">${esc(inT)}${late?`<br><span style="font-size:8px;">+${late}m</span>`:''}</td><td style="${bg}font-size:10px;text-align:center;">${esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')}</td>`;}html+=`</tr>`;}
+  html+=`</tbody></table>`;el.innerHTML=html;
 }
 
 function exportTimestampsToExcel(){
-  const mon = parseInt(document.getElementById('tsMonth').value);
-  const now = new Date();
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;
-  const days = new Date(year, mon+1, 0).getDate();
-  // ... rest unchanged
+  const mon=parseInt(document.getElementById('tsMonth').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const days=new Date(year,mon+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const r1=[`DTR - ${MF[mon].toUpperCase()} ${year}`,'','POSITION'],r2=['EMPLOYEES','',''],r3=['LAST NAME','FIRST NAME',''];
+  for(let d=1;d<=days;d++){r1.push(`${d}/${mon+1}`,'');r2.push(DAY[new Date(year,mon,d).getDay()],'');r3.push('IN','OUT');}
+  const data=[r1,r2,r3];
+  for(const[uid,u]of aes()){const att=S.attendance[uid]||{};const{L,F}=splitName(u.fullName);const row=[L.toUpperCase(),F.toUpperCase(),u['shift_'+mon]||u.defaultShift||''];
+    for(let d=1;d<=days;d++){const k=`${mon}_${d}`;const tin=att[`${k}_time`];const tout=att[`${k}_out`];const late=att[`${k}_late`]||0;const st=att[k]||'';let inT='';if(tin){inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});if(late)inT+=` (+${late}m)`;}else if(st&&st!=='P')inT=st;row.push(inT,tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'');}data.push(row);}
+  const cen={alignment:{horizontal:'center',vertical:'center'}};
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:18},{wch:18},{wch:12},...Array(days*2).fill({wch:10})];
+  ws['!merges']=[];for(let d=0;d<days;d++){ws['!merges'].push({s:{r:0,c:3+d*2},e:{r:0,c:4+d*2}},{s:{r:1,c:3+d*2},e:{r:1,c:4+d*2}});}
+  // Center all cells
+  if(!ws['!ref'])ws['!ref']='A1';
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let r=range.s.r;r<=range.e.r;r++)for(let c=range.s.c;c<=range.e.c;c++){const a=XLSX.utils.encode_cell({r,c});if(ws[a])ws[a].s=cen;}
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,`${MF[mon]} ${year}`);XLSX.writeFile(wb,`DTR_${MF[mon]}_${year}.xlsx`);
 }
 
-/* ── PAYROLL MODULE ── */
+/* ══════════════════════════════════════════════════════════════
+   PAYROLL MODULE
+   
+   NIGHT DIFF — FIXED (verified from NUEBE payslip):
+   • nightHrs = pCount × 8  (for Night shift employees, no timestamps)
+   • nightHrs = actual 10PM-6AM hours (when timestamps exist)
+   • nightDiff = nightHrs × (daily/8) × 10%
+   • Example: 11 P days → 88h → 88×(1153.846/8)×0.10 = ₱1,269.23 ✓
+══════════════════════════════════════════════════════════════ */
+
 function buildRows(mon,pS,pE,year){
-  const rows = []; let sn = 1;
-  for(const [uid,u] of aes()){
-    const att = S.attendance[uid]||{};
-    const salary = Math.max(0, parseFloat(u.monthlySalary)||0);
-    const cutoff = salary/2;
-    const daily = salary/WD;
-    let pCnt=0, rdsCnt=0, hdCnt=0, absDays=0, lMin=0, utHrs=0;
-    for(let d=pS; d<=pE; d++){
-      const k = `${mon}_${d}`, st = att[k]||'', late = parseInt(att[`${k}_late`]||0);
-      lMin += late;
-      switch(st){
-        case 'P': pCnt++; break;
-        case 'RDS': rdsCnt++; break;
-        case 'HD': hdCnt++; break;
-        case 'UT': pCnt++; utHrs++; break;
-        case 'A': case 'NPL': case 'NPSL': case 'S': absDays++; break;
-      }
-    }
-    const meal = pCnt*200 + rdsCnt*200 + hdCnt*100;
-    const transpo = Math.max(0, parseFloat(u.transpoAllow)||0);
-    const stat = Math.max(0, parseFloat(u.statBenefits)||0);
-    const bday = 0, regHolDays=0, regHol=0, specHolDays=0, specHol=0;
-    const nh = computeNightHrs(uid,mon,pS,pE);
-    const nd = nh * (daily/8) * 0.10;
-    const colK = daily;
-    const totalAllow = colK + meal + transpo + bday + nd + stat + regHol + specHol;
-    const absAmt = absDays * daily;
-    const tardAmt = lMin>0 ? (lMin/60)*(daily/8) : 0;
-    const utAmt = utHrs>0 ? utHrs*(daily/8) : 0;
-    const totalDeduct = absAmt + tardAmt + utAmt;
-    const net = cutoff + meal + transpo + bday + nd + stat + regHol + specHol - totalDeduct;
-    const {L,F} = splitName(u.fullName);
-    const empNo = u.empID || uid;
-    rows.push({sn,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',salary,cutoff,daily,colK,meal,transpo,bday,nh,nd,stat,regHolDays,regHol,specHolDays,specHol,totalAllow,absDays,absAmt,lMin,tardAmt,utHrs,utAmt,totalDeduct,net,hd:u.hireDate||'',empNo,pCnt,rdsCnt,hdCnt});
+  const rows=[];let sn=1;
+  for(const[uid,u]of aes()){
+    const p=calcPayroll(uid,mon,pS,pE);
+    const{L,F}=splitName(u.fullName);
+    const empNo=u.empID||uid;
+    const salary=Math.max(0,parseFloat(u.monthlySalary)||0);
+    const daily=salary/WD;
+    rows.push({sn,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',salary,cutoff:p.cutoff,daily,colK:p.colK,meal:p.meal,transpo:p.transpo,bday:p.bday,stat:p.stat,nh:p.nh,nd:p.nd,regHolDays:0,regHol:p.regHol,specHolDays:0,specHol:p.specHol,totalAllow:p.totalAllow,absDays:p.absDays,absAmt:p.absAmt,lMin:p.lMin,tardAmt:p.tardAmt,utHrs:p.utHrs,utAmt:p.utAmt,totalDeduct:p.totalDeduct,net:p.net,hd:u.hireDate||'',empNo,pCnt:p.pCnt,rdsCnt:p.rdsCnt,hdCnt:p.hdCnt});
     sn++;
   }
   return rows;
 }
 
 function renderPayrollPreview(){
-  if(!isAH()){ showToast('Restricted to HR and Admin','error'); return; }
-  const mon = parseInt(document.getElementById('pyMonth').value); if(isNaN(mon)) return;
-  const per = document.getElementById('pyPeriod').value;
-  const [pS,pEr] = per.split('-').map(Number);
-  const now = new Date();
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;
-  const dim = new Date(year, mon+1, 0).getDate();
-  const pE = pEr>=28 ? dim : pEr;
-  const rows = buildRows(mon,pS,pE,year);
-  const label = `${MF[mon].toUpperCase()} ${pS} – ${pE}, ${year}`;
-  document.getElementById('pyPeriodLabel').textContent = label;
-  if(!rows.length){ /* unchanged */ return; }
-  const T = rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
+  if(!isAH()){showToast('Restricted to HR and Admin','error');return;}
+  const mon=parseInt(document.getElementById('pyMonth').value);if(isNaN(mon))return;
+  const per=document.getElementById('pyPeriod').value;const[pS,pEr]=per.split('-').map(Number);
+  const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
+  const rows=buildRows(mon,pS,pE,year);
+  const label=`${MF[mon].toUpperCase()} ${pS} – ${pE}, ${year}`;
+  document.getElementById('pyPeriodLabel').textContent=label;
+  if(!rows.length){document.getElementById('payrollPreview').innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);">No employee data found.</div>`;document.getElementById('pyStats').style.display='none';return;}
+  const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
   document.getElementById('pyStats').style.display='';
-  document.getElementById('pyStats').innerHTML = `...`; // same as before
-  let html = `<table>...`; // same as before, but uses the rows with computed nh and nd
-  document.getElementById('payrollPreview').innerHTML = html;
+  document.getElementById('pyStats').innerHTML=`<div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">${rows.length}</div></div><div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">${php(T.net)}</div></div><div class="py-stat amber"><div class="ps-label">Total Cut-off</div><div class="ps-val" style="font-size:14px;">${php(T.cutoff)}</div></div><div class="py-stat purple"><div class="ps-label">Total Meal</div><div class="ps-val" style="font-size:14px;">${php(T.meal)}</div><div class="ps-sub">P/RDS=₱200 HD=₱100</div></div><div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">${php(T.totalDeduct)}</div></div>`;
+  let html=`<table><thead><tr>
+    <th rowspan="2">#</th><th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th><th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th>
+    <th rowspan="2" style="text-align:left;min-width:110px;">POSITION</th><th rowspan="2">MONTHLY</th><th rowspan="2">CUT-OFF</th><th rowspan="2">DAILY</th>
+    <th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">COL K</th>
+    <th colspan="5" style="background:#1e40af;color:#fff;">ALLOWANCES</th>
+    <th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL ALLOW</th>
+    <th colspan="3" style="background:#991b1b;color:#fff;">DEDUCTIONS</th>
+    <th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th>
+  </tr><tr>
+    <th style="background:#2563eb;color:#fff;">MEAL</th><th style="background:#2563eb;color:#fff;">TRANSPO</th>
+    <th style="background:#2563eb;color:#fff;">NIGHT HRS<br><small>pCnt×8h</small></th>
+    <th style="background:#2563eb;color:#fff;">NIGHT DIFF</th><th style="background:#2563eb;color:#fff;">STAT</th>
+    <th style="background:#b91c1c;color:#fff;">ABS DAYS</th><th style="background:#b91c1c;color:#fff;">ABS AMT</th><th style="background:#b91c1c;color:#fff;">TARD/UT</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{html+=`<tr>
+    <td class="ctr" style="color:var(--muted);">${r.sn}</td>
+    <td class="txt" style="font-weight:700;">${esc(r.L)}</td><td class="txt">${esc(r.F)}</td>
+    <td class="txt" style="font-size:11px;color:var(--muted);">${esc(r.pos)}</td>
+    <td>${php(r.salary)}</td><td style="font-weight:700;color:var(--accent);">${php(r.cutoff)}</td>
+    <td style="color:var(--muted);">${php(r.daily)}</td><td style="color:var(--muted);">${php(r.colK)}</td>
+    <td class="allow-cell" style="font-weight:600;">${php(r.meal)}<br><small style="color:var(--muted);font-size:9px;">P:${r.pCnt} RDS:${r.rdsCnt} HD:${r.hdCnt}</small></td>
+    <td class="allow-cell">${php(r.transpo)}</td>
+    <td class="allow-cell">${r.nh.toFixed(1)}h</td>
+    <td class="allow-cell">${php(r.nd)}</td><td class="allow-cell">${php(r.stat)}</td>
+    <td style="font-weight:700;color:var(--accent);">${php(r.totalAllow)}</td>
+    <td class="deduct-cell">${r.absDays>0?r.absDays+' days':'—'}</td>
+    <td class="deduct-cell">${r.absAmt>0?php(r.absAmt):'—'}</td>
+    <td class="deduct-cell">${r.tardAmt+r.utAmt>0?php(r.tardAmt+r.utAmt):'—'}</td>
+    <td class="net-cell">${php(r.net)}</td>
+  </tr>`;});
+  html+=`<tr class="total-row"><td colspan="4" style="text-align:right;padding:10px 12px;">GRAND TOTALS</td><td>${php(T.salary)}</td><td>${php(T.cutoff)}</td><td colspan="2"></td><td>${php(T.meal)}</td><td>${php(T.transpo)}</td><td></td><td>${php(T.nd)}</td><td>${php(T.stat)}</td><td>${php(T.totalAllow)}</td><td></td><td>${php(T.absAmt)}</td><td>${php(T.tardAmt+T.utAmt)}</td><td style="font-size:13px;">${php(T.net)}</td></tr></tbody></table>`;
+  document.getElementById('payrollPreview').innerHTML=html;
 }
 
-/* ── PAYROLL EXPORT (FIXED) ── */
+/* ── EXCEL STYLES ── */
+const XS={
+  YELLOW:{fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}},font:{bold:true,sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+  GRAY:{fill:{patternType:'solid',fgColor:{rgb:'595959'}},font:{bold:true,sz:9,color:{rgb:'FFFFFF'}},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
+  GREEN_V:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{sz:10},alignment:{horizontal:'right',vertical:'center'}},
+  GREEN_H:{fill:{patternType:'solid',fgColor:{rgb:'92D050'}},font:{bold:true,sz:9},alignment:{wrapText:true,vertical:'center',horizontal:'center'}},
+  DBLUE:{fill:{patternType:'solid',fgColor:{rgb:'1C4587'}},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+  DRED:{fill:{patternType:'solid',fgColor:{rgb:'85200C'}},font:{bold:true,color:{rgb:'FFFFFF'},sz:10},alignment:{horizontal:'center',vertical:'center'}},
+  YROW:{fill:{patternType:'solid',fgColor:{rgb:'FFFF00'}}},
+  CEN:{alignment:{horizontal:'center',vertical:'center'}},
+};
+function xs(ws,r,c,s){const a=XLSX.utils.encode_cell({r,c});if(!ws[a])ws[a]={v:'',t:'s'};ws[a].s=s;}
+
 function exportPayrollExcel(){
-  if(!isAH()){ showToast('Restricted to HR and Admin','error'); return; }
-  const mon = parseInt(document.getElementById('pyMonth').value); if(isNaN(mon)){ showToast('Please select a month','error'); return; }
-  const per = document.getElementById('pyPeriod').value;
-  const [pS,pEr] = per.split('-').map(Number);
-  const now = new Date();
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;
-  const dim = new Date(year, mon+1, 0).getDate();
-  const pEnd = pEr>=28 ? dim : pEr;
-  const rows = buildRows(mon,pS,pEnd,year);
-  if(!rows.length){ showToast('No employee data to export','error'); return; }
+  if(!isAH()){showToast('Restricted to HR and Admin','error');return;}
+  const mon=parseInt(document.getElementById('pyMonth').value);if(isNaN(mon)){showToast('Please select a month','error');return;}
+  const per=document.getElementById('pyPeriod').value;const[pS,pEr]=per.split('-').map(Number);
+  const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,mon+1,0).getDate(),pEnd=pEr>=28?dim:pEr;
+  const rows=buildRows(mon,pS,pEnd,year);if(!rows.length){showToast('No employee data to export','error');return;}
+  const mL=`${MF[mon].toUpperCase().slice(0,3)} ${pS},${year}`,mE=`${MF[mon].toUpperCase().slice(0,3)} ${pEnd},${year}`,rem=`${MF[mon].toUpperCase()} ${pS} TO ${pEnd}`;
+  const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,regHol:a.regHol+r.regHol,specHol:a.specHol+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
+  const wb=XLSX.utils.book_new();
 
-  const mL = `${MF[mon].toUpperCase().slice(0,3)} ${pS},${year}`;
-  const mE = `${MF[mon].toUpperCase().slice(0,3)} ${pEnd},${year}`;
-  const rem = `${MF[mon].toUpperCase()} ${pS} TO ${pEnd}`;
-  const T = rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,regHol:a.regHol+r.regHol,specHol:a.specHol+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
-
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1: REQUEST CLAIM (unchanged, except using correct T values)
-  const s1 = [ /* same as original */ ];
-  const ws1 = XLSX.utils.aoa_to_sheet(s1,{cellDates:true});
-  // ... formatting ...
+  // SHEET 1: REQUEST CLAIM
+  const s1=[['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],[1,new Date(),'Salary for Staff','',rows.length,T.net,'AFB','AFB','All','Salary and Wages',rem,'',''],[2,new Date(),'Salary Charge Fee','',1,300,'AFB','AFB','All','Salary Charge Fee',rem,'',''],['',''],[' ','','','','',T.net+300]];
+  const ws1=XLSX.utils.aoa_to_sheet(s1,{cellDates:true});
+  ws1['!cols']=[{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
+  for(let c=0;c<13;c++)xs(ws1,0,c,XS.YELLOW);
   XLSX.utils.book_append_sheet(wb,ws1,'REQUEST CLAIM');
 
-  // Sheet 2: PAYROLL REQUEST (FIXED COLUMN INDEX FOR DISCREPANCY)
-  const cols2 = 33; // column count A-AG (index 0-32)
-  const s2 = [];
-  // Row 1: Pay Period labels and totals
-  const r1 = Array(cols2).fill('');
-  r1[0] = 'Pay Period'; r1[5] = 'BASIC'; r1[6] = T.cutoff; s2.push(r1);
-  s2.push(['Start',mL,'','','','OT',0]);
-  s2.push(['End',  mE,'','','','MEAL',T.meal]);
-  s2.push(['','','','','','TRANSPO',T.transpo]);
-  s2.push(['Total Salary',T.net,'','','','BIRTHDAY',0]);
-  s2.push(['','','','','','ND',T.nd]);
-  s2.push(['','','','','','STAT',T.stat]);
-  s2.push(['','','','','','Regular Holiday',T.regHol]);
-  s2.push(['','','','','','Special Holiday',T.specHol]);
-  // Row 10 (index 9) – DISCREPANCY label and merged cells
-  const r10 = Array(cols2).fill('');
-  r10[5] = 'DISCREPANCY'; r10[6] = 0;
-  // Allowances merged (columns O–Y) indices 14-24
-  r10[14] = 'Allowances';
-  // Deductions merged (columns AA–AF) indices 26-31
-  r10[26] = 'Deductions';
-  s2.push(r10);
-  // Header row (row 11, index 10)
-  const hdr = ['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','','Overtime','Discrepancy','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary'];
-  s2.push(hdr);
-  // Department totals row (yellow) – index 11
-  const rDept = Array(cols2).fill('');
-  rDept[3] = 'AFB / TMT';
-  rDept[7] = T.cutoff;
-  rDept[14] = T.meal; rDept[15] = T.transpo;
-  rDept[18] = T.nd; rDept[19] = T.stat;
-  rDept[21] = T.regHol; rDept[23] = T.specHol;
-  rDept[24] = T.totalAllow;
-  rDept[26] = T.absAmt; rDept[28] = T.tardAmt; rDept[30] = T.utAmt;
-  rDept[31] = T.totalDeduct; rDept[32] = T.net;
-  s2.push(rDept);
-  // Employee rows
-  rows.forEach(r => {
-    s2.push([r.sn, r.L, r.F, r.pos, r.full, r.salary, r.hd?new Date(r.hd):'', r.cutoff, r.daily, 0, r.colK, 0, 0, 0, r.meal, r.transpo, r.bday, r.nh, r.nd, r.stat, r.regHolDays, r.regHol, r.specHolDays, r.specHol, r.totalAllow, r.absDays, r.absAmt, r.lMin, r.tardAmt, r.utHrs, r.utAmt, r.totalDeduct, r.net]);
-  });
-
-  const ws2 = XLSX.utils.aoa_to_sheet(s2, {cellDates:true});
-  ws2['!cols'] = [ /* column widths */ ];
-  ws2['!merges'] = [{s:{r:9,c:14},e:{r:9,c:24}}, {s:{r:9,c:26},e:{r:9,c:31}}];
-  // Apply GREEN to column G rows 0-8
-  for(let r=0; r<=8; r++) xsc(ws2,r,6,XST.GREEN_VAL);
-  // Header row (index 10) GRAY/GREEN
-  [0,1,2,3,4,5,7,8,11,12,24,31,32].forEach(c=>xsc(ws2,10,c,XST.GRAY_HDR));
-  xsc(ws2,10,6,XST.GREEN_HDR);
-  xsc(ws2,9,14,XST.GRAY_HDR); xsc(ws2,9,26,XST.GRAY_HDR);
-  // Dept totals row yellow
-  for(let c=0; c<33; c++) xsc(ws2,11,c,XST.YELLOW_ROW);
+  // SHEET 2: PAYROLL REQUEST
+  const s2=[
+    ['Pay Period','','','','','BASIC',T.cutoff,...Array(26).fill('')],
+    ['Start',mL,'','','','OT',0],['End',mE,'','','','MEAL',T.meal],
+    ['','','','','','TRANSPO',T.transpo],['Total Salary',T.net,'','','','BIRTHDAY',0],
+    ['','','','','','ND',T.nd],['','','','','','STAT',T.stat],
+    ['','','','','','Regular Holiday',T.regHol],['','','','','','Speacial Holiday',T.specHol],
+  ];
+  const r10=Array(33).fill('');r10[5]='DISCREPANCY';r10[6]=0;r10[14]='Allowances';r10[26]='Deductions';s2.push(r10);
+  s2.push(['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','','Overtime','Discrepancy','NO RD ADJUSTMENT DAILY RATE (*1.30/DS) DAILY RATE (*1.43/NS)','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary']);
+  const r12=Array(33).fill('');r12[3]='AFB / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;r12[18]=T.nd;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;r12[24]=T.totalAllow;r12[26]=T.absAmt;r12[28]=T.tardAmt;r12[30]=T.utAmt;r12[31]=T.totalDeduct;r12[32]=T.net;s2.push(r12);
+  rows.forEach(r=>{s2.push([r.sn,r.L,r.F,r.pos,r.full,r.salary,r.hd?new Date(r.hd):'',r.cutoff,r.daily,0,r.colK,0,0,0,r.meal,r.transpo,r.bday,r.nh,r.nd,r.stat,r.regHolDays,r.regHol,r.specHolDays,r.specHol,r.totalAllow,r.absDays,r.absAmt,r.lMin,r.tardAmt,r.utHrs,r.utAmt,r.totalDeduct,r.net]);});
+  const ws2=XLSX.utils.aoa_to_sheet(s2,{cellDates:true});
+  ws2['!cols']=[{wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20},{wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},{wch:11},{wch:7.29},{wch:9},{wch:8},{wch:10.71},{wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},{wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},{wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},{wch:14.29},{wch:15.86},{wch:8.71}];
+  ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{r:9,c:31}}];
+  for(let r=0;r<=8;r++)xs(ws2,r,6,XS.GREEN_V);
+  [0,1,2,3,4,5,7,8,11,12,24,31,32].forEach(c=>xs(ws2,10,c,XS.GRAY));
+  xs(ws2,10,6,XS.GREEN_H);xs(ws2,9,14,XS.GRAY);xs(ws2,9,26,XS.GRAY);
+  for(let c=0;c<33;c++)xs(ws2,11,c,XS.YROW);
   XLSX.utils.book_append_sheet(wb,ws2,'PAYROLL REQUEST');
 
-  // Sheet 3: ATTENDANCE SHEET (LEGEND FIX)
-  const nD = pEnd-pS+1;
-  const attHdr = ['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
-  for(let d=pS; d<=pEnd; d++) attHdr.push(new Date(year,mon,d));
-  attHdr.push('TOTAL DAYS','COST','','');  // extra cols for legend
-  const s3 = [attHdr];
-  rows.forEach(r=>{
-    const att = S.attendance[r.uid]||{};
-    const totalDays = r.pCnt + r.rdsCnt + r.hdCnt*0.5;
-    const cost = r.pCnt*200 + r.rdsCnt*200 + r.hdCnt*100;
-    const rowData = [r.empNo, r.L, r.F, r.pos, r.hd?new Date(r.hd):'', 'ACTIVE'];
-    for(let d=pS; d<=pEnd; d++) rowData.push(att[`${mon}_${d}`]||'');
-    rowData.push(totalDays, cost, '', '');  // leave legend columns empty for employee rows
+  // SHEET 3: ATTENDANCE SHEET — centered
+  const nD=pEnd-pS+1;
+  const attHdr=['EMPLOYEE NO.','LAST NAME','FIRST NAME','POSITION','HIRED DATE','STATUS'];
+  for(let d=pS;d<=pEnd;d++)attHdr.push(new Date(year,mon,d));
+  attHdr.push('TOTAL DAYS','COST','','LEGEND:');
+  const s3=[attHdr];
+  rows.forEach((r,i)=>{
+    const att=S.attendance[r.uid]||{};
+    const totalDays=r.pCnt+r.rdsCnt+r.hdCnt*0.5;
+    const cost=r.pCnt*200+r.rdsCnt*200+r.hdCnt*100;
+    const rowData=[r.empNo,r.L,r.F,r.pos,r.hd?new Date(r.hd):'','ACTIVE'];
+    for(let d=pS;d<=pEnd;d++)rowData.push(att[`${mon}_${d}`]||'');
+    rowData.push(totalDays,cost);
+    if(i<LEG.length)rowData.push('',LEG[i][0],LEG[i][1]);
     s3.push(rowData);
   });
-  // Add legend footer row(s)
-  const legendRow = Array(attHdr.length).fill('');
-  legendRow[attHdr.length-2] = 'LEGEND:';
-  s3.push(legendRow);
-  LEG.forEach(([code,desc], idx) => {
-    const row = Array(attHdr.length).fill('');
-    row[attHdr.length-4] = code;   // code column
-    row[attHdr.length-3] = desc;   // description column
-    s3.push(row);
-  });
-
-  const ws3 = XLSX.utils.aoa_to_sheet(s3, {cellDates:true});
-  const attCols = [ {wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8} ];
-  for(let d=pS; d<=pEnd; d++) attCols.push({wch:5});
+  const ws3=XLSX.utils.aoa_to_sheet(s3,{cellDates:true});
+  const attCols=[{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];
+  for(let d=pS;d<=pEnd;d++)attCols.push({wch:5});
   attCols.push({wch:11},{wch:10},{wch:4},{wch:6},{wch:22});
-  ws3['!cols'] = attCols;
-  // Header styling
-  for(let c=0; c<6; c++) xsc(ws3,0,c,XST.DARK_BLUE);
-  for(let c=6; c<6+nD; c++) xsc(ws3,0,c,XST.DARK_RED);
-  for(let c=6+nD; c<6+nD+2; c++) xsc(ws3,0,c,XST.DARK_BLUE);
-  // Legend cell colors (apply to the actual legend rows)
-  LEG.forEach(([code], idx) => {
-    const rowIdx = s3.length - LEG.length + idx; // last rows
-    const clr = LEG_CLR[code];
-    if(clr){
-      const colCode = 6+nD+1; // second last column (code)
-      const addr = XLSX.utils.encode_cell({r:rowIdx, c:colCode});
-      if(ws3[addr]) ws3[addr].s = {fill:{patternType:'solid',fgColor:{rgb:clr}},alignment:{horizontal:'center',vertical:'center'}};
-    }
-  });
+  ws3['!cols']=attCols;
+  // Apply center alignment to ALL cells + header colors
+  const rng=XLSX.utils.decode_range(ws3['!ref']||'A1');
+  for(let r=rng.s.r;r<=rng.e.r;r++)for(let c=rng.s.c;c<=rng.e.c;c++){const a=XLSX.utils.encode_cell({r,c});if(ws3[a])ws3[a].s=XS.CEN;}
+  for(let c=0;c<6;c++)xs(ws3,0,c,XS.DBLUE);
+  for(let c=6;c<6+nD;c++)xs(ws3,0,c,XS.DRED);
+  for(let c=6+nD;c<6+nD+2;c++)xs(ws3,0,c,XS.DBLUE);
+  rows.forEach((r,i)=>{if(i>=LEG.length)return;const code=LEG[i][0];const clr=LEG_CLR[code];if(clr){const a=XLSX.utils.encode_cell({r:1+i,c:6+nD+1});if(ws3[a])ws3[a].s={fill:{patternType:'solid',fgColor:{rgb:clr}},alignment:{horizontal:'center',vertical:'center'}};}});
   XLSX.utils.book_append_sheet(wb,ws3,'ATTENDANCE SHEET');
 
-  const fname = `PAYROLL_${MF[mon].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  showToast(`✅ Exported: ${fname}`, 'success');
+  const fname=`PAYROLL_${MF[mon].toUpperCase()}_${pS}-${pEnd}_${year}.xlsx`;
+  XLSX.writeFile(wb,fname);showToast(`✅ Exported: ${fname}`,'success');
 }
 
 function exportToExcel(){
-  if(!isAH()){ showToast('Restricted to HR and Admin','error'); return; }
-  const mon = parseInt(document.getElementById('pMonth').value);
-  const per = document.getElementById('pPeriod').value;
-  const [pS,pEr] = per.split('-').map(Number);
-  const now = new Date();
-  let year = now.getFullYear();
-  if(mon > now.getMonth() || (now.getMonth()===0 && mon===11)) year--;
-  const dim = new Date(year, mon+1, 0).getDate();
-  const pE = pEr>=28 ? dim : pEr;
-  const data = [['Emp ID','Name','Dept','Shift']];
-  for(let d=pS; d<=pE; d++) data[0].push(`Day ${d}`);
-  data[0].push('Total Lates (min)');
-  for(const [uid,u] of aes()){
-    const att = S.attendance[uid]||{};
-    const row = [u.empID||uid, u.fullName, u.dept, u['shift_'+mon]||u.defaultShift||''];
-    let tl = 0;
-    for(let d=pS; d<=pE; d++){
-      const k = `${mon}_${d}`;
-      const st = att[k]||'';
-      const l = att[`${k}_late`]||0;
-      if(l) tl += parseInt(l);
-      row.push(l?`${st} (${l}m late)`:st);
-    }
-    row.push(tl);
-    data.push(row);
-  }
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-  XLSX.writeFile(wb, `Attendance_${MONTHS[mon]}_${per}_${year}.xlsx`);
+  if(!isAH()){showToast('Restricted to HR and Admin','error');return;}
+  const mon=parseInt(document.getElementById('pMonth').value);const per=document.getElementById('pPeriod').value;const[pS,pEr]=per.split('-').map(Number);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
+  const data=[['Emp ID','Name','Dept','Shift']];for(let d=pS;d<=pE;d++)data[0].push(`Day ${d}`);data[0].push('Total Lates (min)');
+  for(const[uid,u]of aes()){const att=S.attendance[uid]||{};const row=[u.empID||uid,u.fullName,u.dept,u['shift_'+mon]||u.defaultShift||''];let tl=0;for(let d=pS;d<=pE;d++){const k=`${mon}_${d}`;const st=att[k]||'';const l=att[`${k}_late`]||0;if(l)tl+=parseInt(l);row.push(l?`${st} (${l}m late)`:st);}row.push(tl);data.push(row);}
+  const ws=XLSX.utils.aoa_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Attendance');XLSX.writeFile(wb,`Attendance_${MONTHS[mon]}_${per}_${year}.xlsx`);
 }
 
 /* ── TOAST ── */
-function showToast(msg,type='info'){ /* unchanged */ }
-function showFE(id,msg){ /* unchanged */ }
-function showFV(id,msg){ /* unchanged */ }
+function showToast(msg,type='info'){const c=document.getElementById('toastContainer');while(c.children.length>=5)c.removeChild(c.firstChild);const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=`${type==='success'?'✅':type==='error'?'❌':'ℹ️'} ${msg}`;c.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3500);}
+function showFE(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
+function showFV(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
 
 /* ── RENDER QUEUE ── */
-const _rq = new Set(); let _rt = null;
-function qR(...tasks){ tasks.forEach(t=>_rq.add(t)); if(_rt) clearTimeout(_rt); _rt=setTimeout(()=>{ _rt=null; const j=[..._rq]; _rq.clear(); if(j.includes('tab')) renderTab(); if(j.includes('inbox')) updInbox(); if(j.includes('myLeaves')) updMyLeaves(); if(j.includes('notifications')) updNotifs(); if(j.includes('dashboard')) updDash(); },80); }
+const _rq=new Set();let _rt=null;
+function qR(...tasks){tasks.forEach(t=>_rq.add(t));if(_rt)clearTimeout(_rt);_rt=setTimeout(()=>{_rt=null;const j=[..._rq];_rq.clear();if(j.includes('tab'))renderTab();if(j.includes('inbox'))updInbox();if(j.includes('myLeaves'))updMyLeaves();if(j.includes('notifications'))updNotifs();if(j.includes('dashboard'))updDash();if(j.includes('earnings'))renderEarnings();},80);}
 
 /* ── REALTIME LISTENERS ── */
 function setupListeners(){
-  Object.values(S.listeners).forEach(f=>{ if(typeof f==='function') f(); });
-  S.listeners.users = onValue(ref(db,'users'), snap=>{ S.users = snap.val()||{}; chkDisabled(); qR('tab','dashboard'); });
-  S.listeners.attendance = onValue(ref(db,'attendance'), snap=>{ S.attendance = snap.val()||{}; qR('tab','dashboard'); });
-  S.listeners.leaveRequests = onValue(ref(db,'leave_requests'), snap=>{ S.leaveRequests = snap.val()||{}; qR('inbox','myLeaves'); });
-  S.listeners.notifications = onValue(ref(db,'notifications'), snap=>{ S.notifications = snap.val()||{}; qR('notifications'); });
-  S.listeners.auditLogs = onValue(ref(db,'audit_logs'), snap=>{ renderAudit(snap.val()); });
+  Object.values(S.listeners).forEach(f=>{if(typeof f==='function')f();});
+  S.listeners.users=onValue(ref(db,'users'),snap=>{S.users=snap.val()||{};chkDisabled();qR('tab','dashboard');});
+  S.listeners.attendance=onValue(ref(db,'attendance'),snap=>{S.attendance=snap.val()||{};qR('tab','dashboard','earnings');});
+  S.listeners.leaveRequests=onValue(ref(db,'leave_requests'),snap=>{S.leaveRequests=snap.val()||{};qR('inbox','myLeaves');});
+  S.listeners.notifications=onValue(ref(db,'notifications'),snap=>{S.notifications=snap.val()||{};qR('notifications');});
+  S.listeners.auditLogs=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
 }
 
-/* ── EXPORT TO WINDOW (SAFE, NO DOUBLE-EXECUTION) ── */
-const _registeredFunctions = new Set();
-function ex(n,f){
-  window[n] = f;
-  window['__hr_'+n] = f;
-  _registeredFunctions.add(n);
-}
-// Clear any pending placeholder intervals
-window.addEventListener('load', ()=>{
-  // The initial polling placeholders will call the real function once, then we replace them.
-  // Since we already assign window[n] = f, they will immediately find it.
-});
-ex('handleLogin', handleLogin);
-ex('handleLogout', ()=>handleLogout(false));
-ex('userClockAction', userClockAction);
-ex('submitLeave', submitLeave);
-ex('cancelLeave', cancelLeave);
-ex('addEmployee', addEmployee);
-ex('editEmployee', editEmployee);
-ex('cancelEdit', cancelEdit);
-ex('manualClockOutNow', manualClockOutNow);
-ex('switchTab', switchTabI);
-ex('toggleLeaveForm', toggleLeaveForm);
-ex('renderAttendance', renderAttendance);
-ex('renderSchedules', renderSchedules);
-ex('updateLeaveBalance', updateLeaveBalance);
-ex('checkDateRange', checkDateRange);
-ex('exportToExcel', exportToExcel);
-ex('renderPayrollPreview', renderPayrollPreview);
-ex('exportPayrollExcel', exportPayrollExcel);
-ex('searchEmployees', searchEmployees);
-ex('searchActive', searchActive);
-ex('searchSchedules', searchSchedules);
-ex('searchAttendance', searchAttendance);
-ex('searchAudit', searchAudit);
-ex('searchMyLeaves', searchMyLeaves);
-ex('changeAttendanceStatus', changeAttendanceStatus);
-ex('updateScheduleField', updateScheduleField);
-ex('saveSchedule', saveSchedule);
-ex('saveAllSchedules', saveAllSchedules);
-ex('openPanel', openPanel);
-ex('closeAllPanels', closeAllPanels);
-ex('approveLeave', approveLeave);
-ex('rejectLeave', rejectLeave);
-ex('markNotificationRead', markNotificationRead);
-ex('deleteEmployee', deleteEmployee);
-ex('toggleBulkRegister', toggleBulkRegister);
-ex('runBulkRegister', runBulkRegister);
-ex('renderTimestamps', renderTimestamps);
-ex('exportTimestampsToExcel', exportTimestampsToExcel);
-ex('adminClockOut', adminClockOut);
+/* ── EXPORT TO WINDOW ── */
+function ex(n,f){window[n]=f;window['__hr_'+n]=f;}
+ex('handleLogin',handleLogin);ex('handleLogout',()=>handleLogout(false));ex('userClockAction',userClockAction);ex('submitLeave',submitLeave);ex('cancelLeave',cancelLeave);ex('addEmployee',addEmployee);ex('editEmployee',editEmployee);ex('cancelEdit',cancelEdit);ex('manualClockOutNow',manualClockOutNow);ex('switchTab',switchTabI);ex('toggleLeaveForm',toggleLeaveForm);ex('renderAttendance',renderAttendance);ex('renderSchedules',renderSchedules);ex('updateLeaveBalance',updateLeaveBalance);ex('checkDateRange',checkDateRange);ex('exportToExcel',exportToExcel);ex('renderPayrollPreview',renderPayrollPreview);ex('exportPayrollExcel',exportPayrollExcel);ex('renderEarnings',renderEarnings);ex('searchEmployees',searchEmployees);ex('searchActive',searchActive);ex('searchSchedules',searchSchedules);ex('searchAttendance',searchAttendance);ex('searchAudit',searchAudit);ex('searchMyLeaves',searchMyLeaves);ex('changeAttendanceStatus',changeAttendanceStatus);ex('updateScheduleField',updateScheduleField);ex('saveSchedule',saveSchedule);ex('saveAllSchedules',saveAllSchedules);ex('openPanel',openPanel);ex('closeAllPanels',closeAllPanels);ex('approveLeave',approveLeave);ex('rejectLeave',rejectLeave);ex('markNotificationRead',markNotificationRead);ex('deleteEmployee',deleteEmployee);ex('toggleBulkRegister',toggleBulkRegister);ex('runBulkRegister',runBulkRegister);ex('renderTimestamps',renderTimestamps);ex('exportTimestampsToExcel',exportTimestampsToExcel);
 </script>
 </body>
 </html>
