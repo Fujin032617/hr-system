@@ -406,7 +406,11 @@ td.att-cell:hover{transform:scale(1.08);}
       <!-- ACTIVE NOW -->
       <section id="sec-active" class="tab-content hidden">
         <div class="section-title">Active Now</div><div class="section-sub">Employees currently clocked in</div>
-        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchActive()"></div><div class="table-wrap" id="activeTable"></div></div>
+        <div class="card">
+          <div id="ipBanner" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 14px;font-size:11px;color:#1e40af;margin-bottom:12px;">📡 Your IP: <b id="myIP">detecting…</b></div>
+          <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchActive()"></div>
+          <div class="table-wrap" id="activeTable"></div>
+        </div>
       </section>
 
       <!-- SCHEDULES -->
@@ -463,7 +467,28 @@ td.att-cell:hover{transform:scale(1.08);}
       <!-- AUDIT -->
       <section id="sec-audit" class="tab-content hidden">
         <div class="section-title">Audit Logs</div><div class="section-sub">System-wide action history</div>
-        <div class="card"><div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchAudit()"></div><div class="table-wrap" id="auditTable"></div></div>
+        <div class="card">
+          <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <div class="search-wrap" style="flex:1;min-width:200px;margin:0;"><span class="search-icon">🔍</span><input type="text" id="auditSearch" class="search-input" placeholder="Search name, action, emp ID…" oninput="filterAudit()"></div>
+            <select id="auditAction" class="toolbar-select" onchange="filterAudit()" style="min-width:160px;">
+              <option value="">All Actions</option>
+              <option value="CLOCK IN">Clock In</option>
+              <option value="CLOCK OUT">Clock Out</option>
+              <option value="leave">Leave Requests</option>
+              <option value="attendance">Attendance Changes</option>
+              <option value="AUTO">Auto Clock-Out</option>
+            </select>
+            <select id="auditDept" class="toolbar-select" onchange="filterAudit()">
+              <option value="">All Departments</option>
+              <option value="RC">RC</option>
+              <option value="CSR">CSR</option>
+            </select>
+            <input type="date" id="auditDate" class="toolbar-select" onchange="filterAudit()" title="Filter by date">
+            <button class="btn btn-ghost btn-sm" onclick="clearAuditFilters()">✕ Clear</button>
+          </div>
+          <div id="auditStats" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
+          <div class="table-wrap" id="auditTable"></div>
+        </div>
       </section>
 
       <!-- MY LEAVES -->
@@ -758,6 +783,8 @@ async function clockAction(type){
         const diff=now-sc;if(diff>0)lm=Math.floor(diff/60000);
       }
       const upd={[key]:'P',[key+'_time']:now.toISOString()};if(lm>0)upd[key+'_late']=lm;
+      // Capture IP and ISP on clock-in
+      try{const ipRes=await fetch('https://ipapi.co/json/');if(ipRes.ok){const ipData=await ipRes.json();if(ipData.ip)upd[key+'_ip']=ipData.ip;if(ipData.org||ipData.isp)upd[key+'_isp']=ipData.org||ipData.isp;}}catch{}
       localStorage.setItem('afb_lc',JSON.stringify({uid,key}));
       const al={name:A.cu.fullName,action:lm>0?'CLOCK IN ('+lm+'m late)':'CLOCK IN',timestamp:now.toISOString(),empID:uid,department:A.cu.dept};
       const r=await safe(async()=>{await update(ref(db,'attendance/'+uid),upd);await push(ref(db,'audit_logs'),al);},'ci',{uid,u:upd,al});
@@ -856,7 +883,7 @@ function doRender(tab){
   if(tab==='dashboard')updDash();
   else if(tab==='earnings')renderEarnings();
   else if(tab==='dir')renderDir();
-  else if(tab==='active')renderActive();
+  else if(tab==='active'){renderActive();detectMyIP();}
   else if(tab==='sched')renderSchedules();
   else if(tab==='pay'&&isAH())renderAtt();
   else if(tab==='payroll'&&isAH())renderPRev();
@@ -1019,14 +1046,14 @@ function searchSched(){const q=document.querySelector('#sec-sched .search-input'
 /* ── ACTIVE NOW ── */
 function renderActive(){
   const el=document.getElementById('activeTable');if(!el)return;const now=new Date(),mon=now.getMonth(),day=now.getDate(),tk=mon+'_'+day;
-  let h='<table><thead><tr><th class="tl">Emp ID</th><th class="tl">Name</th><th>Dept</th><th>Time In</th><th>Shift</th><th>Status</th></tr></thead><tbody>';let cnt=0;
-  for(const[uid,u]of sortEmps()){const at=A.att[uid]||{};if(at[tk]==='P'&&!at[tk+'_out']){cnt++;const ti=at[tk+'_time'];const late=at[tk+'_late']||0;h+='<tr><td class="tl" style="font-weight:600;">'+esc(u.empID||uid)+'</td><td class="tl">'+esc(u.fullName)+'</td><td>'+esc(u.dept)+'</td><td>'+(ti?new Date(ti).toLocaleTimeString():'—')+(late?'<span style="font-size:10px;color:var(--red);margin-left:4px;">+'+late+'m</span>':'')+'</td><td style="font-size:11px;color:var(--muted);">'+esc(u['shift_'+mon]||u.defaultShift||'—')+'</td><td><span class="status-badge badge-approved">● Present</span></td></tr>';}}
-  if(!cnt)h+='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>';h+='</tbody></table>';el.innerHTML=h;
+  let h='<table><thead><tr><th class="tl">Emp ID</th><th class="tl">Name</th><th>Dept</th><th>Shift</th><th>Backend ID</th><th>Time In</th><th>IP Provider</th><th>Status</th></tr></thead><tbody>';let cnt=0;
+  for(const[uid,u]of sortEmps()){const at=A.att[uid]||{};if(at[tk]==='P'&&!at[tk+'_out']){cnt++;const ti=at[tk+'_time'];const late=at[tk+'_late']||0;const ip=at[tk+'_ip']||'';const isp=at[tk+'_isp']||'';
+    h+='<tr><td class="tl" style="font-weight:600;">'+esc(u.empID||uid)+'</td><td class="tl">'+esc(u.fullName)+'</td><td>'+esc(u.dept)+'</td><td style="font-size:11px;color:var(--muted);">'+esc(u['shift_'+mon]||u.defaultShift||'—')+'</td><td style="font-size:11px;font-family:monospace;">'+esc(u.backendID||'—')+'</td><td>'+(ti?new Date(ti).toLocaleTimeString():'—')+(late?'<span style="font-size:10px;color:var(--red);margin-left:4px;">+'+late+'m</span>':'')+'</td><td style="font-size:11px;color:var(--muted);">'+(isp?'<span style="background:#eff6ff;padding:2px 8px;border-radius:10px;color:#1e40af;">'+esc(isp)+'</span>':ip?'<span style="font-size:10px;font-family:monospace;">'+esc(ip)+'</span>':'—')+'</td><td><span class="status-badge badge-approved">● Present</span></td></tr>';}}
+  if(!cnt)h+='<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">No active employees right now</td></tr>';h+='</tbody></table>';el.innerHTML=h;
 }
 function searchActive(){const q=document.querySelector('#sec-active .search-input').value.toLowerCase();document.querySelectorAll('#activeTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── AUDIT ── */
-function renderAudit(logs){const el=document.getElementById('auditTable');if(!el||!logs)return;let h='<table><thead><tr><th class="tl">Timestamp</th><th class="tl">User</th><th class="tl">Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>';Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).forEach(l=>{h+='<tr><td class="tl" style="color:var(--muted);font-size:11px;">'+new Date(l.timestamp).toLocaleString()+'</td><td class="tl">'+esc(l.name||'System')+'</td><td class="tl">'+esc(l.action)+'</td><td>'+esc(l.empID||'')+'</td><td>'+esc(l.department||'')+'</td></tr>';});h+='</tbody></table>';el.innerHTML=h;}
 function searchAudit(){const q=document.querySelector('#sec-audit .search-input').value.toLowerCase();document.querySelectorAll('#auditTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── INBOX ── */
@@ -1116,12 +1143,12 @@ function exportDTR(){
 /* ── PAYROLL PREVIEW ── */
 function buildRows(mon,pS,pE){
   const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
-  const rows=[];let sn=1;
+  const rows=[];let rowNum=1;
   for(const[uid,u]of sortEmps()){
     const p=calcPayroll(uid,mon,pS,pE);
     const{L,F}=sn(u.fullName);
-    rows.push({sn,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',empNo:u.empID||uid,hd:u.hireDate||'',...p,regHolDays:0,specHolDays:0});
-    sn++;
+    rows.push({sn:rowNum,uid,L,F,pos:u.position||u.dept||'',full:u.fullName||'',empNo:u.empID||uid,hd:u.hireDate||'',...p,regHolDays:0,specHolDays:0});
+    rowNum++;
   }
   return rows;
 }
@@ -1251,6 +1278,74 @@ function setupListeners(){
 /* ── REGISTER GLOBAL FUNCTIONS ── */
 function reg(n,f){window[n]=f;window['_R'+n]=f;}
 reg('doLogin',doLogin);reg('doLogout',()=>doLogout(false));reg('clockAction',clockAction);reg('submitLeave',submitLeave);reg('cancelLeave',cancelLeave);reg('saveEmployee',saveEmployee);reg('editEmp',editEmp);reg('cancelEdit',cancelEdit);reg('manualClockOutNow',manualClockOutNow);reg('goTab',goTab);reg('toggleLvForm',toggleLvForm);reg('updLvBal',updLvBal);reg('chkDates',chkDates);reg('exportAttExcel',exportAttExcel);reg('renderAtt',renderAtt);reg('renderSchedules',renderSchedules);reg('searchDir',searchDir);reg('searchActive',searchActive);reg('searchSched',searchSched);reg('searchAtt',searchAtt);reg('searchAudit',searchAudit);reg('searchLeaves',searchLeaves);reg('cycleAtt',cycleAtt);reg('updSchedField',updSchedField);reg('saveSched',saveSched);reg('saveAllSched',saveAllSched);reg('openPanel',openPanel);reg('closePanel',closePanel);reg('approveLeave',approveLeave);reg('rejectLeave',rejectLeave);reg('markRead',markRead);reg('disableEmp',disableEmp);reg('toggleBulk',toggleBulk);reg('runBulk',runBulk);reg('renderTS',renderTS);reg('exportDTR',exportDTR);reg('renderPRev',renderPRev);reg('exportPayroll',exportPayroll);reg('renderEarnings',renderEarnings);
+
+/* ── DETECT MY IP (for Active Now banner) ── */
+async function detectMyIP(){
+  try{const r=await fetch('https://ipapi.co/json/');if(r.ok){const d=await r.json();const el=document.getElementById('myIP');if(el&&d.ip)el.textContent=d.ip+(d.org?' ('+d.org+')':'');}}catch{const el=document.getElementById('myIP');if(el)el.textContent='unavailable';}
+}
+
+/* ── IMPROVED AUDIT LOGS ── */
+let _allLogs=[];
+function renderAudit(logs){
+  const el=document.getElementById('auditTable');if(!el)return;
+  if(!logs){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No logs yet.</div>';return;}
+  _allLogs=Object.values(logs).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  filterAudit();
+}
+function filterAudit(){
+  const el=document.getElementById('auditTable');if(!el)return;
+  const q=(document.getElementById('auditSearch')?.value||'').toLowerCase();
+  const act=(document.getElementById('auditAction')?.value||'').toLowerCase();
+  const dept=(document.getElementById('auditDept')?.value||'').toLowerCase();
+  const date=(document.getElementById('auditDate')?.value||'');
+  
+  let filtered=_allLogs.filter(l=>{
+    const txt=(l.name+' '+l.action+' '+(l.empID||'')+' '+(l.department||'')).toLowerCase();
+    if(q&&!txt.includes(q))return false;
+    if(act&&!l.action.toLowerCase().includes(act))return false;
+    if(dept&&(l.department||'').toLowerCase()!==dept)return false;
+    if(date){const ld=new Date(l.timestamp).toISOString().slice(0,10);if(ld!==date)return false;}
+    return true;
+  });
+
+  const stats=document.getElementById('auditStats');
+  if(stats)stats.textContent='Showing '+filtered.length+' of '+_allLogs.length+' log entries';
+
+  if(!filtered.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No logs match your filters.</div>';return;}
+  
+  const actColor=act=>{
+    const a=act.toLowerCase();
+    if(a.includes('clock in'))return '#d1fae5';
+    if(a.includes('clock out')||a.includes('auto'))return '#fee2e2';
+    if(a.includes('approve'))return '#d1fae5';
+    if(a.includes('reject')||a.includes('cancel'))return '#fee2e2';
+    if(a.includes('leave'))return '#fef3c7';
+    if(a.includes('attendance'))return '#eff6ff';
+    if(a.includes('disable'))return '#fce7f3';
+    return 'transparent';
+  };
+
+  let h='<table><thead><tr><th class="tl" style="min-width:140px;">Timestamp</th><th class="tl" style="min-width:120px;">Employee</th><th class="tl">Action</th><th>Emp ID</th><th>Dept</th></tr></thead><tbody>';
+  filtered.forEach(l=>{
+    const bg=actColor(l.action);
+    h+='<tr style="'+(bg!=='transparent'?'background:'+bg+';':'')+'">'
+     +'<td class="tl" style="color:var(--muted);font-size:11px;white-space:nowrap;">'+new Date(l.timestamp).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</td>'
+     +'<td class="tl" style="font-weight:600;">'+esc(l.name||'System')+'</td>'
+     +'<td class="tl">'+esc(l.action)+'</td>'
+     +'<td style="font-size:11px;font-family:monospace;">'+esc(l.empID||'')+'</td>'
+     +'<td style="font-size:11px;">'+esc(l.department||'')+'</td>'
+     +'</tr>';
+  });
+  h+='</tbody></table>';el.innerHTML=h;
+}
+function clearAuditFilters(){
+  ['auditSearch','auditDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['auditAction','auditDept'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  filterAudit();
+}
+reg('filterAudit',filterAudit);reg('clearAuditFilters',clearAuditFilters);
+reg('searchAudit',filterAudit);
+
 </script>
 </body>
 </html>
