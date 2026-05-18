@@ -271,8 +271,11 @@ td.att-cell:hover{transform:scale(1.08);}
         <div class="nav-label">Reports</div>
         <button class="nav-item ah-only" data-tab="pay" onclick="goTab('pay',this)" style="display:none;"><span class="icon">📊</span> Payroll &amp; Attendance</button>
         <button class="nav-item ah-only" data-tab="payroll" onclick="goTab('payroll',this)" style="display:none;"><span class="icon">💰</span> Payroll Export</button>
-        <button class="nav-item aoh-only" data-tab="timestamps" onclick="goTab('timestamps',this)" style="display:none;"><span class="icon">⏱</span> Timestamp Sheet</button>
         <button class="nav-item aoh-only" data-tab="audit" onclick="goTab('audit',this)" style="display:none;"><span class="icon">🔍</span> Audit Logs</button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">My Records</div>
+        <button class="nav-item" data-tab="timestamps" onclick="goTab('timestamps',this)"><span class="icon">⏱</span> Timestamp Sheet</button>
       </div>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" onclick="doLogout()"><span>🚪</span> Sign Out</button></div>
@@ -673,8 +676,9 @@ function renderEarnings(){
   const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
   const uid=A.cu.id;
   const u=gU(uid)||A.cu;
-  if(!u.monthlySalary||parseFloat(u.monthlySalary)===0){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:40px;">💼</div><div style="margin-top:12px;font-size:13px;font-weight:600;">No salary on file.</div><div style="font-size:11px;margin-top:4px;">Contact HR or Admin to update your profile.</div></div>';
+  // Show payslip even if salary=0; only block if user record truly missing
+  if(!u){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:40px;">⚠️</div><div style="margin-top:12px;font-size:13px;font-weight:600;">Employee record not found.</div><div style="font-size:11px;margin-top:4px;">Contact HR or Admin.</div></div>';
     return;
   }
   const p=calcPayroll(uid,mon,pS,pE);
@@ -1187,30 +1191,112 @@ async function runBulk(){
 
 /* ── TIMESTAMP SHEET — CENTERED ── */
 function renderTS(){
-  const el=document.getElementById('tsTable');if(!el)return;const mon=parseInt(document.getElementById('tsMon').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const dim=new Date(year,mon+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  let h='<table><thead><tr><th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:180px;">DAILY TIME RECORD<br><small>'+MF[mon].toUpperCase()+' '+year+'</small></th><th rowspan="3" style="background:#fffde7;min-width:80px;text-align:center;">POSITION</th>';
-  for(let d=1;d<=dim;d++){const iw=[0,6].includes(new Date(year,mon,d).getDay());h+='<th colspan="2" style="'+(iw?'background:#e8f5e9':'background:#fffde7')+';text-align:center;">'+d+'</th>';}h+='</tr><tr>';
-  for(let d=1;d<=dim;d++){const w=new Date(year,mon,d).getDay(),iw=[0,6].includes(w);h+='<th colspan="2" style="'+(iw?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e')+';font-size:9px;text-align:center;">'+DAY[w]+'</th>';}h+='</tr><tr>';
-  for(let d=1;d<=dim;d++){const iw=[0,6].includes(new Date(year,mon,d).getDay());h+='<th style="'+(iw?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1')+';font-size:9px;text-align:center;">IN</th><th style="'+(iw?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f')+';font-size:9px;text-align:center;">OUT</th>';}h+='</tr></thead><tbody>';
-  for(const[uid,u]of sortEmps()){const at=A.att[uid]||{};const{L,F}=sn(u.fullName);const sh=u['shift_'+mon]||u.defaultShift||u.position||'';
-    h+='<tr><td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">'+esc(L.toUpperCase())+'</td><td style="text-align:left;padding:4px 8px;white-space:nowrap;">'+esc(F.toUpperCase())+'</td><td style="text-align:center;font-size:11px;">'+esc(sh)+'</td>';
-    for(let d=1;d<=dim;d++){const k=mon+'_'+d;const tin=at[k+'_time'],tout=at[k+'_out'],late=at[k+'_late']||0,st=at[k]||'';const iw=[0,6].includes(new Date(year,mon,d).getDay()),bg=iw?'background:#f1f8e9;':'';let inT='';if(tin)inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});else if(st&&st!=='P')inT=st;h+='<td style="'+bg+'font-size:10px;text-align:center;'+(late?'color:#dc2626;font-weight:700;':'')+'">'+esc(inT)+(late?'<br><span style="font-size:8px;">+'+late+'m</span>':'')+'</td><td style="'+bg+'font-size:10px;text-align:center;">'+esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')+'</td>';}h+='</tr>';}
-  h+='</tbody></table>';el.innerHTML=h;
+  const el=document.getElementById('tsTable');if(!el)return;
+  const mon=parseInt(document.getElementById('tsMon').value);
+  const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const dim=new Date(year,mon+1,0).getDate();
+  const DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  // Admin/HR see ALL employees; Employee/OPS see only themselves
+  const canSeeAll=isAH();
+  const empList=canSeeAll?sortEmps():sortEmps().filter(([uid])=>uid===A.cu.id);
+
+  if(!canSeeAll&&empList.length===0){
+    el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">No record found for your account.</div>';
+    return;
+  }
+
+  // Role label banner
+  let banner='';
+  if(!canSeeAll){
+    banner='<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 14px;font-size:11px;color:#1e40af;margin-bottom:12px;">ℹ️ You are viewing your own DTR record only.</div>';
+  }
+
+  let h='<table><thead><tr>'
+    +'<th rowspan="3" colspan="2" style="background:#fffde7;text-align:center;min-width:180px;">DAILY TIME RECORD<br><small>'+MF[mon].toUpperCase()+' '+year+'</small></th>'
+    +'<th rowspan="3" style="background:#fffde7;min-width:80px;text-align:center;">POSITION</th>';
+  for(let d=1;d<=dim;d++){
+    const iw=[0,6].includes(new Date(year,mon,d).getDay());
+    h+='<th colspan="2" style="'+(iw?'background:#e8f5e9':'background:#fffde7')+';text-align:center;">'+d+'</th>';
+  }
+  h+='</tr><tr>';
+  for(let d=1;d<=dim;d++){
+    const w=new Date(year,mon,d).getDay(),iw=[0,6].includes(w);
+    h+='<th colspan="2" style="'+(iw?'background:#e8f5e9;color:#166534':'background:#fffde7;color:#92400e')+';font-size:9px;text-align:center;">'+DAY[w]+'</th>';
+  }
+  h+='</tr><tr>';
+  for(let d=1;d<=dim;d++){
+    const iw=[0,6].includes(new Date(year,mon,d).getDay());
+    h+='<th style="'+(iw?'background:#c8e6c9;color:#1b5e20':'background:#e3f2fd;color:#0d47a1')+';font-size:9px;text-align:center;">IN</th>'
+      +'<th style="'+(iw?'background:#c8e6c9;color:#1b5e20':'background:#fce4ec;color:#880e4f')+';font-size:9px;text-align:center;">OUT</th>';
+  }
+  h+='</tr></thead><tbody>';
+
+  for(const[uid,u]of empList){
+    const at=A.att[uid]||{};
+    const{L,F}=sn(u.fullName);
+    const sh=u['shift_'+mon]||u.defaultShift||u.position||'';
+    h+='<tr>'
+      +'<td style="font-weight:800;text-align:left;padding:4px 8px;white-space:nowrap;">'+esc(L.toUpperCase())+'</td>'
+      +'<td style="text-align:left;padding:4px 8px;white-space:nowrap;">'+esc(F.toUpperCase())+'</td>'
+      +'<td style="text-align:center;font-size:11px;">'+esc(sh)+'</td>';
+    for(let d=1;d<=dim;d++){
+      const k=mon+'_'+d;
+      const tin=at[k+'_time'],tout=at[k+'_out'],late=at[k+'_late']||0,st=at[k]||'';
+      const iw=[0,6].includes(new Date(year,mon,d).getDay()),bg=iw?'background:#f1f8e9;':'';
+      let inT='';
+      if(tin)inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});
+      else if(st&&st!=='P')inT=st;
+      h+='<td style="'+bg+'font-size:10px;text-align:center;'+(late?'color:#dc2626;font-weight:700;':'')+'">'+esc(inT)+(late?'<br><span style="font-size:8px;">+'+late+'m</span>':'')+'</td>'
+        +'<td style="'+bg+'font-size:10px;text-align:center;">'+esc(tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'')+'</td>';
+    }
+    h+='</tr>';
+  }
+  h+='</tbody></table>';
+  el.innerHTML=banner+h;
 }
 
 function exportDTR(){
-  const mon=parseInt(document.getElementById('tsMon').value);const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();const days=new Date(year,mon+1,0).getDate(),DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const r1=['DTR - '+MF[mon].toUpperCase()+' '+year,'','POSITION'],r2=['EMPLOYEES','',''],r3=['LAST NAME','FIRST NAME',''];
-  for(let d=1;d<=days;d++){r1.push(d+'/'+(mon+1),'');r2.push(DAY[new Date(year,mon,d).getDay()],'');r3.push('IN','OUT');}
+  const mon=parseInt(document.getElementById('tsMon').value);
+  const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
+  const days=new Date(year,mon+1,0).getDate();
+  const DAY=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  // Admin/HR export all; Employee/OPS export only themselves
+  const canSeeAll=isAH();
+  const empList=canSeeAll?sortEmps():sortEmps().filter(([uid])=>uid===A.cu.id);
+  const r1=['DTR - '+MF[mon].toUpperCase()+' '+year,'','POSITION'];
+  const r2=['EMPLOYEES','',''];
+  const r3=['LAST NAME','FIRST NAME',''];
+  for(let d=1;d<=days;d++){
+    r1.push(d+'/'+(mon+1),'');
+    r2.push(DAY[new Date(year,mon,d).getDay()],'');
+    r3.push('IN','OUT');
+  }
   const data=[r1,r2,r3];
-  for(const[uid,u]of sortEmps()){const at=A.att[uid]||{};const{L,F}=sn(u.fullName);const row=[L.toUpperCase(),F.toUpperCase(),u['shift_'+mon]||u.defaultShift||''];
-    for(let d=1;d<=days;d++){const k=mon+'_'+d;const tin=at[k+'_time'],tout=at[k+'_out'],late=at[k+'_late']||0,st=at[k]||'';let inT='';if(tin){inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});if(late)inT+=' (+'+late+'m)';}else if(st&&st!=='P')inT=st;row.push(inT,tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'');}data.push(row);}
+  for(const[uid,u]of empList){
+    const at=A.att[uid]||{};
+    const{L,F}=sn(u.fullName);
+    const row=[L.toUpperCase(),F.toUpperCase(),u['shift_'+mon]||u.defaultShift||''];
+    for(let d=1;d<=days;d++){
+      const k=mon+'_'+d;
+      const tin=at[k+'_time'],tout=at[k+'_out'],late=at[k+'_late']||0,st=at[k]||'';
+      let inT='';
+      if(tin){inT=new Date(tin).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true});if(late)inT+=' (+'+late+'m)';}
+      else if(st&&st!=='P')inT=st;
+      row.push(inT,tout?new Date(tout).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true}):'');
+    }
+    data.push(row);
+  }
   const CEN={alignment:{horizontal:'center',vertical:'center'}};
-  const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:18},{wch:18},{wch:12},...Array(days*2).fill({wch:10})];
-  ws['!merges']=[];for(let d=0;d<days;d++){ws['!merges'].push({s:{r:0,c:3+d*2},e:{r:0,c:4+d*2}},{s:{r:1,c:3+d*2},e:{r:1,c:4+d*2}});}
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:18},{wch:18},{wch:12},...Array(days*2).fill({wch:10})];
+  ws['!merges']=[];
+  for(let d=0;d<days;d++){ws['!merges'].push({s:{r:0,c:3+d*2},e:{r:0,c:4+d*2}},{s:{r:1,c:3+d*2},e:{r:1,c:4+d*2}});}
   const rng=XLSX.utils.decode_range(ws['!ref']||'A1');
   for(let r=rng.s.r;r<=rng.e.r;r++)for(let c=rng.s.c;c<=rng.e.c;c++){const a=XLSX.utils.encode_cell({r,c});if(ws[a])ws[a].s=CEN;}
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,MF[mon]+' '+year);XLSX.writeFile(wb,'DTR_'+MF[mon]+'_'+year+'.xlsx');
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,MF[mon]+' '+year);
+  const suffix=canSeeAll?'':('_'+A.cu.fullName.replace(/\s+/g,'_'));
+  XLSX.writeFile(wb,'DTR_'+MF[mon]+'_'+year+suffix+'.xlsx');
 }
 
 /* ── PAYROLL PREVIEW ── */
