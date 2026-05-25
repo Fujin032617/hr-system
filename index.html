@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AFB Teams</title>
+<title>Huetube Teams</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -12,9 +12,8 @@
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);font-size:13px;line-height:1.6;min-height:100vh;}
 #appShell{display:flex;min-height:100vh;}
 #sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s;}
-.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
-.sidebar-logo .brand{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);}
-.sidebar-logo .sub{font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.sidebar-logo{padding:24px 18px 16px;border-bottom:1px solid var(--border);cursor:pointer;text-align:center;user-select:none;}
+.sidebar-logo img{display:block;margin:0 auto;max-width:100%;height:auto;}
 .sidebar-user{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
 .user-info .name{color:var(--navy);font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
@@ -178,8 +177,6 @@ td.att-cell:hover{transform:scale(1.08);}
 #offlineBanner{display:none;background:var(--amber);color:#fff;text-align:center;padding:6px 16px;font-size:11px;font-weight:600;}
 #loginSection{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
 .login-box{background:#fff;border-radius:20px;padding:40px;width:380px;box-shadow:var(--shadow2);}
-.login-logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--accent);margin-bottom:6px;}
-.login-tagline{font-size:12px;color:var(--muted);margin-bottom:28px;}
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .toolbar-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);background:#fff;cursor:pointer;}
 .notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:11px;color:#1e40af;margin-bottom:14px;}
@@ -241,24 +238,35 @@ td.att-cell:hover{transform:scale(1.08);}
   <button class="btn btn-danger btn-sm btn-full" onclick="manualClockOutNow()">Clock Out Now</button>
 </div>
 
-<!-- LOGIN -->
+<!-- LOGIN SECTION (NEW DESIGN) -->
 <div id="loginSection">
-  <div class="login-box">
-    <div class="login-logo">AFB<span style="color:var(--accent);">.</span>Teams</div>
-    <div class="login-tagline">Team attendance and payroll portal</div>
-    <div id="loginError" class="alert alert-error hidden" style="margin-bottom:16px;"></div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="form-group"><label class="form-label">Email</label><input type="email" id="lUser" class="form-input" placeholder="you@company.com"></div>
-      <div class="form-group"><label class="form-label">Password</label><input type="password" id="lPass" class="form-input" placeholder="••••••••"></div>
+  <div class="login-box" style="text-align: center;">
+    <!-- Centered logo – 220px wide, no text -->
+    <img src="huetube-logo.svg" alt="Huetube" style="width: 250px; height: auto; margin-bottom: 10px;">
+
+    <div id="loginError" class="alert alert-error hidden" style="margin-bottom:16px; text-align: left;"></div>
+
+    <div style="display:flex; flex-direction:column; gap:14px; text-align: left;">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="lUser" class="form-input" placeholder="your@company.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="lPass" class="form-input" placeholder="••••••••">
+      </div>
       <button id="loginBtn" class="btn btn-primary btn-full" style="padding:12px;font-size:13px;" onclick="doLogin()">Sign In</button>
     </div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- APP SHELL -->
 <div id="appShell" class="hidden">
   <aside id="sidebar">
-    <div class="sidebar-logo"><div class="brand">AFB<span style="color:var(--accent);">.</span>Teams</div><div class="sub">Team Portal</div></div>
+    <!-- Sidebar logo – image only, clickable to Dashboard -->
+    <div class="sidebar-logo" onclick="goTab('dashboard', document.querySelector('[data-tab=\"dashboard\"]'))">
+      <img src="huetube-logo.svg" alt="Huetube" style="width: 320px; height: auto;">
+    </div>
     <div class="sidebar-user">
       <div class="user-avatar" id="userAvatar">U</div>
       <div class="user-info"><div class="name" id="sidebarName">User</div><div class="role-pill" id="sidebarRole">Employee</div></div>
@@ -1574,14 +1582,14 @@ function exportPayroll(){
   const mL=MF[mon].toUpperCase().slice(0,3)+' '+pS+','+year,mE=MF[mon].toUpperCase().slice(0,3)+' '+pEnd+','+year,rem=MF[mon].toUpperCase()+' '+pS+' TO '+pEnd;
   const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,regHol:(a.regHol||0)+r.regHol,specHol:(a.specHol||0)+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
   const wb=XLSX.utils.book_new();
-  const s1=[['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],[1,new Date(),'Salary for Staff','',rows.length,T.net,'AFB','AFB','All','Salary and Wages',rem,'',''],[2,new Date(),'Salary Charge Fee','',1,300,'AFB','AFB','All','Salary Charge Fee',rem,'',''],[],[' ','','','','',T.net+300]];
+  const s1=[['SN','Date','Description','Net Price','Quantity','Total Amount','Company','Department','Sub-Department','Purpose','Remark','Status','Finance Released'],[1,new Date(),'Salary for Staff','',rows.length,T.net,'Huetube','AFB','All','Salary and Wages',rem,'',''],[2,new Date(),'Salary Charge Fee','',1,300,'Huetube','AFB','All','Salary Charge Fee',rem,'',''],[],[' ','','','','',T.net+300]];
   const ws1=XLSX.utils.aoa_to_sheet(s1,{cellDates:true});ws1['!cols']=[{wch:5},{wch:14},{wch:22},{wch:11},{wch:9},{wch:16},{wch:8},{wch:10},{wch:13},{wch:18},{wch:22},{wch:10},{wch:14}];
   for(let c=0;c<13;c++)xs(ws1,0,c,XS.Y);
   XLSX.utils.book_append_sheet(wb,ws1,'REQUEST CLAIM');
   const s2=[['Pay Period','','','','','BASIC',T.cutoff,...Array(26).fill('')],['Start',mL,'','','','OT',0],['End',mE,'','','','MEAL',T.meal],['','','','','','TRANSPO',T.transpo],['Total Salary',T.net,'','','','BIRTHDAY',0],['','','','','','ND',T.nd],['','','','','','STAT',T.stat],['','','','','','Regular Holiday',T.regHol],['','','','','','Speacial Holiday',T.specHol]];
   const r10=Array(33).fill('');r10[5]='DISCREPANCY';r10[6]=0;r10[14]='Allowances';r10[26]='Deductions';s2.push(r10);
   s2.push(['SN / HRID','Last Name','First Name','Position','Full Name','Monthly\nBasic Salary','Date Started','Cut-off\nBasic Salary','Daily Salary','NO RD ADJ DAILY RATE','','Overtime','Discrepancy','NO RD ADJ DAILY RATE','Meal Allowances','Transportation Allowance','Bday Bonus','No. of Hour','NIGHT SHIFT DIFFERENTIAL','STATUTORY BENEFITS','NO. Of Day','Regular Holiday','NO. Of Day','Special Holiday','Total Allowances','NO.OF ABSENCES','Absences','NO. Of Mins.','Tardiness','No. of Hrs','Undertime','Total Deductions','Net Salary']);
-  const r12=Array(33).fill('');r12[3]='AFB / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;r12[18]=T.nd;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;r12[24]=T.totalAllow;r12[26]=T.absAmt;r12[28]=T.tardAmt;r12[30]=T.utAmt;r12[31]=T.totalDeduct;r12[32]=T.net;s2.push(r12);
+  const r12=Array(33).fill('');r12[3]='Huetube / TMT';r12[7]=T.cutoff;r12[14]=T.meal;r12[15]=T.transpo;r12[18]=T.nd;r12[19]=T.stat;r12[21]=T.regHol;r12[23]=T.specHol;r12[24]=T.totalAllow;r12[26]=T.absAmt;r12[28]=T.tardAmt;r12[30]=T.utAmt;r12[31]=T.totalDeduct;r12[32]=T.net;s2.push(r12);
   rows.forEach(r=>{s2.push([r.sn,r.L,r.F,r.pos,r.full,r.salary,r.hd?new Date(r.hd):'',r.cutoff,r.daily,0,r.colK,0,0,0,r.meal,r.transpo,r.bday,r.nh,r.nd,r.stat,r.regHolDays||0,r.regHol||0,r.specHolDays||0,r.specHol||0,r.totalAllow,r.abs,r.absAmt,r.lMin,r.tardAmt,r.utH,r.utAmt,r.totalDeduct,r.net]);});
   const ws2=XLSX.utils.aoa_to_sheet(s2,{cellDates:true});ws2['!cols']=[{wch:9.86},{wch:12.86},{wch:13.43},{wch:11.14},{wch:20},{wch:12.86},{wch:14.14},{wch:9.43},{wch:11.86},{wch:10.71},{wch:11},{wch:7.29},{wch:9},{wch:8},{wch:10.71},{wch:7.86},{wch:9.14},{wch:7.71},{wch:10.71},{wch:9.14},{wch:6.14},{wch:8.86},{wch:5.71},{wch:8.71},{wch:11.86},{wch:7.71},{wch:9.43},{wch:7.86},{wch:6.43},{wch:7.71},{wch:14.29},{wch:15.86},{wch:8.71}];
   ws2['!merges']=[{s:{r:9,c:14},e:{r:9,c:24}},{s:{r:9,c:26},e:{r:9,c:31}}];
