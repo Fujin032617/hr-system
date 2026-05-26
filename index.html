@@ -133,7 +133,6 @@ td.att-cell:hover{transform:scale(1.08);}
 .s-PL{background:#bbf7d0!important;color:#14532d!important;}
 .s-ML{background:#fce7f3!important;color:#831843!important;}
 .s-{background:transparent!important;color:transparent!important;}
-/* ── HOLIDAY STYLES ── */
 .holiday-badge{display:block;font-size:8px;background:#fef3c7;color:#92400e;border-radius:3px;padding:1px 3px;margin-top:2px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44px;}
 .holiday-badge.special{background:#ede9fe;color:#4c1d95;}
 .hol-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:16px;border-left:4px solid var(--amber);}
@@ -143,7 +142,6 @@ td.att-cell:hover{transform:scale(1.08);}
 .hol-tag.regular{background:#fef3c7;color:#92400e;}
 .hol-tag.special{background:#ede9fe;color:#4c1d95;}
 .att-hol-col{background:#fffbeb !important;}
-/* ── END HOLIDAY STYLES ── */
 .late-tag{display:block;font-size:8px;background:rgba(0,0,0,.15);border-radius:3px;margin-top:2px;padding:0 2px;}
 .lates-total{font-weight:800;color:#991b1b;background:#fef2f2;text-align:center!important;}
 .leave-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
@@ -241,11 +239,8 @@ td.att-cell:hover{transform:scale(1.08);}
 <!-- LOGIN SECTION (NEW DESIGN) -->
 <div id="loginSection">
   <div class="login-box" style="text-align: center;">
-    <!-- Centered logo – 220px wide, no text -->
     <img src="huetube-logo.svg" alt="Huetube" style="width: 250px; height: auto; margin-bottom: 10px;">
-
     <div id="loginError" class="alert alert-error hidden" style="margin-bottom:16px; text-align: left;"></div>
-
     <div style="display:flex; flex-direction:column; gap:14px; text-align: left;">
       <div class="form-group">
         <label class="form-label">Email</label>
@@ -263,7 +258,6 @@ td.att-cell:hover{transform:scale(1.08);}
 <!-- APP SHELL -->
 <div id="appShell" class="hidden">
   <aside id="sidebar">
-    <!-- Sidebar logo – image only, clickable to Dashboard -->
     <div class="sidebar-logo" onclick="goTab('dashboard', document.querySelector('[data-tab=\"dashboard\"]'))">
       <img src="huetube-logo.svg" alt="Huetube" style="width: 320px; height: auto;">
     </div>
@@ -287,7 +281,8 @@ td.att-cell:hover{transform:scale(1.08);}
       <div class="nav-section" id="navReports" style="display:none;">
         <div class="nav-label">Reports</div>
         <button class="nav-item ah-only" data-tab="pay" onclick="goTab('pay',this)" style="display:none;"><span class="icon">📊</span> Payroll &amp; Attendance</button>
-        <button class="nav-item ah-only" data-tab="payroll" onclick="goTab('payroll',this)" style="display:none;"><span class="icon">💰</span> Payroll Export</button>
+        <!-- ✅ CHANGED: hr-only class instead of ah-only, so only HR can see Payroll Export -->
+        <button class="nav-item hr-only" data-tab="payroll" onclick="goTab('payroll',this)" style="display:none;"><span class="icon">💰</span> Payroll Export</button>
         <button class="nav-item aoh-only" data-tab="audit" onclick="goTab('audit',this)" style="display:none;"><span class="icon">🔍</span> Audit Logs</button>
       </div>
       <div class="nav-section" id="navHolidays" style="display:none;">
@@ -896,58 +891,166 @@ async function runQ(t,d){
 }
 async function safe(fn,qt,qd){if(!A.isOnline){addQ(qt,qd);return{ok:false,q:true};}try{await fn();return{ok:true};}catch(e){if(!navigator.onLine){addQ(qt,qd);return{ok:false,q:true};}throw e;}}
 
-/* ── AUTO CLOCK-OUT ── */
-async function chkAuto(){
-  if(!A.cu)return;const now=new Date(),ys=new Date(now);ys.setDate(ys.getDate()-1);let ak=null;
-  for(const dv of[now,ys]){const k=dv.getMonth()+'_'+dv.getDate();const at=A.att[A.cu.id]||{};if(at[k]==='P'&&!at[k+'_out']&&at[k+'_time']){ak=k;break;}}
-  if(!ak)return;
-  const ci=new Date(A.att[A.cu.id][ak+'_time']),autoT=new Date(ci.getTime()+43200000),warnT=new Date(autoT.getTime()-1800000);
-  if(now>=autoT){try{await doAuto(ak);toast('Auto clocked out after 12-hour shift','info');}catch{addQ('co',mkAP(ak));}}
-  else if(now>=warnT)showAutoBn(Math.ceil((autoT-now)/60000));
+/* ── findOpenSession ──────────────────────────────────────────────────────
+   Looks back up to 2 days for a clock-in (status='P') that has no clock-out.
+   Safe across midnight AND month-end boundaries (e.g. Jan 31 → Feb 1).
+   Returns the Firebase key string like "0_31" or null if no open session.
+──────────────────────────────────────────────────────────────────────────*/
+function findOpenSession(uid) {
+  const at = A.att[uid] || {};
+  const now = new Date();
+  for (let i = 0; i <= 2; i++) {
+    const d = new Date(now.getTime() - i * 86400000); // subtract i full days in ms
+    const k = d.getMonth() + '_' + d.getDate();
+    if (at[k] === 'P' && at[k + '_time'] && !at[k + '_out']) return k;
+  }
+  return null;
 }
-function mkAP(k){const n=new Date();return{uid:A.cu.id,u:{[k+'_out']:n.toISOString(),[k+'_auto']:true},al:{name:A.cu.fullName,action:'AUTO CLOCK OUT',timestamp:n.toISOString(),empID:A.cu.id,department:A.cu.dept},nt:{userId:A.cu.id,title:'Auto Clock-Out',message:'Auto clocked out at '+n.toLocaleTimeString()+' after 12h.',type:'warning',timestamp:n.toISOString(),read:false}};}
+
+/* ── clockAction (midnight-safe override) ────────────────────────────────
+   FIX 1: Clock-in duplicate check now uses findOpenSession instead of
+           only checking today's key.
+   FIX 2: Clock-out key lookup now uses findOpenSession instead of
+           the fragile one-day-back logic.
+──────────────────────────────────────────────────────────────────────────*/
+async function clockAction(type) {
+  if (A.proc.clock) return;
+  const now = new Date();
+  const mon = now.getMonth();
+  const day = now.getDate();
+  const key = mon + '_' + day;     // today's key (only used for clock-IN writes)
+  const uid = A.cu.id;
+
+  if (type === 'P') {
+    // ✅ FIX 1: use findOpenSession — catches sessions from yesterday / prev month
+    if (findOpenSession(uid)) {
+      toast('Already clocked in — please clock out first', 'error');
+      return;
+    }
+  }
+
+  A.proc.clock = true;
+  try {
+    if (type === 'P') {
+      // --- CLOCK IN (unchanged logic, writes to today's key) ---
+      const u = A.users[uid] || {};
+      const slot = (u['out_' + mon] || '').trim();
+      let lm = 0;
+      if (slot && /\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot)) {
+        const raw = slot.split(/[-–]/)[0].trim().toUpperCase().replace(/(\d)(AM|PM)/, '$1 $2');
+        let sh = 0, sm = 0;
+        if (raw.includes(':')) {
+          const p = raw.split(':'); sh = parseInt(p[0]); sm = parseInt(p[1]);
+          if (raw.includes('PM') && sh < 12) sh += 12;
+          if (raw.includes('AM') && sh === 12) sh = 0;
+        } else {
+          const m = raw.match(/(\d+)\s*(AM|PM)?/);
+          if (m) { sh = parseInt(m[1]); if ((m[2] || 'AM') === 'PM' && sh < 12) sh += 12; }
+        }
+        const sc = new Date(now); sc.setHours(sh, sm, 0, 0);
+        if (sh >= 18 && now.getHours() < 12) sc.setDate(sc.getDate() - 1);
+        if (sh < 6 && now.getHours() >= 18) sc.setDate(sc.getDate() + 1);
+        const diff = now - sc; if (diff > 0) lm = Math.floor(diff / 60000);
+      }
+      const upd = { [key]: 'P', [key + '_time']: now.toISOString() };
+      if (lm > 0) upd[key + '_late'] = lm;
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          if (ipData.ip) upd[key + '_ip'] = ipData.ip;
+          if (ipData.org || ipData.isp) upd[key + '_isp'] = ipData.org || ipData.isp;
+        }
+      } catch {}
+      localStorage.setItem('afb_lc', JSON.stringify({ uid, key }));
+      const al = {
+        name: A.cu.fullName,
+        action: lm > 0 ? 'CLOCK IN (' + lm + 'm late)' : 'CLOCK IN',
+        timestamp: now.toISOString(), empID: uid, department: A.cu.dept
+      };
+      const r = await safe(async () => {
+        await update(ref(db, 'attendance/' + uid), upd);
+        await push(ref(db, 'audit_logs'), al);
+      }, 'ci', { uid, u: upd, al });
+      if (r.ok || r.q) {
+        toast(r.ok ? (lm > 0 ? 'Clocked in — ' + lm + ' min late' : 'Clocked in! 👋') : 'Offline — clock in queued', r.ok ? 'success' : 'info');
+        document.getElementById('btnCI').classList.add('hidden');
+        document.getElementById('btnCO').classList.remove('hidden');
+      }
+
+    } else {
+      // --- CLOCK OUT ---
+      // ✅ FIX 2: use findOpenSession — midnight/month-boundary safe
+      let ck = findOpenSession(uid);
+      if (!ck) {
+        // Last resort: try localStorage hint
+        try {
+          const p = JSON.parse(localStorage.getItem('afb_lc') || '{}');
+          if (p.uid === uid && p.key) ck = p.key;
+        } catch {}
+      }
+      if (!ck) {
+        toast('No open clock-in session found', 'error');
+        return;
+      }
+      const upd = { [ck + '_out']: now.toISOString() };
+      const al = {
+        name: A.cu.fullName, action: 'CLOCK OUT',
+        timestamp: now.toISOString(), empID: uid, department: A.cu.dept
+      };
+      const nt = {
+        userId: uid, title: 'Clock Out',
+        message: 'Clocked out at ' + now.toLocaleTimeString(),
+        type: 'info', timestamp: now.toISOString(), read: false
+      };
+      const r = await safe(async () => {
+        await update(ref(db, 'attendance/' + uid), upd);
+        await push(ref(db, 'audit_logs'), al);
+        await push(ref(db, 'notifications'), nt);
+      }, 'co', { uid, u: upd, al, nt });
+      if (r.ok || r.q) {
+        toast(r.ok ? 'Clocked out successfully!' : 'Offline — clock out queued', r.ok ? 'success' : 'info');
+        localStorage.removeItem('afb_lc');
+        hideBn();
+        document.getElementById('btnCI').classList.remove('hidden');
+        document.getElementById('btnCO').classList.add('hidden');
+      }
+    }
+  } catch {
+    toast(navigator.onLine ? 'Failed' : 'Offline — queued', 'error');
+  } finally {
+    A.proc.clock = false;
+  }
+}
+
+/* ── chkAuto (midnight-safe override) ────────────────────────────────────
+   FIX 4: Uses findOpenSession — handles shifts that span midnight / month end.
+──────────────────────────────────────────────────────────────────────────*/
+async function chkAuto() {
+  if (!A.cu) return;
+  const now = new Date();
+  // ✅ FIX 4: midnight-safe — looks back up to 2 days
+  const ak = findOpenSession(A.cu.id);
+  if (!ak) return;
+  const at = A.att[A.cu.id] || {};
+  const ci = new Date(at[ak + '_time']);
+  const autoT = new Date(ci.getTime() + 43200000);    // 12 h after clock-in
+  const warnT = new Date(autoT.getTime() - 1800000);  // warn 30 min before
+  if (now >= autoT) {
+    try { await doAuto(ak); toast('Auto clocked out after 12-hour shift', 'info'); }
+    catch { addQ('co', mkAP(ak)); }
+  } else if (now >= warnT) {
+    showAutoBn(Math.ceil((autoT - now) / 60000));
+  }
+}
+
+/* ── AUTO CLOCK-OUT ── */
 async function doAuto(k){const p=mkAP(k);await update(ref(db,'attendance/'+p.uid),p.u);await push(ref(db,'audit_logs'),p.al);await push(ref(db,'notifications'),p.nt);localStorage.removeItem('afb_lc');hideBn();document.getElementById('btnCI').classList.remove('hidden');document.getElementById('btnCO').classList.add('hidden');}
 function showAutoBn(m){const b=document.getElementById('autoClockoutBanner');if(!b)return;b.classList.remove('hidden');let s=m*60;document.getElementById('autoClockoutTimer').textContent=fmtT(s);if(A.timers.bn)clearInterval(A.timers.bn);A.timers.bn=setInterval(()=>{s--;if(s<=0){clearInterval(A.timers.bn);hideBn();}else document.getElementById('autoClockoutTimer').textContent=fmtT(s);},1000);}
 function hideBn(){const b=document.getElementById('autoClockoutBanner');if(b)b.classList.add('hidden');if(A.timers.bn){clearInterval(A.timers.bn);A.timers.bn=null;}}
 function fmtT(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
 function manualClockOutNow(){clockAction('OUT');}
-
-/* ── CLOCK IN/OUT ── */
-async function clockAction(type){
-  if(A.proc.clock)return;
-  const now=new Date(),mon=now.getMonth(),day=now.getDate(),key=mon+'_'+day,uid=A.cu.id;
-  if(type==='P'){const at=A.att[uid]||{};if(at[key]==='P'&&!at[key+'_out']){toast('Already clocked in today','error');return;}}
-  A.proc.clock=true;
-  try{
-    if(type==='P'){
-      const u=A.users[uid]||{};const slot=(u['out_'+mon]||'').trim();
-      let lm=0;
-      if(slot&&/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot)){
-        const raw=slot.split(/[-–]/)[0].trim().toUpperCase().replace(/(\d)(AM|PM)/,'$1 $2');
-        let sh=0,sm=0;
-        if(raw.includes(':')){const p=raw.split(':');sh=parseInt(p[0]);sm=parseInt(p[1]);if(raw.includes('PM')&&sh<12)sh+=12;if(raw.includes('AM')&&sh===12)sh=0;}
-        else{const m=raw.match(/(\d+)\s*(AM|PM)?/);if(m){sh=parseInt(m[1]);if((m[2]||'AM')==='PM'&&sh<12)sh+=12;}}
-        const sc=new Date(now);sc.setHours(sh,sm,0,0);if(sh>=18&&now.getHours()<12)sc.setDate(sc.getDate()-1);if(sh<6&&now.getHours()>=18)sc.setDate(sc.getDate()+1);
-        const diff=now-sc;if(diff>0)lm=Math.floor(diff/60000);
-      }
-      const upd={[key]:'P',[key+'_time']:now.toISOString()};if(lm>0)upd[key+'_late']=lm;
-      try{const ipRes=await fetch('https://ipapi.co/json/');if(ipRes.ok){const ipData=await ipRes.json();if(ipData.ip)upd[key+'_ip']=ipData.ip;if(ipData.org||ipData.isp)upd[key+'_isp']=ipData.org||ipData.isp;}}catch{}
-      localStorage.setItem('afb_lc',JSON.stringify({uid,key}));
-      const al={name:A.cu.fullName,action:lm>0?'CLOCK IN ('+lm+'m late)':'CLOCK IN',timestamp:now.toISOString(),empID:uid,department:A.cu.dept};
-      const r=await safe(async()=>{await update(ref(db,'attendance/'+uid),upd);await push(ref(db,'audit_logs'),al);},'ci',{uid,u:upd,al});
-      if(r.ok||r.q){toast(r.ok?(lm>0?'Clocked in — '+lm+' min late':'Clocked in! 👋'):'Offline — clock in queued',r.ok?'success':'info');document.getElementById('btnCI').classList.add('hidden');document.getElementById('btnCO').classList.remove('hidden');}
-    }else{
-      let ck=key;try{const p=JSON.parse(localStorage.getItem('afb_lc')||'{}');if(p.uid===uid&&p.key)ck=p.key;}catch{}
-      const at=A.att[uid]||{};if(!at[key+'_time']){const y=new Date(now);y.setDate(y.getDate()-1);const yk=y.getMonth()+'_'+y.getDate();if(at[yk+'_time']&&!at[yk+'_out'])ck=yk;}
-      const upd={[ck+'_out']:now.toISOString()};
-      const al={name:A.cu.fullName,action:'CLOCK OUT',timestamp:now.toISOString(),empID:uid,department:A.cu.dept};
-      const nt={userId:uid,title:'Clock Out',message:'Clocked out at '+now.toLocaleTimeString(),type:'info',timestamp:now.toISOString(),read:false};
-      const r=await safe(async()=>{await update(ref(db,'attendance/'+uid),upd);await push(ref(db,'audit_logs'),al);await push(ref(db,'notifications'),nt);},'co',{uid,u:upd,al,nt});
-      if(r.ok||r.q){toast(r.ok?'Clocked out successfully!':'Offline — clock out queued',r.ok?'success':'info');localStorage.removeItem('afb_lc');hideBn();document.getElementById('btnCI').classList.remove('hidden');document.getElementById('btnCO').classList.add('hidden');}
-    }
-  }catch{toast(navigator.onLine?'Failed':'Offline — queued','error');}
-  finally{A.proc.clock=false;}
-}
+function mkAP(k){const n=new Date();return{uid:A.cu.id,u:{[k+'_out']:n.toISOString(),[k+'_auto']:true},al:{name:A.cu.fullName,action:'AUTO CLOCK OUT',timestamp:n.toISOString(),empID:A.cu.id,department:A.cu.dept},nt:{userId:A.cu.id,title:'Auto Clock-Out',message:'Auto clocked out at '+n.toLocaleTimeString()+' after 12h.',type:'warning',timestamp:n.toISOString(),read:false}};}
 
 /* ── AUTH ── */
 onAuthStateChanged(auth,async user=>{
@@ -1010,6 +1113,8 @@ function applyRoles(){
   const ah=isAH(),aoh=isAOH();
   document.querySelectorAll('.ah-only').forEach(el=>el.style.display=ah?'':'none');
   document.querySelectorAll('.aoh-only').forEach(el=>el.style.display=aoh?'':'none');
+  // ✅ NEW: hr-only class for HR-only tabs
+  document.querySelectorAll('.hr-only').forEach(el=>el.style.display=(A.cu.role==='HR')?'':'none');
   document.getElementById('navManage').style.display=aoh?'':'none';
   document.getElementById('navReports').style.display=aoh?'':'none';
   document.getElementById('navHolidays').style.display=ah?'':'none';
@@ -1018,7 +1123,9 @@ function applyRoles(){
 }
 
 function goTab(tab,btn){
-  if((tab==='pay'||tab==='payroll'||tab==='holidays')&&!isAH()){toast('Restricted to HR and Admin','error');return;}
+  // ✅ Restrict Payroll Export to HR only
+  if((tab==='pay'||tab==='holidays')&&!isAH()){toast('Restricted to HR and Admin','error');return;}
+  if(tab==='payroll' && A.cu.role !== 'HR'){toast('Restricted to HR only','error');return;}
   document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   const sec=document.getElementById('sec-'+tab);if(sec){sec.classList.remove('hidden');if(btn)btn.classList.add('active');}
   const titles={dashboard:'Dashboard',earnings:'My Earnings',dir:'Staff Directory',active:'Active Now',sched:'Schedules',pay:'Payroll & Attendance',payroll:'Payroll Export',holidays:'Holiday Manager',audit:'Audit Logs',leaves:'My Leaves',timestamps:'Timestamp Sheet'};
@@ -1034,7 +1141,7 @@ function doRender(tab){
   else if(tab==='active'){renderActive();detectMyIP();}
   else if(tab==='sched')renderSchedules();
   else if(tab==='pay'&&isAH())renderAtt();
-  else if(tab==='payroll'&&isAH())renderPRev();
+  else if(tab==='payroll'&&A.cu.role==='HR')renderPRev();
   else if(tab==='holidays'&&isAH()){initHolYearFilter();renderHolidays();renderQuickHols();}
   else if(tab==='audit'){get(ref(db,'audit_logs')).then(s=>renderAudit(s.val()));}
   else if(tab==='leaves')renderLeaves();
@@ -1054,9 +1161,10 @@ function updDash(){
   document.getElementById('myOff').textContent=((u['off1_'+mon]||'')+' '+(u['off2_'+mon]||'')).trim()||'TBA';
   let present=0,lates=0;const at=A.att[uid]||{};for(let d=1;d<=now.getDate();d++){const k=mon+'_'+d;if(at[k]==='P'){present++;lates+=parseInt(at[k+'_late']||0);}}
   document.getElementById('mPresent').textContent=present;document.getElementById('mLates').textContent=lates;
-  const yest=new Date(now);yest.setDate(yest.getDate()-1);const yk=yest.getMonth()+'_'+yest.getDate(),tk=mon+'_'+now.getDate();
-  const ci=(at[tk]==='P'&&!at[tk+'_out'])||(at[yk]==='P'&&!at[yk+'_out']);
-  document.getElementById('btnCI').classList.toggle('hidden',ci);document.getElementById('btnCO').classList.toggle('hidden',!ci);
+  // ✅ FIX 3: midnight-safe open-session check
+  const ci = !!findOpenSession(uid);
+  document.getElementById('btnCI').classList.toggle('hidden', ci);
+  document.getElementById('btnCO').classList.toggle('hidden', !ci);
 }
 
 /* ── LEAVE UTILS ── */
@@ -1238,7 +1346,7 @@ async function saveSched(eid,mon){
     await autoPostRestDays(eid,mon);
   }catch{toast('Failed','error');}
 }
-async function saveAllSched(){if(!A.schChg||!Object.keys(A.schChg).length){toast('No pending changes','info');return;}try{for(const[eid,ch]of Object.entries(A.schChg)){if(Object.keys(ch).length)await update(ref(db,'users/'+eid),ch);}A.schChg={};document.getElementById('savAllBtn').classList.add('hidden');toast('All schedules published!','success');const now=new Date();await autoPostAllRestDays(now.getMonth());}catch{toast('Failed','error');}}
+async function saveAllSched(){if(!A.schChg||!Object.keys(A.schChg).length){toast('No pending changes','info');}try{for(const[eid,ch]of Object.entries(A.schChg)){if(Object.keys(ch).length)await update(ref(db,'users/'+eid),ch);}A.schChg={};document.getElementById('savAllBtn').classList.add('hidden');toast('All schedules published!','success');const now=new Date();await autoPostAllRestDays(now.getMonth());}catch{toast('Failed','error');}}
 function searchSched(){const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
 /* ── ACTIVE NOW ── */
@@ -1541,7 +1649,8 @@ function buildRows(mon,pS,pE){
 }
 
 function renderPRev(){
-  if(!isAH()){toast('Restricted to HR and Admin','error');return;}
+  // ✅ Only HR can view payroll
+  if(A.cu.role !== 'HR'){toast('Restricted to HR only','error');return;}
   const mon=parseInt(document.getElementById('pyMon').value);if(isNaN(mon))return;
   const per=document.getElementById('pyPer').value;const[pS,pEr]=per.split('-').map(Number);
   const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
@@ -1573,7 +1682,8 @@ const XS={
 function xs(ws,r,c,s){const a=XLSX.utils.encode_cell({r,c});if(!ws[a])ws[a]={v:'',t:'s'};ws[a].s=s;}
 
 function exportPayroll(){
-  if(!isAH()){toast('Restricted to HR and Admin','error');return;}
+  // ✅ Only HR can export payroll
+  if(A.cu.role !== 'HR'){toast('Restricted to HR only','error');return;}
   const mon=parseInt(document.getElementById('pyMon').value);if(isNaN(mon)){toast('Please select a month','error');return;}
   const per=document.getElementById('pyPer').value;const[pS,pEr]=per.split('-').map(Number);
   const now=new Date(),year=mon>now.getMonth()?now.getFullYear()-1:now.getFullYear();
@@ -1654,11 +1764,9 @@ async function autoPostRestDays(uid, mon){
   const updates={};
   const off1=u['off1_'+mon]||'';
   const off2=u['off2_'+mon]||'';
-  // If no rest days configured, skip
   if(!off1&&!off2)return;
   for(let d=1;d<=dim;d++){
     const k=mon+'_'+d;
-    // Only fill empty slots — never overwrite existing status
     if(at[k])continue;
     const date=new Date(year,mon,d);
     const dn=DOW[date.getDay()];
@@ -1677,8 +1785,7 @@ async function autoPostRestDays(uid, mon){
 
 async function autoPostAllRestDays(mon){
   if(!isAH())return;
-  // Run for all active employees
-  for(const[uid] of sortEmps()){
+  for(const[uid]of sortEmps()){
     await autoPostRestDays(uid,mon);
   }
 }
@@ -1692,7 +1799,6 @@ function setupListeners(){
     chkDis();
     const t=curTab();
     if(t)doRender(t);
-    // Auto-post rest days for current month whenever user data changes (schedule updates)
     if(isAH()){
       const now=new Date();
       autoPostAllRestDays(now.getMonth());
@@ -1767,6 +1873,7 @@ function clearAuditFilters(){
   filterAudit();
 }
 
+console.log('[HueTube] ✅ Midnight-crossing fix loaded');
 </script>
 </body>
 </html>
