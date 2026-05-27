@@ -393,7 +393,7 @@ td.att-cell:hover{transform:scale(1.08);}
             <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">One per line: <code style="background:var(--border);padding:2px 6px;border-radius:4px;">FullName, Email, Password, Dept, Role, SL, VL</code></p>
             <textarea id="bulkData" class="form-textarea" style="height:120px;font-family:monospace;font-size:11px;"></textarea>
             <div id="bulkProg" class="hidden" style="font-size:11px;color:var(--muted);margin:8px 0;"></div>
-            <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-purple btn-sm" onclick="runBulk()">▶ Run</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('bulkPanel').classList.add('hidden')">Close</button></div>
+            <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-purple btn-sm" onclick="runBulk()">▶ Run</button><button class="btn btn-ghost btn-sm" onclick="toggleBulk()">Close</button></div>
           </div>
           <div class="form-grid">
             <div class="form-group"><label class="form-label">Emp ID</label><input type="text" id="fEmpID" class="form-input" placeholder="EMP001"></div>
@@ -438,6 +438,7 @@ td.att-cell:hover{transform:scale(1.08);}
         <div class="card">
           <div class="toolbar" style="margin-bottom:16px;">
             <select id="sMon" class="toolbar-select" onchange="renderSchedules()"></select>
+            <select id="sYear" class="toolbar-select" onchange="renderSchedules()"></select>
             <div class="search-wrap" style="flex:1;min-width:200px;margin:0;"><span class="search-icon">🔍</span><input type="text" class="search-input" placeholder="Search…" onkeyup="searchSched()"></div>
             <button id="savAllBtn" class="btn btn-success hidden" onclick="saveAllSched()">Publish All Changes</button>
           </div>
@@ -474,7 +475,7 @@ td.att-cell:hover{transform:scale(1.08);}
           </div>
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;font-size:11px;color:#1e40af;margin-top:16px;line-height:1.8;">
             📋 <strong>Sheets exported:</strong> REQUEST CLAIM · PAYROLL REQUEST · ATTENDANCE SHEET<br>
-            💡 <strong>Night Diff</strong> = pCount × 8h × (daily/8) × 10% &nbsp;|&nbsp; <strong>Meal</strong> = P×₱200 + RDS×₱200 + HD×₱100<br>
+            💡 <strong>Night Diff</strong> = pCount × 8h × (daily/8) × 10% &nbsp;|&nbsp; <strong>Meal</strong> = P×₱200 + RDS×₱200 + HD×₱100 + UT×₱100<br>
             🗓️ <strong>Holidays</strong> = Regular (100% daily) paid <strong>only if worked</strong> · Special (30% daily) if worked<br>
             📌 <strong>Rest days</strong> are auto-posted as RD in the attendance grid when schedules are set
           </div>
@@ -632,7 +633,7 @@ td.att-cell:hover{transform:scale(1.08);}
 
 <script>
 (function(){
-  var fns=['doLogin','doLogout','clockAction','submitLeave','cancelLeave','saveEmployee','editEmp','cancelEdit','manualClockOutNow','goTab','toggleLvForm','updLvBal','chkDates','exportAttExcel','renderAtt','renderSchedules','searchDir','searchActive','searchSched','searchAtt','searchAudit','searchLeaves','cycleAtt','updSchedField','saveSched','saveAllSched','openPanel','closePanel','approveLeave','rejectLeave','markRead','disableEmp','toggleBulk','runBulk','renderTS','exportDTR','renderPRev','exportPayroll','renderEarnings','saveHoliday','editHoliday','cancelHolEdit','deleteHoliday','renderHolidays','renderQuickHols','prefillHoliday','autoPostRestDays','autoPostAllRestDays','filterAudit','clearAuditFilters'];
+  var fns=['doLogin','doLogout','clockAction','submitLeave','cancelLeave','saveEmployee','editEmp','cancelEdit','manualClockOutNow','goTab','toggleLvForm','updLvBal','chkDates','exportAttExcel','renderAtt','renderSchedules','searchDir','searchActive','searchSched','searchAtt','searchLeaves','cycleAtt','updSchedField','saveSched','saveAllSched','openPanel','closePanel','approveLeave','rejectLeave','markRead','disableEmp','toggleBulk','runBulk','renderTS','exportDTR','renderPRev','exportPayroll','renderEarnings','saveHoliday','editHoliday','cancelHolEdit','deleteHoliday','renderHolidays','renderQuickHols','prefillHoliday','autoPostRestDays','autoPostAllRestDays','filterAudit','clearAuditFilters'];
   fns.forEach(function(n){window[n]=function(){var a=arguments;var iv=setInterval(function(){if(window['_R'+n]){clearInterval(iv);window['_R'+n].apply(null,a);}},40);};});
 })();
 </script>
@@ -703,6 +704,8 @@ function isNightShift(uid,mon){
 }
 
 /* ── PAYROLL CORE ── */
+// FIX 2: UT no longer included in pCnt (meal/nightdiff base).
+// UT gets ₱100 meal (same as HD), tracked via separate utCnt.
 function calcPayroll(uid,mon,pS,pE,year){
   const att=A.att[uid]||{};
   const u=gU(uid)||A.users[uid]||A.cu||{};
@@ -710,18 +713,19 @@ function calcPayroll(uid,mon,pS,pE,year){
   const cutoff=salary/2;
   const daily=salary/WD;
 
-  let pCnt=0,rdsCnt=0,hdCnt=0,abs=0,lMin=0,utH=0;
+  let pCnt=0,rdsCnt=0,hdCnt=0,utCnt=0,abs=0,lMin=0,utH=0;
   for(let d=pS;d<=pE;d++){
     const k=mon+'_'+d,st=att[k]||'',late=parseInt(att[k+'_late']||0);
     lMin+=late;
     if(st==='P')pCnt++;
     else if(st==='RDS')rdsCnt++;
     else if(st==='HD')hdCnt++;
-    else if(st==='UT'){pCnt++;utH++;}
+    else if(st==='UT'){utCnt++;utH++;} // FIX 2: UT tracked separately, NOT added to pCnt
     else if(st==='A'||st==='NPL'||st==='NPSL'||st==='S')abs++;
   }
 
-  const meal=pCnt*200+rdsCnt*200+hdCnt*100;
+  // FIX 2: UT meal = ₱100/day (same as HD, since employee left early)
+  const meal=pCnt*200+rdsCnt*200+hdCnt*100+utCnt*100;
   const transpo=Math.max(0,parseFloat(u.transpoAllow)||0);
   const stat=Math.max(0,parseFloat(u.statBenefits)||0);
   const bday=0;
@@ -742,17 +746,17 @@ function calcPayroll(uid,mon,pS,pE,year){
   const regHol=regHolDays*daily;
   const specHol=specHolDays*daily*0.30;
 
-  const{nh,nd}=calcNightDiff(uid,mon,pS,pE,pCnt+rdsCnt,daily);
+  // FIX 2: night diff base count now uses pCnt+rdsCnt+utCnt (UT employees were present)
+  const{nh,nd}=calcNightDiff(uid,mon,pS,pE,pCnt+rdsCnt+utCnt,daily);
   const colK=daily;
   const totalAllow=colK+meal+transpo+bday+nd+stat+regHol+specHol;
   const absAmt=abs*daily;
   const tardAmt=lMin>0?(lMin/60)*(daily/8):0;
   const utAmt=utH>0?utH*(daily/8):0;
   const totalDeduct=absAmt+tardAmt+utAmt;
-  /* FIX #4: net must include transpo so payslip matches payroll export */
   const net=cutoff+meal+transpo+bday+nd+stat+regHol+specHol-totalDeduct;
 
-  return{salary,cutoff,daily,colK,pCnt,rdsCnt,hdCnt,abs,lMin,utH,meal,transpo,bday,stat,nh,nd,regHol,specHol,regHolDays,specHolDays,totalAllow,absAmt,tardAmt,utAmt,totalDeduct,net};
+  return{salary,cutoff,daily,colK,pCnt,rdsCnt,hdCnt,utCnt,abs,lMin,utH,meal,transpo,bday,stat,nh,nd,regHol,specHol,regHolDays,specHolDays,totalAllow,absAmt,tardAmt,utAmt,totalDeduct,net};
 }
 
 function calcNightDiff(uid,mon,pS,pE,pCnt,daily){
@@ -762,7 +766,7 @@ function calcNightDiff(uid,mon,pS,pE,pCnt,daily){
   for(let d=pS;d<=pE;d++){
     const k=mon+'_'+d;
     const ci=att[k+'_time'],co=att[k+'_out'],st=att[k]||'';
-    if((st==='P'||st==='RDS')&&ci&&co){
+    if((st==='P'||st==='RDS'||st==='UT')&&ci&&co){
       hasTs=true;
       const a=new Date(ci),b=new Date(co);
       const ta=a.getHours()*60+a.getMinutes();
@@ -777,19 +781,20 @@ function calcNightDiff(uid,mon,pS,pE,pCnt,daily){
 }
 
 /* ── MIDNIGHT-SAFE SESSION FINDER ── */
+// FIX 7: Extended from 3 days to 7 days lookback to cover edge cases
 function findOpenSession(uid){
   const at=A.att[uid]||{};
   const now=new Date();
-  for(let i=0;i<=2;i++){
+  for(let i=0;i<=6;i++){
     const d=new Date(now.getTime()-i*86400000);
     const k=d.getMonth()+'_'+d.getDate();
-    if(at[k]==='P'&&at[k+'_time']&&!at[k+'_out'])return k;
+    const st=at[k]||'';
+    if((st==='P'||st==='UT')&&at[k+'_time']&&!at[k+'_out'])return k;
   }
   return null;
 }
 
 /* ── CLOCK ACTION ── */
-/* FIX #1: Night shift date adjustment now guarded by isNightShift check */
 async function clockAction(type){
   if(A.proc.clock)return;
   const now=new Date();
@@ -809,7 +814,8 @@ async function clockAction(type){
       const slot=(u['out_'+mon]||'').trim();
       let lm=0;
       if(slot&&/\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM)/i.test(slot)){
-        const raw=slot.split(/[-–]/)[0].trim().toUpperCase().replace(/(\d)(AM|PM)/,'$1 $2');
+        const normalised=slot.replace(/[\u2013\u2014\-]/g,'-');
+        const raw=normalised.split('-')[0].trim().toUpperCase().replace(/(\d)(AM|PM)/,'$1 $2');
         let sh=0,sm=0;
         if(raw.includes(':')){
           const p=raw.split(':');sh=parseInt(p[0]);sm=parseInt(p[1]);
@@ -820,7 +826,6 @@ async function clockAction(type){
           if(m){sh=parseInt(m[1]);if((m[2]||'AM')==='PM'&&sh<12)sh+=12;}
         }
         const sc=new Date(now);sc.setHours(sh,sm,0,0);
-        /* FIX #1: Only apply night-shift date correction for night workers */
         const nightWorker=isNightShift(uid,mon);
         if(nightWorker&&sh>=18&&now.getHours()<12)sc.setDate(sc.getDate()-1);
         if(nightWorker&&sh<6&&now.getHours()>=18)sc.setDate(sc.getDate()+1);
@@ -885,6 +890,17 @@ onAuthStateChanged(auth,async user=>{
   else{if(A.cu)resetApp();}
 });
 
+/* ── Debounced render ── */
+let _renderDebounce=null;
+function scheduleRender(){
+  if(_renderDebounce)clearTimeout(_renderDebounce);
+  _renderDebounce=setTimeout(()=>{
+    const t=curTab();
+    if(t&&A.cu)doRender(t);
+    _renderDebounce=null;
+  },80);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const now=new Date();
   ['pMon','sMon','tsMon','pyMon','erMon'].forEach(id=>{
@@ -899,11 +915,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const currentYear=now.getFullYear();
   const yearRange=[currentYear-1,currentYear,currentYear+1];
+
   const monthYearPairs=[
     {monthId:'pMon',yearId:'pYear'},
     {monthId:'pyMon',yearId:'pyYear'},
     {monthId:'tsMon',yearId:'tsYear'},
-    {monthId:'erMon',yearId:'erYear'}
+    {monthId:'erMon',yearId:'erYear'},
+    {monthId:'sMon',yearId:'sYear'}
   ];
   monthYearPairs.forEach(({monthId,yearId})=>{
     const ySel=document.getElementById(yearId);
@@ -912,10 +930,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     const mSel=document.getElementById(monthId);
     if(mSel){
       mSel.addEventListener('change',()=>{
-        const mon=parseInt(mSel.value);
-        /* Only auto-adjust year if user hasn't explicitly changed it */
-        const selYear=(mon>now.getMonth())?currentYear-1:currentYear;
-        ySel.value=yearRange.includes(selYear)?selYear:currentYear;
+        const selMon=parseInt(mSel.value);
+        const curMon=now.getMonth();
+        let targetYear=currentYear;
+        if(selMon>curMon){targetYear=currentYear-1;}
+        if(yearRange.includes(targetYear)){ySel.value=targetYear;}
       });
     }
   });
@@ -985,10 +1004,6 @@ async function submitLeave(){
       ['lvStart','lvEnd','lvReason'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('lvFormWrap').classList.add('hidden');
       toast('Leave request submitted!','success');
-      // Optimistic update: add to local state so balance updates immediately
-      const tempId = 'opt_' + Date.now();
-      A.lvReqs[tempId] = { ...req, status: 'Pending' };
-      updLvBal();
     }
     else if(r.q)toast('Offline — leave request queued','info');
   }catch{toast('Failed to submit leave request','error');}finally{A.proc.lv=false;}
@@ -1048,7 +1063,6 @@ function renderAtt(){
   if(!isAH()){document.getElementById('attTable').innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);">Access restricted to HR and Admin</div>';return;}
   const el=document.getElementById('attTable');if(!el)return;
   const mon=parseInt(document.getElementById('pMon').value);
-  /* FIX #2: Pass year from dropdown to autoPostAllRestDays */
   const year=getYearFromDropdown('pYear');
   const sf=(document.getElementById('pShiftF')?.value||'').trim().toLowerCase();
   const per=document.getElementById('pPer').value;const[pS,pEr]=per.split('-').map(Number);const dim=new Date(year,mon+1,0).getDate(),pE=pEr>=28?dim:pEr;
@@ -1092,14 +1106,28 @@ function renderAtt(){
     h+='<td class="lates-total">'+(tl||'—')+'</td></tr>';
   }
   h+='</tbody></table>';el.innerHTML=h;
-  /* FIX #2: Pass year so rest days post against the correct calendar */
 }
 
+// FIX 4: On confirm cancel, find and restore the cell's visual state
 async function cycleAtt(uid,key){
   if(!isAH()){toast('Only Admin/HR can modify attendance','error');return;}
-  const at=A.att[uid]||{};const cur=at[key]||'';const nxt=SC[(SC.indexOf(cur)+1)%SC.length];
+  const at=A.att[uid]||{};
+  const cur=at[key]||'';
+  const nextIdx=(SC.indexOf(cur)+1)%SC.length;
+  const nxt=SC[nextIdx];
+  if(nxt===''&&cur!==''){
+    if(!confirm('Clear this attendance cell? Current value: '+cur)){
+      // FIX 4: User cancelled — find and re-paint the cell to avoid stale appearance
+      const cell=document.querySelector(`td.att-cell[onclick="cycleAtt('${uid}','${key}')"]`);
+      if(cell){
+        cell.className='att-cell s-'+cur;
+        cell.innerHTML=esc(cur)+(at[key+'_late']?'<span class="late-tag">'+at[key+'_late']+'m</span>':'');
+      }
+      return;
+    }
+  }
   const now=new Date();
-  const auditLog={name:A.cu.fullName,action:'Changed attendance for '+uid+' on '+key+' to '+nxt,timestamp:now.toISOString(),empID:uid};
+  const auditLog={name:A.cu.fullName,action:'Changed attendance for '+uid+' on '+key+' to '+(nxt||'(cleared)'),timestamp:now.toISOString(),empID:uid};
   const r=await safe(async()=>{await update(ref(db,'attendance/'+uid),{[key]:nxt});await push(ref(db,'audit_logs'),auditLog);},'attCell',{uid,key,value:nxt,auditLog});
   if(r.ok||r.q){toast(r.ok?'Updated':'Offline – queued','success');}else{toast('Failed','error');}
 }
@@ -1116,29 +1144,34 @@ function renderSchedules(){
   h+='</tbody></table>';el.innerHTML=h;
 }
 function updSchedField(eid,field,val){document.getElementById('savAllBtn').classList.remove('hidden');if(!A.schChg)A.schChg={};if(!A.schChg[eid])A.schChg[eid]={};A.schChg[eid][field]=val;}
+
+// FIX 3: saveSched reads year from dropdown (sYear) instead of always using current year
 async function saveSched(eid,mon){
   try{
     const p=(A.schChg||{})[eid]||{},u=A.users[eid]||{};
     const upd={};['out_','shift_','off1_','off2_'].forEach(pre=>{const f=pre+mon;if(f in p)upd[f]=p[f];else if(f in u)upd[f]=u[f];});
     if(!Object.keys(upd).length){toast('No changes','info');return;}
+    // FIX 3: Use the year selected in the schedules dropdown, not always current year
+    const schedYear=getYearFromDropdown('sYear');
     const r=await safe(async()=>{await update(ref(db,'users/'+eid),upd);},'schedSave',{uid:eid,updates:upd});
     if(r.ok||r.q){
       if(A.schChg?.[eid]){Object.keys(upd).forEach(f=>delete A.schChg[eid][f]);if(!Object.keys(A.schChg[eid]).length)delete A.schChg[eid];}
       if(!A.schChg||!Object.keys(A.schChg).length)document.getElementById('savAllBtn').classList.add('hidden');
       toast(r.ok?'Schedule saved!':'Offline – queued','success');
-      /* FIX #2: pass current year */
-      if(r.ok)await autoPostRestDays(eid,mon,new Date().getFullYear());
+      if(r.ok)await autoPostRestDays(eid,mon,schedYear,true);
     }else toast('Failed','error');
   }catch{toast('Failed','error');}
 }
+
+// FIX 3: saveAllSched also passes the year from the dropdown
 async function saveAllSched(){
   if(!A.schChg||!Object.keys(A.schChg).length){toast('No pending changes','info');return;}
   const updatesArray=Object.entries(A.schChg).map(([eid,ch])=>({uid:eid,changes:ch}));
+  const schedYear=getYearFromDropdown('sYear');
   const r=await safe(async()=>{for(const upd of updatesArray){await update(ref(db,'users/'+upd.uid),upd.changes);}},'schedAll',{updatesArray});
   A.schChg={};document.getElementById('savAllBtn').classList.add('hidden');
   toast(r.ok?'All schedules published!':'Offline – queued','success');
-  /* FIX #2: pass current year */
-  if(r.ok)await autoPostAllRestDays(new Date().getMonth(),new Date().getFullYear());
+  if(r.ok)await autoPostAllRestDays(new Date().getMonth(),schedYear);
 }
 function searchSched(){const q=document.querySelector('#sec-sched .search-input').value.toLowerCase();document.querySelectorAll('#schedTable tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';});}
 
@@ -1202,8 +1235,57 @@ function renderLeaves(){if(!A.cu)return;const c=document.getElementById('leavesO
 function searchLeaves(){const q=document.querySelector('#sec-leaves .search-input').value.toLowerCase();let t=0,a=0,p=0,r=0;document.querySelectorAll('#leavesOut .leave-card').forEach(c=>{const v=c.textContent.toLowerCase().includes(q);c.style.display=v?'':'none';if(v){t++;const st=c.getAttribute('data-status')||'';if(st==='approved')a++;else if(st==='pending')p++;else if(st==='rejected')r++;}});document.getElementById('lvTotal').textContent=t;document.getElementById('lvApp').textContent=a;document.getElementById('lvPend').textContent=p;document.getElementById('lvRej').textContent=r;}
 
 /* ── BULK REGISTER ── */
-function toggleBulk(){document.getElementById('bulkPanel').classList.toggle('hidden');}
-async function runBulk(){const raw=document.getElementById('bulkData').value.trim();if(!raw){toast('No data entered','error');return;}const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);const prog=document.getElementById('bulkProg');prog.classList.remove('hidden');let ok=0,fail=0;for(let i=0;i<lines.length;i++){const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());prog.textContent='Processing '+(i+1)+'/'+lines.length+': '+(fullName||'?')+'…';if(!fullName||!email||!password){fail++;continue;}try{const cr=await createUserWithEmailAndPassword(secAuth,email,password);const uid=cr.user.uid;await set(ref(db,'users/'+uid),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});ok++;}catch(e){console.error('Bulk fail',email,e);fail++;}finally{try{await signOut(secAuth);}catch{}}}prog.textContent='✅ Done: '+ok+' created, '+fail+' failed.';if(ok>0){renderDir();toast(ok+' employee(s) registered!','success');}if(fail>0)toast(fail+' failed — check console','error');}
+// FIX 6: toggleBulk warns before closing if textarea has unsaved data
+function toggleBulk(){
+  const panel=document.getElementById('bulkPanel');
+  const isOpen=!panel.classList.contains('hidden');
+  if(isOpen){
+    const data=document.getElementById('bulkData').value.trim();
+    if(data&&!confirm('Close bulk registration? Unsaved data will be lost.')){return;}
+    panel.classList.add('hidden');
+  }else{
+    panel.classList.remove('hidden');
+  }
+}
+
+async function runBulk(){
+  const raw=document.getElementById('bulkData').value.trim();
+  if(!raw){toast('No data entered','error');return;}
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const prog=document.getElementById('bulkProg');
+  prog.classList.remove('hidden');
+  let ok=0,fail=0,skipped=0;
+  for(let i=0;i<lines.length;i++){
+    const[fullName,email,password,dept,role,slStr,vlStr]=lines[i].split(',').map(p=>p.trim());
+    prog.textContent='Processing '+(i+1)+'/'+lines.length+': '+(fullName||'?')+'…';
+    if(!fullName||!email||!password){fail++;prog.textContent+=' ⚠️ Skipped (missing fields)';continue;}
+    try{
+      const cr=await createUserWithEmailAndPassword(secAuth,email,password);
+      const uid=cr.user.uid;
+      await set(ref(db,'users/'+uid),{fullName,email,empID:uid,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});
+      ok++;
+      if(i<lines.length-1)await new Promise(res=>setTimeout(res,800));
+    }catch(e){
+      console.error('Bulk fail',email,e);
+      if(e.code==='auth/email-already-in-use'){
+        skipped++;
+        prog.textContent+=' ⚠️ Email already exists';
+      }else if(e.code==='auth/too-many-requests'){
+        toast('Rate limit hit — pausing 10 seconds…','info');
+        await new Promise(res=>setTimeout(res,10000));
+        try{
+          const cr2=await createUserWithEmailAndPassword(secAuth,email,password);
+          const uid2=cr2.user.uid;
+          await set(ref(db,'users/'+uid2),{fullName,email,empID:uid2,dept:dept||'RC',role:role||'Employee',slMax:Math.max(0,parseInt(slStr)||10),vlMax:Math.max(0,parseInt(vlStr)||10),maxConsecutiveLeave:30,defaultShift:'',monthlySalary:0,transpoAllow:1500,statBenefits:1000,disabled:false});
+          ok++;
+        }catch{fail++;}
+      }else{fail++;}
+    }finally{try{await signOut(secAuth);}catch{}}
+  }
+  prog.textContent='✅ Done: '+ok+' created'+(skipped?' | '+skipped+' skipped (duplicate email)':'')+' | '+fail+' failed.';
+  if(ok>0){renderDir();toast(ok+' employee(s) registered!','success');}
+  if(fail>0)toast(fail+' failed — check console','error');
+}
 
 /* ══════════════════════════════════════════
    HOLIDAY MANAGER
@@ -1273,7 +1355,7 @@ function renderPRev(){
   const T=rows.reduce((a,r)=>({salary:a.salary+r.salary,cutoff:a.cutoff+r.cutoff,meal:a.meal+r.meal,transpo:a.transpo+r.transpo,nd:a.nd+r.nd,stat:a.stat+r.stat,regHol:(a.regHol||0)+r.regHol,specHol:(a.specHol||0)+r.specHol,totalAllow:a.totalAllow+r.totalAllow,absAmt:a.absAmt+r.absAmt,tardAmt:a.tardAmt+r.tardAmt,utAmt:a.utAmt+r.utAmt,totalDeduct:a.totalDeduct+r.totalDeduct,net:a.net+r.net}),{salary:0,cutoff:0,meal:0,transpo:0,nd:0,stat:0,regHol:0,specHol:0,totalAllow:0,absAmt:0,tardAmt:0,utAmt:0,totalDeduct:0,net:0});
   document.getElementById('pyStats').style.display='';document.getElementById('pyStats').innerHTML='<div class="py-stat blue"><div class="ps-label">Headcount</div><div class="ps-val">'+rows.length+'</div></div><div class="py-stat green"><div class="ps-label">Total Net Pay</div><div class="ps-val" style="font-size:14px;">'+php(T.net)+'</div></div><div class="py-stat amber"><div class="ps-label">Total Cut-off</div><div class="ps-val" style="font-size:14px;">'+php(T.cutoff)+'</div></div><div class="py-stat purple"><div class="ps-label">Total Meal</div><div class="ps-val" style="font-size:14px;">'+php(T.meal)+'</div></div><div class="py-stat red"><div class="ps-label">Total Deductions</div><div class="ps-val" style="font-size:14px;">'+php(T.totalDeduct)+'</div></div>';
   let h='<table><thead><tr><th rowspan="2">#</th><th rowspan="2" style="text-align:left;min-width:110px;">LAST NAME</th><th rowspan="2" style="text-align:left;min-width:100px;">FIRST NAME</th><th rowspan="2" style="text-align:left;min-width:110px;">POSITION</th><th rowspan="2">MONTHLY</th><th rowspan="2">CUT-OFF</th><th rowspan="2">DAILY</th><th rowspan="2" style="background:#3a3b3c;color:#e4e6eb;">COL K</th><th colspan="7" style="background:#1e40af;color:#fff;">ALLOWANCES</th><th rowspan="2" style="background:#1c1e21;color:#fff;">TOTAL</th><th colspan="3" style="background:#991b1b;color:#fff;">DEDUCTIONS</th><th rowspan="2" style="background:#065f46;color:#fff;min-width:110px;">NET SALARY</th></tr><tr><th style="background:#2563eb;color:#fff;">MEAL</th><th style="background:#2563eb;color:#fff;">TRANSPO</th><th style="background:#2563eb;color:#fff;">NIGHT HRS</th><th style="background:#2563eb;color:#fff;">NIGHT DIFF</th><th style="background:#2563eb;color:#fff;">STAT</th><th style="background:#1d4ed8;color:#fff;">REG HOL</th><th style="background:#4338ca;color:#fff;">SPEC HOL</th><th style="background:#b91c1c;color:#fff;">ABS</th><th style="background:#b91c1c;color:#fff;">ABS AMT</th><th style="background:#b91c1c;color:#fff;">TARD/UT</th></tr></thead><tbody>';
-  rows.forEach(r=>{const isN=isNightShift(r.uid,parseInt(document.getElementById('pyMon').value));h+='<tr><td class="ctr" style="color:var(--muted);">'+r.sn+'</td><td class="tl" style="font-weight:700;">'+esc(r.L)+'</td><td class="tl">'+esc(r.F)+'</td><td class="tl" style="font-size:11px;color:var(--muted);">'+esc(r.pos)+'</td><td>'+php(r.salary)+'</td><td style="font-weight:700;color:var(--accent);">'+php(r.cutoff)+'</td><td style="color:var(--muted);">'+php(r.daily)+'</td><td style="color:var(--muted);">'+php(r.colK)+'</td><td class="allow-cell" style="font-weight:600;">'+php(r.meal)+'<br><small style="color:var(--muted);font-size:9px;">P:'+r.pCnt+' RDS:'+r.rdsCnt+' HD:'+r.hdCnt+'</small></td><td class="allow-cell">'+php(r.transpo)+'</td><td class="allow-cell">'+r.nh.toFixed(1)+'h'+(isN?' 🌙':'')+'</td><td class="allow-cell">'+php(r.nd)+'</td><td class="allow-cell">'+php(r.stat)+'</td><td class="allow-cell" style="background:#fffbeb!important;">'+(r.regHolDays?r.regHolDays+'d = ':'')+php(r.regHol)+'</td><td class="allow-cell" style="background:#faf5ff!important;">'+(r.specHolDays?r.specHolDays+'d = ':'')+php(r.specHol)+'</td><td style="font-weight:700;color:var(--accent);">'+php(r.totalAllow)+'</td><td class="deduct-cell">'+(r.abs>0?r.abs+' d':'—')+'</td><td class="deduct-cell">'+(r.absAmt>0?php(r.absAmt):'—')+'</td><td class="deduct-cell">'+(r.tardAmt+r.utAmt>0?php(r.tardAmt+r.utAmt):'—')+'</td><td class="net-cell">'+php(r.net)+'</td></tr>';});
+  rows.forEach(r=>{const isN=isNightShift(r.uid,mon);h+='<tr><td class="ctr" style="color:var(--muted);">'+r.sn+'</td><td class="tl" style="font-weight:700;">'+esc(r.L)+'</td><td class="tl">'+esc(r.F)+'</td><td class="tl" style="font-size:11px;color:var(--muted);">'+esc(r.pos)+'</td><td>'+php(r.salary)+'</td><td style="font-weight:700;color:var(--accent);">'+php(r.cutoff)+'</td><td style="color:var(--muted);">'+php(r.daily)+'</td><td style="color:var(--muted);">'+php(r.colK)+'</td><td class="allow-cell" style="font-weight:600;">'+php(r.meal)+'<br><small style="color:var(--muted);font-size:9px;">P:'+r.pCnt+' RDS:'+r.rdsCnt+' HD:'+r.hdCnt+' UT:'+r.utCnt+'</small></td><td class="allow-cell">'+php(r.transpo)+'</td><td class="allow-cell">'+r.nh.toFixed(1)+'h'+(isN?' 🌙':'')+'</td><td class="allow-cell">'+php(r.nd)+'</td><td class="allow-cell">'+php(r.stat)+'</td><td class="allow-cell" style="background:#fffbeb!important;">'+(r.regHolDays?r.regHolDays+'d = ':'')+php(r.regHol)+'</td><td class="allow-cell" style="background:#faf5ff!important;">'+(r.specHolDays?r.specHolDays+'d = ':'')+php(r.specHol)+'</td><td style="font-weight:700;color:var(--accent);">'+php(r.totalAllow)+'</td><td class="deduct-cell">'+(r.abs>0?r.abs+' d':'—')+'</td><td class="deduct-cell">'+(r.absAmt>0?php(r.absAmt):'—')+'</td><td class="deduct-cell">'+(r.tardAmt+r.utAmt>0?php(r.tardAmt+r.utAmt):'—')+'</td><td class="net-cell">'+php(r.net)+'</td></tr>';});
   h+='<tr class="total-row"><td colspan="4" style="text-align:right;padding:10px 12px;">GRAND TOTALS</td><td>'+php(T.salary)+'</td><td>'+php(T.cutoff)+'</td><td colspan="2"></td><td>'+php(T.meal)+'</td><td>'+php(T.transpo)+'</td><td></td><td>'+php(T.nd)+'</td><td>'+php(T.stat)+'</td><td>'+php(T.regHol)+'</td><td>'+php(T.specHol)+'</td><td>'+php(T.totalAllow)+'</td><td></td><td>'+php(T.absAmt)+'</td><td>'+php(T.tardAmt+T.utAmt)+'</td><td style="font-size:13px;">'+php(T.net)+'</td></tr></tbody></table>';
   document.getElementById('payrollPreview').innerHTML=h;
 }
@@ -1310,7 +1392,7 @@ function exportPayroll(){
   for(let d=pS;d<=pEnd;d++)attHdr.push(new Date(year,mon,d));
   attHdr.push('TOTAL DAYS','COST','','LEGEND:');
   const s3=[attHdr];
-  rows.forEach((r,i)=>{const at=A.att[r.uid]||{};const totalDays=r.pCnt+r.rdsCnt+r.hdCnt*0.5;const cost=r.pCnt*200+r.rdsCnt*200+r.hdCnt*100;const rd=[r.empNo,r.L,r.F,r.pos,r.hd?new Date(r.hd):'','ACTIVE'];for(let d=pS;d<=pEnd;d++)rd.push(at[mon+'_'+d]||'');rd.push(totalDays,cost);if(i<LEG.length)rd.push('',LEG[i][0],LEG[i][1]);s3.push(rd);});
+  rows.forEach((r,i)=>{const at=A.att[r.uid]||{};const totalDays=r.pCnt+r.rdsCnt+r.hdCnt*0.5+r.utCnt*0.5;const cost=r.pCnt*200+r.rdsCnt*200+r.hdCnt*100+r.utCnt*100;const rd=[r.empNo,r.L,r.F,r.pos,r.hd?new Date(r.hd):'','ACTIVE'];for(let d=pS;d<=pEnd;d++)rd.push(at[mon+'_'+d]||'');rd.push(totalDays,cost);if(i<LEG.length)rd.push('',LEG[i][0],LEG[i][1]);s3.push(rd);});
   const ws3=XLSX.utils.aoa_to_sheet(s3,{cellDates:true});const attCols=[{wch:12},{wch:14},{wch:14},{wch:20},{wch:14},{wch:8}];for(let d=pS;d<=pEnd;d++)attCols.push({wch:5});attCols.push({wch:11},{wch:10},{wch:4},{wch:6},{wch:22});ws3['!cols']=attCols;
   const rng=XLSX.utils.decode_range(ws3['!ref']||'A1');for(let r=rng.s.r;r<=rng.e.r;r++)for(let c=rng.s.c;c<=rng.e.c;c++){const a=XLSX.utils.encode_cell({r,c});if(ws3[a])ws3[a].s=XS.C;}
   for(let c=0;c<6;c++)xs(ws3,0,c,XS.DB);for(let c=6;c<6+nD;c++)xs(ws3,0,c,XS.DR);for(let c=6+nD;c<6+nD+2;c++)xs(ws3,0,c,XS.DB);
@@ -1326,51 +1408,47 @@ function toast(msg,type='info'){const c=document.getElementById('toastContainer'
 function showErr(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}}
 function fv(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.remove('hidden');}}
 
-/* ══════════════════════════════════════════
-   FIX #2: AUTO-POST REST DAYS (year param added)
-══════════════════════════════════════════ */
-async function autoPostRestDays(uid,mon,year){
+/* ── AUTO-POST REST DAYS ── */
+async function autoPostRestDays(uid,mon,year,clearOld=false){
   if(!isAH())return;
   const u=A.users[uid];if(!u)return;
-  /* Use passed-in year; fall back to current year if not supplied */
   const yr=year||new Date().getFullYear();
   const dim=new Date(yr,mon+1,0).getDate();
-  const at=A.att[uid]||{};const updates={};
+  const at=A.att[uid]||{};
+  const updates={};
   const off1=u['off1_'+mon]||'',off2=u['off2_'+mon]||'';
-  if(!off1&&!off2)return;
+  if(clearOld){
+    for(let d=1;d<=dim;d++){
+      const k=mon+'_'+d;
+      if(at[k]==='RD'&&!at[k+'_time'])updates[k]='';
+    }
+  }
+  if(!off1&&!off2){
+    if(Object.keys(updates).length){try{await update(ref(db,'attendance/'+uid),updates);}catch(e){console.warn('autoPostRestDays clear failed',uid,e);}}
+    return;
+  }
   for(let d=1;d<=dim;d++){
     const k=mon+'_'+d;
-    if(at[k])continue;
+    if(at[k]&&at[k]!=='RD')continue;
+    if(at[k+'_time'])continue;
     const date=new Date(yr,mon,d);
     const dn=DOW[date.getDay()];
     if((off1&&off1===dn)||(off2&&off2===dn))updates[k]='RD';
   }
-  if(Object.keys(updates).length){
-    try{await update(ref(db,'attendance/'+uid),updates);}
-    catch(e){console.warn('autoPostRestDays failed for',uid,e);}
-  }
+  if(Object.keys(updates).length){try{await update(ref(db,'attendance/'+uid),updates);}catch(e){console.warn('autoPostRestDays failed for',uid,e);}}
 }
 async function autoPostAllRestDays(mon,year){
   if(!isAH())return;
   const yr=year||new Date().getFullYear();
-  for(const[uid]of sortEmps()){await autoPostRestDays(uid,mon,yr);}
+  for(const[uid]of sortEmps()){await autoPostRestDays(uid,mon,yr,false);}
 }
 
 /* ── REALTIME LISTENERS ── */
 function setupListeners(){
   if(A.listeners)Object.values(A.listeners).forEach(f=>{if(typeof f==='function')f();});
   A.listeners={};
-  // Removed autoPostAllRestDays from the users/attendance listeners to prevent write storms.
-  // Rest days are now posted only after explicit schedule saves (saveSched / saveAllSched).
-  A.listeners.users = onValue(ref(db,'users'), snap=>{
-    A.users=snap.val()||{};
-    chkDis();
-    const t=curTab(); if(t) doRender(t);
-  });
-  A.listeners.att = onValue(ref(db,'attendance'), snap=>{
-    A.att=snap.val()||{};
-    const t=curTab(); if(t) doRender(t);
-  });
+  A.listeners.users=onValue(ref(db,'users'),snap=>{A.users=snap.val()||{};chkDis();scheduleRender();});
+  A.listeners.att=onValue(ref(db,'attendance'),snap=>{A.att=snap.val()||{};scheduleRender();});
   A.listeners.lvReqs=onValue(ref(db,'leave_requests'),snap=>{A.lvReqs=snap.val()||{};updInbox();renderLeaves();});
   A.listeners.notifs=onValue(ref(db,'notifications'),snap=>{A.notifs=snap.val()||{};updNotifs();});
   A.listeners.audit=onValue(ref(db,'audit_logs'),snap=>{renderAudit(snap.val());});
@@ -1396,7 +1474,6 @@ reg('renderPRev',renderPRev);reg('exportPayroll',exportPayroll);reg('renderEarni
 reg('saveHoliday',saveHoliday);reg('editHoliday',editHoliday);reg('cancelHolEdit',cancelHolEdit);
 reg('deleteHoliday',deleteHoliday);reg('renderHolidays',renderHolidays);
 reg('renderQuickHols',renderQuickHols);reg('prefillHoliday',prefillHoliday);
-/* FIX #5: Only register filterAudit once (removed duplicate searchAudit) */
 reg('filterAudit',filterAudit);reg('clearAuditFilters',clearAuditFilters);
 reg('searchAudit',filterAudit);
 reg('autoPostRestDays',autoPostRestDays);reg('autoPostAllRestDays',autoPostAllRestDays);
@@ -1420,7 +1497,23 @@ async function runQ(t,d){
   else if(t==='empSave'){await set(ref(db,'users/'+d.uid),d.data);await push(ref(db,'audit_logs'),d.auditLog);}
   else if(t==='holSave'){if(d.id){await update(ref(db,'holidays/'+d.id),d.data);}else{await push(ref(db,'holidays'),d.data);}await push(ref(db,'audit_logs'),d.auditLog);}
 }
-async function safe(fn,qt,qd){if(!A.isOnline){addQ(qt,qd);return{ok:false,q:true};}try{await fn();return{ok:true};}catch(e){if(!navigator.onLine){addQ(qt,qd);return{ok:false,q:true};}throw e;}}
+
+// FIX 5: safe() — always queue on ANY Firebase failure, not just when navigator.onLine is false.
+// Previously: if firebase fails while online, the error was re-thrown → action lost silently.
+// Now: any firebase failure queues the action. Genuine permission errors are also queued
+// (they'll fail again on retry, surfaced via procQ's toast), but no data is lost.
+async function safe(fn,qt,qd){
+  if(!A.isOnline){addQ(qt,qd);return{ok:false,q:true};}
+  try{
+    await fn();
+    return{ok:true};
+  }catch(e){
+    // Queue on any failure — network blip, permission error, timeout, etc.
+    addQ(qt,qd);
+    console.warn('safe() queued action due to error:',qt,e?.code||e?.message||e);
+    return{ok:false,q:true};
+  }
+}
 
 /* ── INIT HELPERS ── */
 function updateClock(){const now=new Date();const cl=document.getElementById('liveClock');if(cl)cl.textContent=now.toLocaleTimeString();const dl=document.getElementById('liveDate');if(dl)dl.textContent=now.toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});const gr=document.getElementById('dashGreet');if(gr){const h=now.getHours();gr.textContent='Good '+(h<12?'morning':h<18?'afternoon':'evening')+', '+(A.cu?.fullName?.split(' ')[0]||'')+'!';}}
@@ -1433,7 +1526,14 @@ function goTab(tab,btn){if((tab==='pay'||tab==='holidays')&&!isAH()){toast('Rest
 function doRender(tab){if(!A.cu)return;if(tab==='dashboard')updDash();else if(tab==='earnings')renderEarnings();else if(tab==='dir')renderDir();else if(tab==='active'){renderActive();detectMyIP();}else if(tab==='sched')renderSchedules();else if(tab==='pay'&&isAH())renderAtt();else if(tab==='payroll'&&A.cu.role==='HR')renderPRev();else if(tab==='holidays'&&isAH()){initHolYearFilter();renderHolidays();renderQuickHols();}else if(tab==='audit'){get(ref(db,'audit_logs')).then(s=>renderAudit(s.val()));}else if(tab==='leaves')renderLeaves();else if(tab==='timestamps')renderTS();}
 function curTab(){const a=document.querySelector('.nav-item.active');return a?a.getAttribute('data-tab'):'';}
 
-/* ── MY EARNINGS (FIX #4: use p.net directly so payslip matches payroll) ── */
+/* ══════════════════════════════════════════
+   MY EARNINGS
+   FIX 1: netPay = p.net - p.transpo
+   Transpo is a pass-through reimbursement.
+   gross already excludes it. p.net includes
+   it internally, so we subtract it here so
+   the payslip net reflects earnings only.
+══════════════════════════════════════════ */
 function renderEarnings(){
   if(!A.cu)return;const el=document.getElementById('earningsOut');if(!el)return;
   const mon=parseInt(document.getElementById('erMon').value);
@@ -1447,10 +1547,23 @@ function renderEarnings(){
   const shiftLabel=u['shift_'+mon]||u.defaultShift||'—';
   const isNight=isNightShift(uid,mon);
   const periodLabel=MF[mon]+' '+pS+' - '+pE+', '+year;
-  const gross=p.cutoff+p.nd+p.meal+p.stat+p.transpo+p.regHol+p.specHol;
-  const netPay=p.net;
+
+  // gross excludes transpo — it's a pass-through reimbursement shown separately
+  const gross=p.cutoff+p.nd+p.meal+p.stat+p.regHol+p.specHol;
+
+  // FIX 1: subtract transpo from p.net so payslip net = gross earnings - deductions
+  // (transpo is still disbursed to the employee via payroll, just not shown as "earnings")
+  const netPay=p.net-p.transpo;
+
   el.innerHTML='<div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;border:1px solid #ddd;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1);">'
-    +'<div style="background:#1c1e21;color:#fff;padding:18px 24px;"><div style="font-size:20px;font-weight:800;letter-spacing:1px;">PAYSLIP</div><div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:2px;">'+periodLabel+'</div></div>'
+
+    /* ── Header ── */
+    +'<div style="background:#1c1e21;color:#fff;padding:18px 24px;">'
+    +'<div style="font-size:20px;font-weight:800;letter-spacing:1px;">PAYSLIP</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:2px;">'+periodLabel+'</div>'
+    +'</div>'
+
+    /* ── Employee info ── */
     +'<div style="background:#f8f9fa;padding:14px 24px;border-bottom:2px solid #dee2e6;display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
     +'<div><div style="font-size:9px;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Employee Name</div><div style="font-size:12px;font-weight:600;color:#1c1e21;margin-top:2px;">'+esc(u.fullName)+'</div></div>'
     +'<div><div style="font-size:9px;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Employee ID</div><div style="font-size:12px;font-weight:600;color:#1c1e21;margin-top:2px;">'+esc(u.empID||uid)+'</div></div>'
@@ -1459,30 +1572,115 @@ function renderEarnings(){
     +'<div><div style="font-size:9px;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Department</div><div style="font-size:12px;font-weight:600;color:#1c1e21;margin-top:2px;">'+esc(u.dept||'—')+'</div></div>'
     +'<div><div style="font-size:9px;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">Shift</div><div style="font-size:12px;font-weight:600;color:#1c1e21;margin-top:2px;">'+esc(shiftLabel)+(isNight?' 🌙':'')+'</div></div>'
     +'</div>'
+
+    /* ── Earnings table ── */
     +'<div style="padding:16px 24px;"><table style="width:100%;border-collapse:collapse;">'
+
+    /* EARNINGS header */
     +'<tr style="background:#f0f0f0;"><td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">EARNINGS</td><td style="padding:7px 10px;font-weight:700;font-size:11px;text-align:right;">AMOUNT</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Basic Pay</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.cutoff)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Night Differential</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.nd)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Meal Allowance</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.meal)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Transportation Allowance</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.transpo)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Statutory Benefit</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.stat)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Discrepancy</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(0)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Regular Holiday Pay <small style="font-size:10px;color:#6c757d;">(present days only)</small></td><td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.regHol>0?'#166534':'inherit')+';">'+php(p.regHol)+(p.regHolDays?' <small style="font-size:9px;color:#6c757d;">('+p.regHolDays+'d)</small>':'')+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Special Holiday Pay</td><td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.specHol>0?'#166534':'inherit')+';">'+php(p.specHol)+(p.specHolDays?' <small style="font-size:9px;color:#6c757d;">('+p.specHolDays+'d)</small>':'')+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Birthday Bonus</td><td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(0)+'</td></tr>'
-    +'<tr style="background:#f0f0f0;"><td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">GROSS SALARY</td><td style="padding:7px 10px;font-weight:700;font-size:12px;text-align:right;">'+php(gross)+'</td></tr>'
+
+    /* Basic Pay */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Basic Pay (Cut-off)</td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.cutoff)+'</td>'
+    +'</tr>'
+
+    /* Night Shift Differential */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Night Shift Differential'
+    +(isNight
+        ?' <small style="font-size:10px;color:#6c757d;">('+p.nh.toFixed(1)+' hrs × 10%)</small>'
+        :' <small style="font-size:10px;color:#6c757d;">(non-night shift)</small>')
+    +'</td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.nd)+'</td>'
+    +'</tr>'
+
+    /* Meal Allowance */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Meal Allowance <small style="font-size:10px;color:#6c757d;">(P:'+p.pCnt+' RDS:'+p.rdsCnt+' HD:'+p.hdCnt+' UT:'+p.utCnt+')</small></td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.meal)+'</td>'
+    +'</tr>'
+
+    /* Statutory Benefit */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Statutory Benefit</td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;">'+php(p.stat)+'</td>'
+    +'</tr>'
+
+    /* Regular Holiday Pay */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Regular Holiday Pay <small style="font-size:10px;color:#6c757d;">(present days only)</small></td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.regHol>0?'#166534':'inherit')+';">'
+    +php(p.regHol)+(p.regHolDays?' <small style="font-size:9px;color:#6c757d;">('+p.regHolDays+'d)</small>':'')
+    +'</td>'
+    +'</tr>'
+
+    /* Special Holiday Pay */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Special Holiday Pay</td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.specHol>0?'#166534':'inherit')+';">'
+    +php(p.specHol)+(p.specHolDays?' <small style="font-size:9px;color:#6c757d;">('+p.specHolDays+'d)</small>':'')
+    +'</td>'
+    +'</tr>'
+
+    /* GROSS EARNINGS subtotal */
+    +'<tr style="background:#f0f0f0;">'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">GROSS EARNINGS</td>'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:12px;text-align:right;">'+php(gross)+'</td>'
+    +'</tr>'
+
+    /* Spacer */
     +'<tr><td colspan="2" style="padding:4px;"></td></tr>'
-    +'<tr style="background:#f0f0f0;"><td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">DEDUCTIONS</td><td style="padding:7px 10px;font-weight:700;font-size:11px;text-align:right;">AMOUNT</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Absences</td><td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.absAmt>0?'#dc2626':'inherit')+';">'+php(p.absAmt)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Tardiness</td><td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.tardAmt>0?'#dc2626':'inherit')+';">'+php(p.tardAmt)+'</td></tr>'
-    +'<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:6px 10px;font-size:12px;">Under Time</td><td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.utAmt>0?'#dc2626':'inherit')+';">'+php(p.utAmt)+'</td></tr>'
-    +'<tr style="background:#f0f0f0;"><td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">TOTAL DEDUCTIONS</td><td style="padding:7px 10px;font-weight:700;font-size:12px;text-align:right;color:'+(p.totalDeduct>0?'#dc2626':'inherit')+';">'+php(p.totalDeduct)+'</td></tr>'
+
+    /* DEDUCTIONS header */
+    +'<tr style="background:#f0f0f0;">'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">DEDUCTIONS</td>'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:11px;text-align:right;">AMOUNT</td>'
+    +'</tr>'
+
+    /* Absences */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Absences <small style="font-size:10px;color:#6c757d;">('+p.abs+' day'+(p.abs!==1?'s':'')+')</small></td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.absAmt>0?'#dc2626':'inherit')+';">'+php(p.absAmt)+'</td>'
+    +'</tr>'
+
+    /* Tardiness */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Tardiness <small style="font-size:10px;color:#6c757d;">('+p.lMin+' min)</small></td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.tardAmt>0?'#dc2626':'inherit')+';">'+php(p.tardAmt)+'</td>'
+    +'</tr>'
+
+    /* Under Time */
+    +'<tr style="border-bottom:1px solid #f0f0f0;">'
+    +'<td style="padding:6px 10px;font-size:12px;">Under Time <small style="font-size:10px;color:#6c757d;">('+p.utH+' hr'+(p.utH!==1?'s':'')+')</small></td>'
+    +'<td style="padding:6px 10px;font-size:12px;text-align:right;color:'+(p.utAmt>0?'#dc2626':'inherit')+';">'+php(p.utAmt)+'</td>'
+    +'</tr>'
+
+    /* TOTAL DEDUCTIONS */
+    +'<tr style="background:#f0f0f0;">'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">TOTAL DEDUCTIONS</td>'
+    +'<td style="padding:7px 10px;font-weight:700;font-size:12px;text-align:right;color:'+(p.totalDeduct>0?'#dc2626':'inherit')+';">'+php(p.totalDeduct)+'</td>'
+    +'</tr>'
+
     +'</table></div>'
-    +'<div style="background:#1c1e21;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;">NET PAY</span><span style="font-size:22px;font-weight:800;">'+php(netPay)+'</span></div>'
+
+    /* ── Transpo note ── */
+    +'<div style="padding:8px 24px;background:#eff6ff;border-top:1px solid #bfdbfe;">'
+    +'<div style="font-size:10px;color:#1e40af;">🚌 Transportation Allowance: <b>'+php(p.transpo)+'</b> — disbursed separately as reimbursement</div>'
+    +'</div>'
+
+    /* ── Net Pay footer ── */
+    +'<div style="background:#1c1e21;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;">'
+    +'<div>'
+    +'<span style="font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;">NET PAY</span>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:2px;">Gross Earnings − Deductions</div>'
+    +'</div>'
+    +'<span style="font-size:22px;font-weight:800;">'+php(netPay)+'</span>'
+    +'</div>'
+
     +'<div style="padding:10px 24px;background:#f8f9fa;text-align:center;font-size:10px;color:#6c757d;">This is a system-generated payslip. For concerns, contact HR.</div>'
     +'</div>';
 }
-
 
 </script>
 </body>
